@@ -1,0 +1,57 @@
+Please perform the following tasks step-by-step to set up a full-stack monorepo project.
+
+1.  **Overall Structure:**
+    Create two main directories in the root: `client` and `server`.
+
+2.  **Backend Setup (inside the `server` directory):**
+    * Navigate into the `server` directory.
+    * Initialize a Node.js project: `npm init -y`
+    * Install production dependencies: `npm install express cors jsonwebtoken drizzle-orm pg dotenv zod`
+    * Install development dependencies: `npm install typescript ts-node nodemon @types/express @types/node @types/cors @types/pg drizzle-kit`
+    * Initialize a TypeScript configuration file: `npx tsc --init --rootDir src --outDir dist --esModuleInterop --resolveJsonModule --lib es6,dom --module commonjs --allowJs true --strict true`
+    * Create a `drizzle.config.ts` file in the `server` root.
+    * Create a `.env.example` file in the `server` root with the content: `DATABASE_URL=""`
+    * Create the following directory and file structure inside `src`:
+        * `src/config/` (for environment variable loading)
+        * `src/db/`
+            * `src/db/index.ts` (for Drizzle client instance)
+            * `src/db/schema.ts` (for Drizzle table definitions)
+            * `src/db/repositories/` (the "storage" layer)
+                * `src/db/repositories/user.repository.ts` (placeholder)
+        * `src/middleware/`
+            * `src/middleware/auth.middleware.ts`
+            * `src/middleware/validation.middleware.ts`
+        * `src/routes/`
+            * `src/routes/index.ts` (main router file)
+            * `src/routes/auth.routes.ts` (example domain router)
+        * `src/services/`
+            * `src/services/auth.service.ts` (example domain service)
+        * `src/utils/`
+        * `src/validations/`
+            * `src/validations/auth.validation.ts` (for Zod schemas)
+        * `src/index.ts` (main server entrypoint)
+    * In `server/package.json`, add the following scripts to the "scripts" section:
+        "scripts": {
+          "dev": "nodemon src/index.ts",
+          "db:generate": "npx drizzle-kit generate:pg",
+          "db:push": "npx drizzle-kit push:pg",
+          "db:studio": "npx drizzle-kit studio"
+        }
+
+3.  **Frontend Setup (inside the `client` directory):**
+    * Navigate into the `client` directory.
+    * Create a new React + TypeScript project using Vite: `npm create vite@latest . -- --template react-ts`
+    * Install production dependencies: `npm install react-router-dom tailwindcss autoprefixer postcss @radix-ui/react-slot @tanstack/react-query @reduxjs/toolkit react-redux react-hook-form zod axios`
+    * Install development dependencies for testing: `npm install -D vitest jsdom @testing-library/react @testing-library/jest-dom`
+    * Create the following directory structure inside `client/src`: `components/ui`, `components/forms`, `components/layout`, `pages`, `hooks`, `services`, `stores`, `types`, `utils`, `constants`, and `styles`.
+
+4.  **Root Configuration (at the project root):**
+    * Navigate back to the project's root directory.
+    * Initialize a root `package.json` file: `npm init -y`
+    * Install `concurrently` as a development dependency: `npm install -D concurrently`
+    * In the root `package.json`, add the following script to the "scripts" section:
+        "scripts": {
+          "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\""
+        }
+
+Please execute these steps in order.
