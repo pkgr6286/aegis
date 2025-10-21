@@ -36,6 +36,20 @@ export const drugProgramRepository = {
   },
 
   /**
+   * Find a drug program by slug (public lookup, no tenant filter)
+   * Slugs are globally unique across all tenants
+   */
+  async findBySlug(slug: string) {
+    const results = await db
+      .select()
+      .from(drugPrograms)
+      .where(eq(drugPrograms.slug, slug))
+      .limit(1);
+    
+    return results[0] || null;
+  },
+
+  /**
    * Create a new drug program
    */
   async create(data: {
@@ -43,11 +57,14 @@ export const drugProgramRepository = {
     name: string;
     brandName?: string;
     brandConfigId?: string;
+    slug?: string | null;
     status?: 'draft' | 'active' | 'archived';
+    createdBy: string;
+    updatedBy: string;
   }) {
     const results = await db
       .insert(drugPrograms)
-      .values(data)
+      .values([data])
       .returning();
     
     return results[0];

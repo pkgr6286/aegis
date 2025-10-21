@@ -2,24 +2,7 @@
 
 ## Overview
 
-Aegis is a multi-tenant SaaS platform designed for pharmaceutical patient assistance programs. The platform enables pharmaceutical companies to manage drug programs, patient screening sessions, and partner integrations while maintaining strict data isolation between tenants. Built with enterprise-grade security and healthcare compliance in mind (HIPAA-ready architecture), the system uses Row-Level Security (RLS) at the PostgreSQL database layer to ensure complete tenant data segregation.
-
-### Current Development Status
-
-**Step 3 Completed: Pharma Admin API (Tenant Management)**
-
-The backend now includes:
-- ✅ Complete Super Admin API for platform-level tenant management
-- ✅ **Complete Pharma Admin API for tenant-level operations**
-- ✅ JWT-based authentication with signature verification
-- ✅ Audit logging service for compliance tracking
-- ✅ Repository pattern for all database operations
-- ✅ Role-based access control (RBAC) middleware
-- ✅ Row-Level Security policies with tenant context middleware
-- ✅ Full CRUD APIs for brand configs, drug programs, and screener versions
-- ✅ User management (invite/remove users from tenant)
-- ✅ Partner management with API key generation/revocation
-- ⚠️ Application role required for RLS enforcement in production (see server/SECURITY.md)
+Aegis is a multi-tenant SaaS platform designed for pharmaceutical patient assistance programs. Its purpose is to enable pharmaceutical companies to manage drug programs, patient screening sessions, and partner integrations while ensuring strict data isolation between tenants. The platform is built with enterprise-grade security and healthcare compliance (HIPAA-ready architecture) using PostgreSQL's Row-Level Security (RLS) for complete tenant data segregation. Key capabilities include a Super Admin API for platform management, a Pharma Admin API for tenant operations, a Public Consumer API for patient screening, and a Partner Verification API.
 
 ## User Preferences
 
@@ -29,233 +12,68 @@ Preferred communication style: Simple, everyday language.
 
 ### Multi-Tenancy Strategy
 
-**Row-Level Security (RLS) Architecture**: The platform implements database-level multi-tenancy using PostgreSQL's Row-Level Security feature rather than separate databases or schema-per-tenant approaches.
-
-**Rationale**: This approach provides automatic data isolation enforced at the database layer, preventing cross-tenant data access even if application logic contains bugs. It offers better performance and scalability compared to separate database instances while maintaining security through PostgreSQL's native security features.
-
-**Implementation Pattern**: Before each database query, the application sets a tenant context variable (`SET app.current_tenant_id = 'uuid'`) which RLS policies automatically use to filter all queries to the appropriate tenant's data.
+The platform utilizes PostgreSQL's Row-Level Security (RLS) for database-level multi-tenancy. This approach enforces automatic data isolation, enhancing security and performance. Tenant context is set before each database query, allowing RLS policies to filter data appropriately.
 
 ### Technology Stack
 
-**Backend Framework**: Express.js with TypeScript for type safety and developer productivity in a Node.js runtime environment.
-
-**Authentication**: JWT (JSON Web Tokens) with `jsonwebtoken` library for cryptographic signature verification and token-based authentication.
-
-**Database Layer**: 
-- PostgreSQL (via Neon Serverless) for production-grade relational data storage
-- Drizzle ORM for type-safe database queries and schema management
-- WebSocket support for serverless PostgreSQL connections
-
-**Frontend Framework**: React 18 with TypeScript, using Vite as the build tool for fast development and optimized production builds.
-
-**UI Component System**: shadcn/ui (Radix UI primitives) with Tailwind CSS for accessible, customizable components following the "New York" design system variant.
-
-**Validation**: Zod for runtime type validation and schema definition, integrated with both Drizzle (drizzle-zod) and React Hook Form.
-
-**State Management**: TanStack Query (React Query) for server state management and data fetching/caching.
+*   **Backend**: Express.js with TypeScript, running on Node.js.
+*   **Authentication**: JWT (JSON Web Tokens) for secure, token-based authentication.
+*   **Database**: PostgreSQL (via Neon Serverless) for relational data, managed with Drizzle ORM for type-safe queries.
+*   **Frontend**: React 18 with TypeScript, using Vite.
+*   **UI/UX**: shadcn/ui (Radix UI primitives) with Tailwind CSS, following a "New York" design system variant for accessible and customizable components. The design aims for an enterprise SaaS aesthetic, inspired by Linear, Stripe, and Healthcare.gov, with a professional blue color palette and WCAG 2.1 AA accessibility compliance.
+*   **Validation**: Zod for runtime type validation, integrated with Drizzle and React Hook Form.
+*   **State Management**: TanStack Query for server state management and data fetching.
 
 ### Database Schema Architecture
 
-**Schema Organization**: Five distinct schema modules for logical separation:
-
-1. **public.ts**: Global system-level tables (tenants, users) without RLS - the master directory of all platform tenants and user accounts
-2. **core.ts**: Tenant-scoped core functionality (tenant_users, audit_logs) with RLS enabled
-3. **programs.ts**: Drug program management and screener configurations
-4. **consumer.ts**: Patient screening sessions, verification codes, and EHR consents
-5. **partners.ts**: External partner integrations, API keys, and partner configurations
-
-**Key Design Patterns**:
-- UUID primary keys for security and distributed system compatibility
-- Comprehensive audit logging for compliance requirements
-- Enum types for status fields to ensure data integrity
-- Timestamp fields (created_at, updated_at) on all tables for temporal tracking
-- Foreign key relationships with proper cascade rules for data consistency
+The database schema is organized into five distinct modules: `public` (global system tables), `core` (tenant-scoped core functionality with RLS), `programs` (drug program and screener configurations), `consumer` (patient screening, verification codes), and `partners` (external partner integrations). UUID primary keys, comprehensive audit logging, enum types for data integrity, and timestamp fields are standard across tables.
 
 ### Authentication & Authorization
 
-**JWT-Based Authentication**: 
-- Token-based authentication with cryptographic signature verification using `jsonwebtoken` library
-- Configurable expiration (default 7 days via JWT_EXPIRES_IN)
-- Development fallback for JWT_SECRET (production requires explicit configuration)
-- Comprehensive error handling for invalid, expired, and forged tokens
-
-**Role System**: 
-- System-level roles (super_admin, support_staff) for platform administration
-- Tenant-level roles (admin, editor, viewer) for customer organization access control
-- Middleware-based role enforcement with `requireRole()` and `requireSystemRole()` guards
-- Middleware chain: `authenticateToken` → `requireRole` → route handlers
-
-**Session Management**: Express session middleware with PostgreSQL session store (connect-pg-simple) for production-grade session persistence.
-
-**Security Features**:
-- JWT signature verification prevents forged tokens
-- Role-based access control protects sensitive endpoints
-- Comprehensive audit logging for compliance
-- Environment validation with production safety checks
+JWT-based authentication is used with cryptographic signature verification. A robust role system includes system-level roles (`super_admin`, `support_staff`) and tenant-level roles (`admin`, `editor`, `viewer`), enforced via middleware. Session management is handled by Express session middleware with a PostgreSQL store.
 
 ### API Architecture
 
-**RESTful Design**: API routes organized under `/api` prefix with versioning capability (`/api/v1/`).
+The API follows a RESTful design, organized under `/api/v1/`.
 
-**Super Admin API** (`/api/v1/superadmin`):
-- `GET /tenants` - List all tenants with admin counts
-- `POST /tenants` - Create new tenant organization
-- `PUT /tenants/:id/license` - Update tenant license configuration
-- `POST /tenants/:id/invite` - Invite tenant administrator
-- All endpoints protected by `super_admin` role requirement
-- Integrated audit logging for all operations
+*   **Super Admin API**: Manages platform-level tenant operations, requiring `super_admin` role.
+*   **Pharma Admin API**: Manages tenant-specific operations including brand configuration, drug programs, user management, and partner integrations, requiring JWT authentication and tenant-level roles.
+*   **Public Consumer API**: Handles patient screening flows (QR code -> screening -> verification code) with session JWTs and rate limiting.
+*   **Partner Verification API**: Facilitates atomic verification of consumer codes by partners using API key authentication and rate limiting.
 
-**Pharma Admin API** (`/api/v1/admin`):
-
-*Brand Configuration Management* (`/api/v1/admin/brand-configs`):
-- `GET /` - List all brand configurations for tenant
-- `POST /` - Create new brand configuration
-- `GET /:id` - Get specific brand configuration
-- `PUT /:id` - Update brand configuration
-- `DELETE /:id` - Delete brand configuration
-
-*Drug Program Management* (`/api/v1/admin/drug-programs`):
-- `GET /` - List all drug programs for tenant
-- `POST /` - Create new drug program
-- `GET /:id` - Get specific drug program
-- `PUT /:id` - Update drug program
-- `DELETE /:id` - Delete drug program
-- `GET /:programId/screeners` - List screener versions for program
-- `POST /:programId/screeners` - Create new screener version
-- `POST /:programId/screeners/:versionId/publish` - Publish screener version
-
-*User Management* (`/api/v1/admin/users`):
-- `GET /users` - List all users in tenant
-- `POST /users/invite` - Invite new user to tenant
-- `DELETE /users/:userId` - Remove user from tenant
-
-*Partner Management* (`/api/v1/admin/partners`):
-- `GET /partners` - List all B2B partners
-- `POST /partners` - Create new partner
-- `POST /partners/:partnerId/keys` - Generate API key for partner
-- `DELETE /partners/:partnerId/keys/:keyId` - Revoke partner API key
-
-*Audit Logs* (`/api/v1/admin/audit-logs`):
-- `GET /audit-logs` - View audit logs with filtering (resourceType, userId, action, date range)
-
-All Pharma Admin endpoints require:
-- JWT authentication (`authenticateToken` middleware)
-- Tenant context set for RLS enforcement (`setTenantContextMiddleware`)
-- Appropriate tenant-level role (`requireTenantRole` middleware)
-- Automatic audit logging for all mutations
-
-**Middleware Stack**:
-- JSON/URL-encoded body parsing
-- CORS configuration for cross-origin requests
-- Request logging for debugging and monitoring
-- Zod validation middleware for request body/query/params validation
-- JWT authentication middleware with signature verification (`authenticateToken`)
-- Role-based access control middleware (`requireRole`, `requireSystemRole`, `requireTenantRole`)
-- Tenant context injection middleware (`setTenantContextMiddleware`) for RLS enforcement
-
-**Error Handling**: Centralized error handling middleware with environment-aware error details (stack traces in development only).
-
-**Repository Pattern**: Data access abstracted through repository layer:
-- `tenant.repository.ts` - Tenant CRUD operations
-- `user.repository.ts` - User management
-- `tenantUser.repository.ts` - Tenant membership management
-- `brandConfig.repository.ts` - Brand configuration operations
-- `drugProgram.repository.ts` - Drug program operations
-- `screenerVersion.repository.ts` - Screener version management
-- `partner.repository.ts` - Partner, API key, and configuration management
-- `auditLog.repository.ts` - Audit log queries
-- All repositories use Drizzle ORM with proper type safety
-
-**Service Layer**: Business logic abstracted through service modules:
-- `superAdmin.service.ts` - Platform administration operations
-- `pharmaAdmin.service.ts` - Tenant user and partner management
-- `brandConfig.service.ts` - Brand configuration business logic
-- `drugProgram.service.ts` - Drug program business logic
-- `screener.service.ts` - Screener version creation and publishing
-- `auditLog.service.ts` - Audit log creation (used by all services)
-- All services integrate automatic audit logging for compliance
+Middleware handles JSON parsing, CORS, logging, Zod validation, various authentication methods (JWT, Session JWT, API Key), role-based access control, tenant context injection for RLS, and rate limiting. A centralized error handling system provides environment-aware error details. Data access is abstracted via a repository pattern using Drizzle ORM, and business logic is encapsulated within a service layer that also integrates automatic audit logging.
 
 ### Frontend Architecture
 
-**Component Organization**:
-- `/components/ui`: Reusable UI primitives from shadcn/ui
-- `/pages`: Route-level page components
-- `/hooks`: Custom React hooks for shared logic
-- `/lib`: Utility functions and configurations
-
-**Design System**: Enterprise SaaS aesthetic inspired by Linear, Stripe, and Healthcare.gov with professional blue color palette, conservative styling for healthcare industry trust, and WCAG 2.1 AA accessibility compliance.
-
-**Styling Approach**: Tailwind CSS with custom CSS variables for theming, supporting both light and dark modes with healthcare-appropriate color schemes.
-
-**Type Safety**: Full TypeScript coverage with path aliases (`@/`, `@shared/`) for clean imports and shared types between frontend/backend.
-
-### Development Workflow
-
-**Build System**: 
-- Vite for frontend development and bundling
-- esbuild for backend bundling (production)
-- tsx for TypeScript execution in development
-
-**Database Migrations**: Drizzle Kit for schema generation and database synchronization with `db:push` command for schema updates.
-
-**Project Structure**: Monorepo architecture with `client/`, `server/`, and `shared/` directories for code organization and type sharing.
+Components are organized into `/components/ui`, `/pages`, `/hooks`, and `/lib`. Styling is managed with Tailwind CSS and custom CSS variables, supporting light and dark modes. The frontend maintains full TypeScript coverage with shared types between frontend and backend.
 
 ## External Dependencies
 
 ### Database & Infrastructure
 
-**Neon Serverless PostgreSQL**: Primary data store with WebSocket-based serverless connections for scalability and automatic connection pooling.
-
-**Environment Configuration**: 
-- `.env` file for configuration management
-- Required: `DATABASE_URL`, `JWT_SECRET` (production), `NODE_ENV`, `PORT`
-- Development fallback for `JWT_SECRET` if not set
-- Environment validation on startup
+*   **Neon Serverless PostgreSQL**: Primary database.
 
 ### Security & Authentication
 
-**jsonwebtoken**: JWT token generation and verification with cryptographic signature checking.
-
-**bcrypt** (planned): Password hashing for user authentication (to be implemented).
+*   **jsonwebtoken**: For JWT handling.
 
 ### Audit & Compliance
 
-**Audit Log Service**: Automatic tracking of all sensitive operations:
-- Tenant creation, updates, and deletions
-- User invitations and role changes
-- License modifications
-- Non-blocking error handling (logs failures but doesn't interrupt operations)
-- Complete before/after state capture for compliance
+*   **Audit Log Service**: Tracks sensitive operations for compliance.
 
 ### UI Component Libraries
 
-**Radix UI**: Comprehensive set of accessible, unstyled component primitives including:
-- Form controls (checkbox, radio, select, slider, switch)
-- Overlays (dialog, popover, tooltip, dropdown, context menu)
-- Navigation (accordion, tabs, menubar, navigation menu)
-- Feedback (toast, alert, progress)
-- Layout (aspect-ratio, scroll-area, separator, collapsible)
-
-**Additional UI Dependencies**:
-- `lucide-react`: Icon library for consistent iconography
-- `react-day-picker`: Calendar/date picker component
-- `embla-carousel-react`: Carousel/slider functionality
-- `cmdk`: Command palette component
-- `vaul`: Drawer component for mobile interfaces
-- `recharts`: Charting library for data visualization
+*   **Radix UI**: Provides accessible, unstyled component primitives.
+*   **lucide-react**: Icon library.
+*   **react-day-picker**: Date picker.
+*   **embla-carousel-react**: Carousel functionality.
+*   **cmdk**: Command palette.
+*   **vaul**: Drawer component.
+*   **recharts**: Charting library.
 
 ### Utilities
 
-**Class Variance Authority (CVA)**: Utility for managing component variants and conditional class composition with TypeScript support.
-
-**clsx + tailwind-merge**: Class name management utilities for combining Tailwind classes without conflicts.
-
-**date-fns**: Date manipulation and formatting library.
-
-**nanoid**: Secure, URL-friendly unique ID generation.
-
-### Development Tools
-
-**Replit Plugins**: Development environment enhancements including error overlay, cartographer (code mapping), and dev banner for Replit-hosted development.
-
-**TypeScript**: Strict type checking with ESNext module resolution and bundler mode for modern development patterns.
+*   **Class Variance Authority (CVA)**: For managing component variants.
+*   **clsx + tailwind-merge**: For combining Tailwind classes.
+*   **date-fns**: Date manipulation.
+*   **nanoid**: Secure unique ID generation.

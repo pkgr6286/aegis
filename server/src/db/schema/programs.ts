@@ -13,6 +13,10 @@ import { relations, sql } from 'drizzle-orm';
 import { tenants, users } from './public';
 import { auditSchema } from './core';
 
+// Forward declaration of screeningSessions for circular dependency
+// Will be imported after consumer.ts is fully defined
+let screeningSessions: any;
+
 /**
  * Use the app table creator for all tenant-scoped business logic tables.
  * RLS (Row-Level Security) MUST be enabled on all tables created here.
@@ -50,11 +54,6 @@ export const brandConfigs = appTable('brand_configs', {
 }));
 
 /**
- * Reference for screener_versions - forward declared for circular dependency
- */
-declare const screenerVersions: ReturnType<typeof appTable>;
-
-/**
  * The core Drug Program object (e.g., "Rosuvastatin 5mg").
  * This is the parent entity for screeners and consumer sessions.
  */
@@ -67,6 +66,14 @@ export const drugPrograms = appTable('drug_programs', {
 
   name: varchar('name', { length: 255 }).notNull(), // Internal name
   brandName: varchar('brand_name', { length: 255 }), // Consumer-facing name (e.g., "Crestor-OTC")
+  
+  /**
+   * Public-facing slug for QR code/URL access (e.g., "crestor-otc-5mg")
+   * Must be unique across ALL tenants for public lookups
+   * Nullable to allow safe migration - existing programs need slugs added manually
+   */
+  slug: varchar('slug', { length: 255 }).unique(),
+  
   status: programStatusEnum('status').notNull().default('draft'),
 
   /**
@@ -79,6 +86,8 @@ export const drugPrograms = appTable('drug_programs', {
 }, (table) => ({
   // Composite index for the main admin dashboard (RLS-scoped)
   tenantStatusIdx: index('dp_tenant_status_idx').on(table.tenantId, table.status),
+  // Index for public slug lookups (globally unique, no RLS filter needed)
+  slugIdx: index('dp_slug_idx').on(table.slug),
 }));
 
 /**
@@ -140,7 +149,7 @@ export const drugProgramsRelations = relations(drugPrograms, ({ one, many }) => 
   allScreenerVersions: many(screenerVersions, {
     relationName: 'all_versions',
   }),
-  screeningSessions: many('screeningSessions'), // Forward reference to consumer.ts
+  // Note: screeningSessions relation defined in consumer.ts to avoid circular dependency
 }));
 
 export const screenerVersionsRelations = relations(screenerVersions, ({ one, many }) => ({
@@ -153,7 +162,7 @@ export const screenerVersionsRelations = relations(screenerVersions, ({ one, man
     references: [drugPrograms.id],
     relationName: 'all_versions',
   }),
-  screeningSessions: many('screeningSessions'), // Forward reference to consumer.ts
+  // Note: screeningSessions relation defined in consumer.ts to avoid circular dependency
   
   // Relations for the createdBy/updatedBy fields from auditSchema
   creator: one(users, {

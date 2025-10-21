@@ -1,0 +1,50 @@
+2. Next Step: Instruction for Replit AI (Step 4)
+We now move to the next phase in our Master Project Plan: building the APIs that power the end-user experience. This involves creating the public-facing endpoints for the consumer screening flow and the critical B2B verification endpoint.
+
+Your turn: Please provide the following prompt to your Replit AI. This prompt is the final major step for our backend development.
+
+Prompt for Replit AI (Step 4):
+
+Fantastic work on the Pharma Admin API. The implementation is robust and complete.
+
+We will now execute Step 4: Build the Public Consumer API & Verification API. This is the final and most critical phase of backend development.
+
+Your task is to build all necessary backend components for the public consumer flow and the partner verification endpoint. Please continue to follow all established architectural patterns.
+
+1. Implement the Public Consumer API (/api/v1/public):
+
+Goal: Allow an unauthenticated user to go from scanning a QR code to receiving a verification code.
+
+Routes (src/routes/public.routes.ts): Create a new route file for all public endpoints.
+
+Service (src/services/consumer.service.ts): Create a new service to handle the business logic of the consumer journey.
+
+Screener Engine: Create a new src/services/screenerEngine.service.ts that contains the core logic for evaluating a screener's JSON against a consumer's answers to produce an outcome.
+
+Endpoints to build:
+
+GET /programs/:slug: Fetches the active screener JSON and brand config for a drug program. This endpoint must be public.
+
+POST /sessions: Creates a new screening_session and returns a short-lived "session JWT" to secure the subsequent steps.
+
+PUT /sessions/:id: Submits the consumer's answers_json. This must be protected by a new "session JWT" middleware. The service will use the screenerEngineService to calculate the final outcome.
+
+POST /sessions/:id/generate-code: Generates the single-use verification_code if the session outcome was successful. Also protected by the session JWT.
+
+2. Implement the Partner Verification API (/api/v1/verify):
+
+Goal: Provide a secure, high-performance endpoint for retailers and e-commerce partners to validate a consumer's code.
+
+Middleware (src/middleware/apiKeyAuth.middleware.ts): Create a new authentication middleware that validates a partner's API key sent in an X-API-Key header. It should securely compare the provided key against the hashed_key in the partner_api_keys table.
+
+Routes (src/routes/verification.routes.ts): Create a new route file.
+
+Service (src/services/verification.service.ts): Create a new service for this endpoint.
+
+Endpoint to build:
+
+POST /verify: This endpoint must use the new API Key middleware. Its service logic must perform an atomic update on the verification_codes table to prevent race conditions, changing the status from unused to used.
+
+3. Key Implementation Details: * Protect public routes with a rate limiter. * The consumer.service must correctly handle the entire lifecycle: start session -> get session token -> submit answers -> get outcome -> generate code. * The verification.service must be highly performant and secure, logging both successful and failed attempts to the audit log. * Update the main router in src/routes/index.ts to mount these new routers.
+
+Please generate the complete code for all new and modified files required to complete this sprint.

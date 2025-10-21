@@ -13,6 +13,7 @@ import { partnerRepository } from '../db/repositories/partner.repository';
 import { auditLogRepository } from '../db/repositories/auditLog.repository';
 import { auditLogService } from './auditLog.service';
 import { nanoid } from 'nanoid';
+import bcrypt from 'bcrypt';
 import type { InviteUserInput, CreatePartnerInput, GenerateApiKeyInput, AuditLogQuery } from '../validations/pharmaAdmin.validation';
 
 export const pharmaAdminService = {
@@ -160,9 +161,9 @@ export const pharmaAdminService = {
     // Generate a raw API key (should be shown to user only once)
     const rawKey = `aegis_${nanoid(32)}`;
 
-    // In production, this should be properly hashed (e.g., using bcrypt)
-    // For now, we'll use a simple hash placeholder
-    const hashedKey = Buffer.from(rawKey).toString('base64');
+    // Hash the API key using bcrypt (one-way, secure)
+    const saltRounds = 10;
+    const hashedKey = await bcrypt.hash(rawKey, saltRounds);
 
     // Generate a key prefix for identification
     const keyPrefix = partnerRepository.generateKeyPrefix(partner.name);
