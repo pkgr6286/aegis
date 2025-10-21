@@ -1,4 +1,4 @@
-import { useLocation } from 'wouter';
+import { useLocation, Link } from 'wouter';
 import {
   Sidebar,
   SidebarContent,
@@ -88,10 +88,10 @@ export function AppSidebar() {
                         className="h-10"
                         data-testid={`nav-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
                       >
-                        <a href={item.url}>
+                        <Link href={item.url}>
                           <Icon className="w-4 h-4" />
                           <span>{item.title}</span>
-                        </a>
+                        </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
