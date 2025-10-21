@@ -227,6 +227,229 @@ export class SuperAdminService {
 
     return updatedTenant;
   }
+
+  /**
+   * Get dashboard statistics for Super Admin
+   */
+  async getStats() {
+    const { db } = await import('../db');
+    const { tenants, users, auditLogs } = await import('../db/schema/public');
+    const { sql, count, gt, gte } = await import('drizzle-orm');
+
+    // Calculate date 30 days ago
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Get total counts
+    const [tenantCount] = await db.select({ count: count() }).from(tenants);
+    const [userCount] = await db.select({ count: count() }).from(users);
+    const [newTenantCount] = await db
+      .select({ count: count() })
+      .from(tenants)
+      .where(gte(tenants.createdAt, thirtyDaysAgo));
+
+    // Get new tenants this month (daily aggregation)
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const newTenantsThisMonth = await db.execute(sql`
+      SELECT 
+        DATE(created_at) as date,
+        COUNT(*)::int as count
+      FROM ${tenants}
+      WHERE created_at >= ${startOfMonth}
+      GROUP BY DATE(created_at)
+      ORDER BY date ASC
+    `);
+
+    return {
+      totalTenants: tenantCount.count,
+      activeUsers: userCount.count,
+      apiCalls: 1250000, // Mock value as requested
+      newTenants: newTenantCount.count,
+      newTenantsThisMonth: newTenantsThisMonth.rows as { date: string; count: number }[],
+    };
+  }
+
+  /**
+   * Get all system users with pagination
+   */
+  async getAllUsers(options?: { page?: number; limit?: number }) {
+    const { db } = await import('../db');
+    const { users, userSystemRoles } = await import('../db/schema/public');
+    const { eq, sql } = await import('drizzle-orm');
+
+    const page = options?.page || 1;
+    const limit = options?.limit || 10;
+    const offset = (page - 1) * limit;
+
+    // Get users with system roles
+    const systemUsers = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        lastLoginAt: users.lastLoginAt,
+        createdAt: users.createdAt,
+        role: userSystemRoles.role,
+      })
+      .from(users)
+      .innerJoin(userSystemRoles, eq(users.id, userSystemRoles.userId))
+      .limit(limit)
+      .offset(offset);
+
+    // Get total count
+    const [totalResult] = await db
+      .select({ count: sql<number>`count(DISTINCT ${users.id})` })
+      .from(users)
+      .innerJoin(userSystemRoles, eq(users.id, userSystemRoles.userId));
+
+    return {
+      data: systemUsers,
+      pagination: {
+        page,
+        limit,
+        total: Number(totalResult.count),
+        totalPages: Math.ceil(Number(totalResult.count) / limit),
+      },
+    };
+  }
+
+  /**
+   * Invite a new system user (super_admin or support_staff)
+   */
+  async inviteSystemUser(inviteData: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: 'super_admin' | 'support_staff';
+  }) {
+    const { db } = await import('../db');
+    const { userSystemRoles } = await import('../db/schema/public');
+    const { and, eq } = await import('drizzle-orm');
+
+    // Find or create user
+    let user = await userRepository.findByEmail(inviteData.email);
+
+    if (!user) {
+      // Create new user (no password set - will be set when user accepts invitation)
+      user = await userRepository.create({
+        email: inviteData.email,
+        hashedPassword: '', // Will be set when user accepts invitation
+        firstName: inviteData.firstName,
+        lastName: inviteData.lastName,
+      });
+    }
+
+    // Check if user already has this system role
+    const existingRole = await db
+      .select()
+      .from(userSystemRoles)
+      .where(
+        and(
+          eq(userSystemRoles.userId, user.id),
+          eq(userSystemRoles.role, inviteData.role)
+        )
+      )
+      .limit(1);
+
+    if (existingRole.length > 0) {
+      throw new Error(`User already has the ${inviteData.role} role`);
+    }
+
+    // Add system role
+    await db.insert(userSystemRoles).values({
+      userId: user.id,
+      role: inviteData.role,
+    });
+
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: inviteData.role,
+    };
+  }
+
+  /**
+   * Revoke a system role from a user
+   */
+  async revokeSystemRole(userId: string, role: 'super_admin' | 'support_staff') {
+    const { db } = await import('../db');
+    const { userSystemRoles } = await import('../db/schema/public');
+    const { and, eq } = await import('drizzle-orm');
+
+    // Remove the system role
+    await db
+      .delete(userSystemRoles)
+      .where(
+        and(
+          eq(userSystemRoles.userId, userId),
+          eq(userSystemRoles.role, role)
+        )
+      );
+
+    return { success: true };
+  }
+
+  /**
+   * Get audit logs with filtering (bypasses RLS for Super Admin)
+   */
+  async getAuditLogs(options?: {
+    page?: number;
+    limit?: number;
+    tenantId?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const { db } = await import('../db');
+    const { auditLogs } = await import('../db/schema/public');
+    const { and, eq, gte, lte, sql } = await import('drizzle-orm');
+
+    const page = options?.page || 1;
+    const limit = options?.limit || 20;
+    const offset = (page - 1) * limit;
+
+    // Build where conditions
+    const conditions = [];
+    if (options?.tenantId) {
+      conditions.push(eq(auditLogs.tenantId, options.tenantId));
+    }
+    if (options?.startDate) {
+      conditions.push(gte(auditLogs.timestamp, new Date(options.startDate)));
+    }
+    if (options?.endDate) {
+      conditions.push(lte(auditLogs.timestamp, new Date(options.endDate)));
+    }
+
+    // Get audit logs
+    const logs = await db
+      .select()
+      .from(auditLogs)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(sql`${auditLogs.timestamp} DESC`)
+      .limit(limit)
+      .offset(offset);
+
+    // Get total count
+    const [totalResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(auditLogs)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+    return {
+      data: logs,
+      pagination: {
+        page,
+        limit,
+        total: Number(totalResult.count),
+        totalPages: Math.ceil(Number(totalResult.count) / limit),
+      },
+    };
+  }
 }
 
 export const superAdminService = new SuperAdminService();

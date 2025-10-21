@@ -1,18 +1,6 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
-
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-});
-
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-});
-
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+// Export all schemas from the server directory
+export * from '../server/src/db/schema/public';
+export * from '../server/src/db/schema/core';
+export * from '../server/src/db/schema/programs';
+export * from '../server/src/db/schema/consumer';
+export * from '../server/src/db/schema/partners';

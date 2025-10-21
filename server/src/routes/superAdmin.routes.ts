@@ -159,4 +159,122 @@ router.put(
   }
 );
 
+/**
+ * GET /api/v1/superadmin/stats
+ * Get dashboard statistics
+ */
+router.get('/stats', async (req, res, next) => {
+  try {
+    const stats = await superAdminService.getStats();
+    
+    res.json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/v1/superadmin/users
+ * Get all system users with pagination
+ */
+router.get('/users', async (req, res, next) => {
+  try {
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+
+    const result = await superAdminService.getAllUsers({ page, limit });
+    
+    res.json({
+      success: true,
+      ...result,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/v1/superadmin/users/invite
+ * Invite a new system user
+ */
+router.post('/users/invite', async (req, res, next) => {
+  try {
+    const { email, firstName, lastName, role } = req.body;
+
+    const user = await superAdminService.inviteSystemUser({
+      email,
+      firstName,
+      lastName,
+      role,
+    });
+    
+    res.status(201).json({
+      success: true,
+      message: 'System user invited successfully',
+      data: user,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * DELETE /api/v1/superadmin/users/:id/role
+ * Revoke a system role from a user
+ */
+router.delete('/users/:id/role', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const role = req.query.role as 'super_admin' | 'support_staff';
+
+    if (!role) {
+      return res.status(400).json({
+        success: false,
+        message: 'Role query parameter is required',
+      });
+    }
+
+    await superAdminService.revokeSystemRole(id, role);
+    
+    res.json({
+      success: true,
+      message: 'System role revoked successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/v1/superadmin/audit-logs
+ * Get audit logs with filtering
+ */
+router.get('/audit-logs', async (req, res, next) => {
+  try {
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+    const tenantId = req.query.tenantId as string | undefined;
+    const startDate = req.query.startDate as string | undefined;
+    const endDate = req.query.endDate as string | undefined;
+
+    const result = await superAdminService.getAuditLogs({
+      page,
+      limit,
+      tenantId,
+      startDate,
+      endDate,
+    });
+    
+    res.json({
+      success: true,
+      ...result,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
