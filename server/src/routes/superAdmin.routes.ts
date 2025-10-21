@@ -11,6 +11,28 @@ import {
 const router = Router();
 
 /**
+ * GET /api/v1/superadmin/me
+ * Get the current authenticated user
+ */
+router.get('/me', async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authenticated',
+      });
+    }
+
+    res.json({
+      success: true,
+      user: req.user,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/v1/superadmin/tenants
  * Get all tenants in the system
  */
