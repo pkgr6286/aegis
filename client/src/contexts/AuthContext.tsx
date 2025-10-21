@@ -50,11 +50,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (credentials: LoginRequest) => {
     setIsLoading(true);
     try {
-      const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
+      const response = await apiClient.post<{ success: boolean; data: LoginResponse }>('/auth/login', credentials);
       
-      if (response.success && response.token) {
-        apiClient.setToken(response.token);
-        setUser(response.user);
+      if (response.success && response.data?.token) {
+        apiClient.setToken(response.data.token);
+        setUser(response.data.user);
       } else {
         throw new Error('Login failed');
       }

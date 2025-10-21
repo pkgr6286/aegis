@@ -27,7 +27,7 @@ router.get('/health', (req, res) => {
 });
 
 // Mount auth routes (public)
-router.use('/auth', authRoutes);
+router.use('/v1/auth', authRoutes);
 
 // Mount super admin routes (protected)
 // All routes under /api/v1/superadmin require authentication and super_admin role
