@@ -4,6 +4,18 @@
 
 Aegis is a multi-tenant SaaS platform designed for pharmaceutical patient assistance programs. The platform enables pharmaceutical companies to manage drug programs, patient screening sessions, and partner integrations while maintaining strict data isolation between tenants. Built with enterprise-grade security and healthcare compliance in mind (HIPAA-ready architecture), the system uses Row-Level Security (RLS) at the PostgreSQL database layer to ensure complete tenant data segregation.
 
+### Current Development Status
+
+**Step 2 Completed: Core Services & Super Admin API**
+
+The backend now includes:
+- ✅ Complete Super Admin API for tenant management
+- ✅ JWT-based authentication with signature verification
+- ✅ Audit logging service for compliance tracking
+- ✅ Repository pattern for database operations
+- ✅ Role-based access control (RBAC) middleware
+- ⚠️ Row-Level Security policies (SQL implementation pending)
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -21,6 +33,8 @@ Preferred communication style: Simple, everyday language.
 ### Technology Stack
 
 **Backend Framework**: Express.js with TypeScript for type safety and developer productivity in a Node.js runtime environment.
+
+**Authentication**: JWT (JSON Web Tokens) with `jsonwebtoken` library for cryptographic signature verification and token-based authentication.
 
 **Database Layer**: 
 - PostgreSQL (via Neon Serverless) for production-grade relational data storage
@@ -54,28 +68,54 @@ Preferred communication style: Simple, everyday language.
 
 ### Authentication & Authorization
 
-**JWT-Based Authentication**: Token-based authentication with configurable expiration (default 7 days).
+**JWT-Based Authentication**: 
+- Token-based authentication with cryptographic signature verification using `jsonwebtoken` library
+- Configurable expiration (default 7 days via JWT_EXPIRES_IN)
+- Development fallback for JWT_SECRET (production requires explicit configuration)
+- Comprehensive error handling for invalid, expired, and forged tokens
 
 **Role System**: 
 - System-level roles (super_admin, support_staff) for platform administration
 - Tenant-level roles (admin, editor, viewer) for customer organization access control
-- Middleware-based role enforcement with `requireRole()` guards
+- Middleware-based role enforcement with `requireRole()` and `requireSystemRole()` guards
+- Middleware chain: `authenticateToken` → `requireRole` → route handlers
 
 **Session Management**: Express session middleware with PostgreSQL session store (connect-pg-simple) for production-grade session persistence.
+
+**Security Features**:
+- JWT signature verification prevents forged tokens
+- Role-based access control protects sensitive endpoints
+- Comprehensive audit logging for compliance
+- Environment validation with production safety checks
 
 ### API Architecture
 
 **RESTful Design**: API routes organized under `/api` prefix with versioning capability (`/api/v1/`).
+
+**Super Admin API** (`/api/v1/superadmin`):
+- `GET /tenants` - List all tenants with admin counts
+- `POST /tenants` - Create new tenant organization
+- `PUT /tenants/:id/license` - Update tenant license configuration
+- `POST /tenants/:id/invite` - Invite tenant administrator
+- All endpoints protected by `super_admin` role requirement
+- Integrated audit logging for all operations
 
 **Middleware Stack**:
 - JSON/URL-encoded body parsing
 - CORS configuration for cross-origin requests
 - Request logging for debugging and monitoring
 - Zod validation middleware for request body/query/params validation
-- Authentication middleware for protected routes
+- JWT authentication middleware with signature verification
+- Role-based access control middleware (`requireRole`, `requireSystemRole`)
 - Tenant context injection for RLS enforcement
 
 **Error Handling**: Centralized error handling middleware with environment-aware error details (stack traces in development only).
+
+**Repository Pattern**: Data access abstracted through repository layer:
+- `tenant.repository.ts` - Tenant CRUD operations
+- `user.repository.ts` - User management
+- `tenantUser.repository.ts` - Tenant membership management
+- All repositories use Drizzle ORM with proper type safety
 
 ### Frontend Architecture
 
@@ -108,7 +148,26 @@ Preferred communication style: Simple, everyday language.
 
 **Neon Serverless PostgreSQL**: Primary data store with WebSocket-based serverless connections for scalability and automatic connection pooling.
 
-**Environment Configuration**: `.env` file for configuration management (DATABASE_URL, JWT_SECRET, NODE_ENV, PORT).
+**Environment Configuration**: 
+- `.env` file for configuration management
+- Required: `DATABASE_URL`, `JWT_SECRET` (production), `NODE_ENV`, `PORT`
+- Development fallback for `JWT_SECRET` if not set
+- Environment validation on startup
+
+### Security & Authentication
+
+**jsonwebtoken**: JWT token generation and verification with cryptographic signature checking.
+
+**bcrypt** (planned): Password hashing for user authentication (to be implemented).
+
+### Audit & Compliance
+
+**Audit Log Service**: Automatic tracking of all sensitive operations:
+- Tenant creation, updates, and deletions
+- User invitations and role changes
+- License modifications
+- Non-blocking error handling (logs failures but doesn't interrupt operations)
+- Complete before/after state capture for compliance
 
 ### UI Component Libraries
 
