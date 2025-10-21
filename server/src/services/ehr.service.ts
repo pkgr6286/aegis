@@ -21,9 +21,9 @@ const EHR_CALLBACK_URL = process.env.REPLIT_DOMAINS
 
 // Use the same secret as session JWTs for consistency
 const JWT_SECRET: string = (() => {
-  const secret = process.env.SESSION_JWT_SECRET || process.env.JWT_SECRET;
+  const secret = process.env.SESSION_JWT_SECRET || process.env.JWT_SECRET || process.env.SESSION_SECRET;
   if (!secret) {
-    throw new Error('CRITICAL: JWT_SECRET or SESSION_JWT_SECRET must be set for EHR OAuth state tokens');
+    throw new Error('CRITICAL: JWT_SECRET or SESSION_JWT_SECRET or SESSION_SECRET must be set for EHR OAuth state tokens');
   }
   return secret;
 })();

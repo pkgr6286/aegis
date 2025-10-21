@@ -1,35 +1,40 @@
 import express from 'express';
-
-/**
- * Aegis Platform - Backend Server
- * 
- * A multi-tenant SaaS platform for pharmaceutical patient assistance programs
- * with Row-Level Security (RLS) for complete tenant data isolation.
- */
+import { createServer } from 'http';
+import { setupVite, log } from './vite';
+import routes from './src/routes';
+import session from 'express-session';
 
 const app = express();
+const server = createServer(app);
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Session middleware (required for authentication)
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'aegis-platform-secret-key-change-in-production',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
+  })
+);
+
 // Request logging middleware
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  if (!req.path.startsWith('/src') && !req.path.startsWith('/@')) {
+    log(`${req.method} ${req.path}`);
+  }
   next();
 });
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    name: 'Aegis Platform API',
-    version: '1.0.0',
-    description: 'Multi-tenant SaaS platform for pharmaceutical patient assistance programs',
-    status: 'Backend foundation ready',
-    database: 'Drizzle ORM + PostgreSQL with Row-Level Security',
-    documentation: '/api/health for health check',
-  });
-});
+// API Routes
+app.use('/api', routes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -40,20 +45,17 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Setup Vite in development mode
+if (process.env.NODE_ENV !== 'production') {
+  setupVite(app, server);
+}
+
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);
   res.status(500).json({
     error: 'Internal server error',
-    message: err.message,
-  });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    error: 'Not found',
-    path: req.path,
+    message: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred',
   });
 });
 
@@ -61,7 +63,7 @@ app.use((req, res) => {
 // Other ports are firewalled. Default to 5000 if not specified.
 const port = parseInt(process.env.PORT || '5000', 10);
 
-app.listen(port, '0.0.0.0', () => {
+server.listen(port, '0.0.0.0', () => {
   console.log(`
 ╔════════════════════════════════════════════════════════════════╗
 ║                                                                ║
@@ -77,12 +79,10 @@ app.listen(port, '0.0.0.0', () => {
 🔒 Security: Row-Level Security (RLS) enabled
 📚 API Docs: http://localhost:${port}/api/health
 
-Next steps:
-1. Run database migrations: npm run db:push
-2. Check database schema: npm run db:studio (from server/ directory)
-3. Implement API endpoints in server/src/routes/
+Frontend: http://localhost:${port}
+Backend API: http://localhost:${port}/api
 
-Backend foundation is ready! ✅
+Ready! ✅
   `);
 });
 

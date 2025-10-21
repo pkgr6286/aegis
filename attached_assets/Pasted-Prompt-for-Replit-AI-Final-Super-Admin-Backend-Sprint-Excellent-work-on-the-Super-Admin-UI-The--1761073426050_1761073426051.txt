@@ -1,0 +1,51 @@
+Prompt for Replit AI (Final Super Admin Backend Sprint):
+
+Excellent work on the Super Admin UI. The frontend is complete. You have correctly identified the missing backend API endpoints required to make it fully functional.
+
+Your task is to now implement the remaining backend endpoints for the Super Admin role. Please follow all existing architectural patterns.
+
+Implement the following 5 API endpoints:
+
+1. Dashboard Statistics (/api/v1/superadmin/stats)
+
+Endpoint: GET /api/v1/superadmin/stats
+
+Logic: Create a new service function that queries the database to calculate the required statistics:
+
+totalTenants: A count from the public.tenants table.
+
+activeUsers: A count from the public.users table.
+
+apiCalls: (Mock this for now, return a static number like 1250000).
+
+newTenants: A count from public.tenants where createdAt is within the last 30 days.
+
+newTenantsThisMonth: An aggregate query on public.tenants grouped by day for the current month.
+
+Response Shape: Match the exact JSON shape specified in the frontend requirements.
+
+2. System User Management (/api/v1/superadmin/users/...)
+
+Endpoint: GET /api/v1/superadmin/users
+
+Logic: Implement pagination. Fetch a paginated list of all users who have a role in the public.user_system_roles table.
+
+Endpoint: POST /api/v1/superadmin/users/invite
+
+Logic: Handle inviting a new system user. Find or create the user in public.users and add an entry to public.user_system_roles.
+
+Endpoint: DELETE /api/v1/superadmin/users/:id/role
+
+Logic: Remove a user's entry from the public.user_system_roles table. Do not delete the user from public.users.
+
+3. Platform Audit Logs (/api/v1/superadmin/audit-logs)
+
+Endpoint: GET /api/v1/superadmin/audit-logs
+
+Logic: Implement pagination and filtering. The service should fetch a paginated list from the app.audit_logs table.
+
+It must support optional query parameters: tenantId, startDate, endDate.
+
+Because this is a Super Admin, do not apply the RLS policy for this specific query; you need to be able to query across all tenants.
+
+Final Instruction: Please generate the complete code for all new and modified service, repository, and route files required to implement these five endpoints.
