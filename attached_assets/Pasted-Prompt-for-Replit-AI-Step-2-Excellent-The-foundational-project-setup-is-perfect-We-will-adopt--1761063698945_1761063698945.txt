@@ -1,0 +1,53 @@
+Prompt for Replit AI (Step 2):
+
+Excellent. The foundational project setup is perfect. We will adopt the src directory structure you have created.
+
+Now, we will complete Step 2: Build the Core Services & Super Admin API.
+
+Your task is to build all the necessary backend components for the Platform Admin (Super Admin) role. Please follow the existing patterns and place all new files in the appropriate directories (src/routes, src/services, etc.).
+
+1. Implement the Audit Log Service:
+
+Create a new file: src/services/auditLog.service.ts.
+
+This service should have a createAuditLog function that takes an object with tenantId, userId, action, etc., and saves it to the audit_logs table.
+
+This service will be used by all other services.
+
+2. Implement the Super Admin API (/api/v1/superadmin):
+
+Routes (src/routes/superAdmin.routes.ts):
+
+GET /tenants: To get a list of all tenants.
+
+POST /tenants: To create a new tenant.
+
+PUT /tenants/:id/license: To update a tenant's license.
+
+POST /tenants/:id/invite: To invite the first Tenant Admin.
+
+Validation (src/validations/superAdmin.validation.ts):
+
+Create Zod schemas for the request bodies of POST /tenants, PUT /.../license, and POST /.../invite.
+
+Service (src/services/superAdmin.service.ts):
+
+Create service functions for getAllTenants, createTenant, updateTenantLicense, and inviteTenantAdmin.
+
+The createTenant service function must call the auditLog.service to log the creation event.
+
+The inviteTenantAdmin service function should handle finding or creating a user in the public.users table and then creating a membership in the app.tenant_users table.
+
+Repository (append to src/db/repositories/):
+
+Create any new data access functions needed by the service layer to interact with the tenants, users, and tenant_users tables.
+
+3. Update Middleware & Main Router:
+
+In src/middleware/auth.middleware.ts, ensure the JWT verification logic correctly identifies a super_admin role.
+
+Create a requireRole function that can protect routes, for example: router.use(requireRole('super_admin')).
+
+In src/routes/index.ts, mount the new superAdminRouter at the path /api/v1/superadmin.
+
+Please generate the complete code for these new files and show where to modify existing files.

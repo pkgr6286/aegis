@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { sql } from 'drizzle-orm';
+import jwt from 'jsonwebtoken';
 
 /**
  * Authentication Middleware
  * 
  * This middleware will:
- * 1. Validate JWT tokens
+ * 1. Validate JWT tokens with signature verification
  * 2. Extract user information
  * 3. Set the tenant context for RLS (Row-Level Security)
  * 
@@ -17,31 +18,79 @@ import { sql } from 'drizzle-orm';
  * to only show data belonging to the current tenant.
  */
 
-// Extend Express Request type to include user and tenant
+// Extend Express Request type to include user, tenant, and roles
 declare global {
   namespace Express {
     interface Request {
       user?: {
         id: string;
         email: string;
+        systemRoles?: string[]; // For super_admin, support_staff
+        tenantRole?: 'admin' | 'editor' | 'viewer';
       };
       tenantId?: string;
     }
   }
 }
 
+type SystemRole = 'super_admin' | 'support_staff';
+type TenantRole = 'admin' | 'editor' | 'viewer';
+
 export const authenticateToken = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  // TODO: Implement JWT token validation
-  // 1. Extract token from Authorization header
-  // 2. Verify token using jsonwebtoken
-  // 3. Extract user ID and tenant ID from token
-  // 4. Attach to req.user and req.tenantId
-  
-  next();
+  // Extract token from Authorization header
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
+  // Get JWT secret from environment
+  const JWT_SECRET = process.env.JWT_SECRET;
+  if (!JWT_SECRET) {
+    console.error('FATAL: JWT_SECRET environment variable is not set');
+    return res.status(500).json({ 
+      error: 'Server configuration error',
+      details: 'JWT_SECRET not configured'
+    });
+  }
+
+  try {
+    // Verify JWT signature and decode payload
+    // This prevents forged tokens and ensures cryptographic authenticity
+    const payload = jwt.verify(token, JWT_SECRET) as {
+      userId: string;
+      email: string;
+      systemRoles?: string[];
+      tenantRole?: 'admin' | 'editor' | 'viewer';
+      tenantId?: string;
+    };
+    
+    // Attach verified user information to request
+    req.user = {
+      id: payload.userId,
+      email: payload.email,
+      systemRoles: payload.systemRoles || [],
+      tenantRole: payload.tenantRole,
+    };
+    
+    req.tenantId = payload.tenantId;
+    
+    next();
+  } catch (error) {
+    // Handle different JWT errors
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ error: 'Token expired' });
+    }
+    return res.status(403).json({ error: 'Token verification failed' });
+  }
 };
 
 export const requireTenant = (
@@ -49,7 +98,7 @@ export const requireTenant = (
   res: Response,
   next: NextFunction
 ) => {
-  // TODO: Ensure tenant context is set
+  // Ensure tenant context is set
   // This middleware ensures that the request has a valid tenant ID
   // before allowing access to tenant-scoped resources
   
@@ -59,6 +108,62 @@ export const requireTenant = (
   
   next();
 };
+
+/**
+ * Middleware to require a specific system-level role
+ * Use this to protect super admin and support staff routes
+ */
+export const requireSystemRole = (...roles: SystemRole[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const userRoles = req.user.systemRoles || [];
+    const hasRequiredRole = roles.some(role => userRoles.includes(role));
+
+    if (!hasRequiredRole) {
+      return res.status(403).json({ 
+        error: 'Insufficient permissions',
+        required: roles,
+      });
+    }
+
+    next();
+  };
+};
+
+/**
+ * Middleware to require a specific tenant-level role
+ * Use this to protect tenant admin, editor, and viewer routes
+ */
+export const requireTenantRole = (...roles: TenantRole[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!req.tenantId) {
+      return res.status(403).json({ error: 'Tenant context required' });
+    }
+
+    const userRole = req.user.tenantRole;
+    if (!userRole || !roles.includes(userRole)) {
+      return res.status(403).json({ 
+        error: 'Insufficient tenant permissions',
+        required: roles,
+        current: userRole,
+      });
+    }
+
+    next();
+  };
+};
+
+/**
+ * Alias for requireSystemRole for better semantics
+ */
+export const requireRole = requireSystemRole;
 
 /**
  * Set the PostgreSQL session variable for RLS
