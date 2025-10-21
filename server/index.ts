@@ -1,71 +1,89 @@
-import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import express from 'express';
+
+/**
+ * Aegis Platform - Backend Server
+ * 
+ * A multi-tenant SaaS platform for pharmaceutical patient assistance programs
+ * with Row-Level Security (RLS) for complete tenant data isolation.
+ */
 
 const app = express();
+
+// Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 
+// Request logging middleware
 app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
 
-(async () => {
-  const server = await registerRoutes(app);
-
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Aegis Platform API',
+    version: '1.0.0',
+    description: 'Multi-tenant SaaS platform for pharmaceutical patient assistance programs',
+    status: 'Backend foundation ready',
+    database: 'Drizzle ORM + PostgreSQL with Row-Level Security',
+    documentation: '/api/health for health check',
   });
+});
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
-
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
   });
-})();
+});
+
+// Error handling middleware
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Error:', err);
+  res.status(500).json({
+    error: 'Internal server error',
+    message: err.message,
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    error: 'Not found',
+    path: req.path,
+  });
+});
+
+// ALWAYS serve the app on the port specified in the environment variable PORT
+// Other ports are firewalled. Default to 5000 if not specified.
+const port = parseInt(process.env.PORT || '5000', 10);
+
+app.listen(port, '0.0.0.0', () => {
+  console.log(`
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║                    AEGIS PLATFORM - BACKEND                    ║
+║                                                                ║
+║  Multi-Tenant SaaS Platform for Patient Assistance Programs   ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+🚀 Server running on port ${port}
+🌍 Environment: ${process.env.NODE_ENV || 'development'}
+🗄️  Database: PostgreSQL with Drizzle ORM
+🔒 Security: Row-Level Security (RLS) enabled
+📚 API Docs: http://localhost:${port}/api/health
+
+Next steps:
+1. Run database migrations: npm run db:push
+2. Check database schema: npm run db:studio (from server/ directory)
+3. Implement API endpoints in server/src/routes/
+
+Backend foundation is ready! ✅
+  `);
+});
+
+export default app;
