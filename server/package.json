@@ -7,7 +7,8 @@
     "dev": "nodemon src/index.ts",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "migration:run": "tsx scripts/run-migration.ts"
   },
   "keywords": ["multi-tenant", "saas", "drizzle", "postgresql"],
   "author": "",
