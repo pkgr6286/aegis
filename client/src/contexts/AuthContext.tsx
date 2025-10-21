@@ -66,7 +66,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (response.success && response.data?.token) {
         apiClient.setToken(response.data.token);
-        setUser(response.data.user);
+        
+        // Fetch full user profile with role metadata
+        try {
+          // Try Super Admin endpoint first
+          const superAdminResponse = await apiClient.get<{ success: boolean; user: User }>('/superadmin/me');
+          
+          if (superAdminResponse.success && superAdminResponse.user) {
+            setUser(superAdminResponse.user);
+            setIsLoading(false);
+            return;
+          }
+        } catch (superAdminError) {
+          // Super Admin check failed, try Pharma Admin endpoint
+          try {
+            const pharmaAdminResponse = await apiClient.get<{ success: boolean; user: User }>('/admin/me');
+            
+            if (pharmaAdminResponse.success && pharmaAdminResponse.user) {
+              setUser(pharmaAdminResponse.user);
+              setIsLoading(false);
+              return;
+            }
+          } catch (pharmaAdminError) {
+            // Both endpoints failed, token is invalid
+            console.error('Failed to fetch user profile after login');
+            apiClient.setToken(null); // Clear invalid token
+            throw new Error('Failed to fetch user profile');
+          }
+        }
+        
+        // If we reach here, profile fetch failed
+        apiClient.setToken(null);
+        throw new Error('Failed to fetch user profile');
       } else {
         throw new Error('Login failed');
       }

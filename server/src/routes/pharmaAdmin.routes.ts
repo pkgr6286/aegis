@@ -52,6 +52,34 @@ router.get('/me', async (req, res) => {
   }
 });
 
+// ============================================================================
+// Dashboard Stats Routes (require any authenticated tenant user)
+// ============================================================================
+
+/**
+ * GET /api/v1/admin/dashboard/stats
+ * Get dashboard statistics for the tenant
+ */
+router.get('/dashboard/stats', async (req, res) => {
+  try {
+    const tenantId = req.tenantId!;
+    const userId = req.user!.id;
+
+    const stats = await pharmaAdminService.getDashboardStats(tenantId, userId);
+
+    res.json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    res.status(500).json({
+      error: 'Failed to fetch dashboard stats',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
 // All remaining routes require admin role
 router.use(requireTenantRole('admin'));
 

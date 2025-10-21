@@ -246,6 +246,103 @@ export const pharmaAdminService = {
   },
 
   // ============================================================================
+  // Dashboard Statistics
+  // ============================================================================
+
+  /**
+   * Get dashboard statistics for the tenant
+   */
+  async getDashboardStats(tenantId: string, userId: string) {
+    const { db } = await import('../db');
+    const { screeningSessions } = await import('../db/schema/consumer');
+    const { drugPrograms } = await import('../db/schema/programs');
+    const { tenantUsers } = await import('../db/schema/core');
+    const { sql, count, eq, and, gte } = await import('drizzle-orm');
+
+    // Calculate date 30 days ago
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Get total screening sessions count
+    const [totalScreenings] = await db
+      .select({ count: count() })
+      .from(screeningSessions)
+      .where(eq(screeningSessions.tenantId, tenantId));
+
+    // Get successful screenings (completed with 'ok_to_use' outcome)
+    const [successfulScreenings] = await db
+      .select({ count: count() })
+      .from(screeningSessions)
+      .where(
+        and(
+          eq(screeningSessions.tenantId, tenantId),
+          eq(screeningSessions.status, 'completed'),
+          eq(screeningSessions.outcome, 'ok_to_use')
+        )
+      );
+
+    // Get total completed screenings for success rate calculation
+    const [completedScreenings] = await db
+      .select({ count: count() })
+      .from(screeningSessions)
+      .where(
+        and(
+          eq(screeningSessions.tenantId, tenantId),
+          eq(screeningSessions.status, 'completed')
+        )
+      );
+
+    // Calculate success rate
+    const successRate = completedScreenings.count > 0
+      ? (successfulScreenings.count / completedScreenings.count) * 100
+      : 0;
+
+    // Get active programs count
+    const [activePrograms] = await db
+      .select({ count: count() })
+      .from(drugPrograms)
+      .where(
+        and(
+          eq(drugPrograms.tenantId, tenantId),
+          eq(drugPrograms.status, 'active')
+        )
+      );
+
+    // Get team members count
+    const [teamMembers] = await db
+      .select({ count: count() })
+      .from(tenantUsers)
+      .where(eq(tenantUsers.tenantId, tenantId));
+
+    // Get daily screening activity for last 30 days
+    const dailyActivity = await db
+      .select({
+        date: sql<string>`DATE(${screeningSessions.createdAt})`,
+        count: count(),
+      })
+      .from(screeningSessions)
+      .where(
+        and(
+          eq(screeningSessions.tenantId, tenantId),
+          gte(screeningSessions.createdAt, thirtyDaysAgo)
+        )
+      )
+      .groupBy(sql`DATE(${screeningSessions.createdAt})`)
+      .orderBy(sql`DATE(${screeningSessions.createdAt})`);
+
+    return {
+      totalScreenings: totalScreenings.count,
+      successRate: Math.round(successRate * 10) / 10, // Round to 1 decimal
+      activePrograms: activePrograms.count,
+      teamMembers: teamMembers.count,
+      dailyActivity: dailyActivity.map(row => ({
+        date: row.date,
+        count: row.count,
+      })),
+    };
+  },
+
+  // ============================================================================
   // Audit Log Access
   // ============================================================================
 

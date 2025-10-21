@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Switch, Route, Redirect, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -84,22 +85,31 @@ function PharmaAdminRoute({ component: Component }: { component: () => JSX.Eleme
   );
 }
 
-function Router() {
+// Root redirect component
+function RootRedirect() {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [location] = useLocation();
 
-  // Redirect root to appropriate dashboard based on user type
-  if (location === "/" && isAuthenticated && !isLoading) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Skeleton className="h-12 w-48" />
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
     return <Redirect to={getDefaultRoute(user)} />;
   }
 
-  // Redirect root to login if not authenticated
-  if (location === "/" && !isAuthenticated && !isLoading) {
-    return <Redirect to="/login" />;
-  }
+  return <Redirect to="/login" />;
+}
 
+function Router() {
   return (
     <Switch>
+      {/* Root redirect */}
+      <Route path="/" component={RootRedirect} />
+      
       {/* Public Routes */}
       <Route path="/login" component={Login} />
       

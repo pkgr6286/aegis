@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation } from 'wouter';
+import { Redirect } from 'wouter';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Shield } from 'lucide-react';
 
 export default function Login() {
-  const [, setLocation] = useLocation();
   const { login, isAuthenticated } = useAuth();
   const { toast } = useToast();
   
@@ -19,8 +18,7 @@ export default function Login() {
 
   // Redirect if already authenticated
   if (isAuthenticated) {
-    setLocation('/dashboard');
-    return null;
+    return <Redirect to="/" />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,7 +31,7 @@ export default function Login() {
         title: 'Welcome back!',
         description: 'You have successfully signed in.',
       });
-      setLocation('/dashboard');
+      // Redirect is handled by useEffect when isAuthenticated changes
     } catch (error) {
       toast({
         variant: 'destructive',
