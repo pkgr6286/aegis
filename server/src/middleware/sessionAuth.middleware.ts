@@ -19,14 +19,16 @@ declare global {
 }
 
 // CRITICAL: Session JWT secret MUST be set via environment variable
-const SESSION_JWT_SECRET = process.env.SESSION_JWT_SECRET || process.env.JWT_SECRET;
-
-if (!SESSION_JWT_SECRET) {
-  throw new Error(
-    'CRITICAL SECURITY ERROR: SESSION_JWT_SECRET (or JWT_SECRET) environment variable must be set. ' +
-    'Session JWTs cannot be issued without a cryptographically secure secret.'
-  );
-}
+const SESSION_JWT_SECRET: string = (() => {
+  const secret = process.env.SESSION_JWT_SECRET || process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error(
+      'CRITICAL SECURITY ERROR: SESSION_JWT_SECRET (or JWT_SECRET) environment variable must be set. ' +
+      'Session JWTs cannot be issued without a cryptographically secure secret.'
+    );
+  }
+  return secret;
+})();
 
 const SESSION_JWT_EXPIRES_IN = '1h'; // Short-lived tokens for security
 

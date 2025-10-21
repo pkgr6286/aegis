@@ -121,6 +121,11 @@ export const ehrConsents = appTable('ehr_consents', {
   // Stores the list of scopes/permissions granted, e.g., ['LabResults', 'Medications']
   scopesGranted: text('scopes_granted').array(),
   
+  // OAuth token storage (should be encrypted in production)
+  // For mock implementation, stores the simulated access token
+  accessToken: text('access_token'), // In production: encrypt before storage
+  tokenExpiresAt: timestamp('token_expires_at'), // For token refresh logic
+  
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => ({
   // Index for auditing consents for a specific session

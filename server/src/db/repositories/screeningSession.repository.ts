@@ -5,7 +5,7 @@
  */
 
 import { db } from '../index';
-import { screeningSessions } from '../schema/consumer';
+import { screeningSessions, ehrConsents } from '../schema/consumer';
 import { eq, and, sql } from 'drizzle-orm';
 
 export const screeningSessionRepository = {
@@ -116,5 +116,32 @@ export const screeningSessionRepository = {
       ));
     
     return results[0];
+  },
+
+  /**
+   * Update session path (e.g., from 'manual' to 'ehr_assisted')
+   */
+  async updatePath(sessionId: string, path: 'manual' | 'ehr_assisted' | 'ehr_mandatory') {
+    const results = await db
+      .update(screeningSessions)
+      .set({ path })
+      .where(eq(screeningSessions.id, sessionId))
+      .returning();
+    
+    return results[0] || null;
+  },
+
+  /**
+   * Find session by ID with EHR consent relation
+   */
+  async findByIdWithConsent(sessionId: string) {
+    const results = await db.query.screeningSessions.findFirst({
+      where: eq(screeningSessions.id, sessionId),
+      with: {
+        ehrConsent: true,
+      },
+    });
+    
+    return results || null;
   },
 };

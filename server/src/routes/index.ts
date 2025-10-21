@@ -5,6 +5,7 @@ import brandConfigRoutes from './brandConfig.routes';
 import drugProgramRoutes from './drugProgram.routes';
 import pharmaAdminRoutes from './pharmaAdmin.routes';
 import publicRoutes from './public.routes';
+import ehrRoutes from './ehr.routes';
 import verificationRoutes from './verification.routes';
 import { authenticateToken, requireRole } from '../middleware/auth.middleware';
 import { publicApiRateLimit, verificationRateLimit } from '../middleware/rateLimit.middleware';
@@ -44,6 +45,11 @@ router.use('/v1/admin', pharmaAdminRoutes);
 // These endpoints power the consumer screening flow (QR code → screening → verification code)
 // Protected by session JWT (where applicable) and rate limiting
 router.use('/v1/public', publicApiRateLimit, publicRoutes);
+
+// Mount EHR Integration routes (rate-limited)
+// EHR "Fast Path" OAuth flow: connect → callback → fetch data
+// Protected by session JWT (where applicable) and rate limiting
+router.use('/v1/public', publicApiRateLimit, ehrRoutes);
 
 // Mount Verification API (rate-limited)
 // Partner API for validating consumer codes at POS/ecommerce checkout

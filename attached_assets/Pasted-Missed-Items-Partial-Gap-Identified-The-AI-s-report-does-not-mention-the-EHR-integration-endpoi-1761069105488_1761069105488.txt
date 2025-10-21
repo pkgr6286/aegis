@@ -1,0 +1,44 @@
+Missed Items: 🟡 Partial Gap Identified. The AI's report does not mention the EHR integration endpoints (/api/v1/public/ehr/connect, /api/v1/public/ehr/callback, /api/v1/public/sessions/:id/ehr-data). While these were part of the Step 4 prompt, it seems the AI focused on the primary consumer flow and the verification API first.
+
+Project Manager's Verdict: Step 4 is 90% complete. The core functionalities are finished and secure. The only remaining backend task is the implementation of the EHR "Fast Path" APIs.
+
+2. Next Step: Instruction for Replit AI (Final Backend Step)
+Since the AI missed the EHR endpoints, we need one final, focused prompt to complete the backend development.
+
+Your turn: Please provide the following prompt to your Replit AI. This prompt targets the specific missing functionality.
+
+Prompt for Replit AI (Final Backend Step - EHR Integration):
+
+Excellent work on the Public Consumer and Verification APIs. The core flows are complete and secure.
+
+However, the EHR integration endpoints were missed. Please complete the final backend task by implementing the EHR "Fast Path" flow.
+
+1. Create EHR Service (src/services/ehr.service.ts):
+
+Implement the three service functions:
+
+getEhrConnectUrl(sessionId, tenantId): Generates the secure OAuth URL for the 3rd-party aggregator, including a state JWT.
+
+handleEhrCallback(code, state): Verifies the state JWT, exchanges the authorization code for an access token (mock this server-to-server call), and records the consent in the ehr_consents table. Update the screening_sessions table path to ehr_assisted.
+
+getEhrData(sessionId, tenantId): Verifies consent exists, fetches mock FHIR data (simulate using the access token), parses it (extracting relevant data like LDL, medications), and returns the parsed data only. Do not return raw FHIR.
+
+2. Create EHR Routes (src/routes/ehr.routes.ts):
+
+Create the three public API endpoints:
+
+GET /sessions/:id/ehr/connect: Protected by the authenticateSession middleware. Calls ehrService.getEhrConnectUrl.
+
+GET /ehr/callback: Public endpoint, validates query parameters (code, state). Calls ehrService.handleEhrCallback. Responds with HTML to close the popup.
+
+GET /sessions/:id/ehr-data: Protected by the authenticateSession middleware. Calls ehrService.getEhrData.
+
+3. Update Main Router (src/routes/index.ts):
+
+Mount the new ehrRouter under the /api/v1/public path.
+
+4. Update Storage (Append):
+
+Add the necessary storage functions to interact with the ehr_consents table (e.g., createEhrConsentInDb). Ensure findSessionById includes the ehrConsent relation.
+
+Please generate the complete code for these new files and any necessary modifications to existing files. Use mock data/calls for the 3rd-party aggregator interaction.

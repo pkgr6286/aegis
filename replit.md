@@ -39,7 +39,8 @@ The API follows a RESTful design, organized under `/api/v1/`.
 *   **Super Admin API**: Manages platform-level tenant operations, requiring `super_admin` role.
 *   **Pharma Admin API**: Manages tenant-specific operations including brand configuration, drug programs, user management, and partner integrations, requiring JWT authentication and tenant-level roles.
 *   **Public Consumer API**: Handles patient screening flows (QR code -> screening -> verification code) with session JWTs and rate limiting.
-*   **Partner Verification API**: Facilitates atomic verification of consumer codes by partners using API key authentication and rate limiting.
+*   **EHR Integration API ("Fast Path")**: Enables consumers to connect their Electronic Health Records via OAuth for automatic health data population, reducing manual entry. Uses state JWT tokens for CSRF protection, mock FHIR data parsing, and audit logging for compliance.
+*   **Partner Verification API**: Facilitates atomic verification of consumer codes by partners using bcrypt-hashed API key authentication and rate limiting.
 
 Middleware handles JSON parsing, CORS, logging, Zod validation, various authentication methods (JWT, Session JWT, API Key), role-based access control, tenant context injection for RLS, and rate limiting. A centralized error handling system provides environment-aware error details. Data access is abstracted via a repository pattern using Drizzle ORM, and business logic is encapsulated within a service layer that also integrates automatic audit logging.
 
@@ -55,7 +56,8 @@ Components are organized into `/components/ui`, `/pages`, `/hooks`, and `/lib`. 
 
 ### Security & Authentication
 
-*   **jsonwebtoken**: For JWT handling.
+*   **jsonwebtoken**: For JWT handling and OAuth state tokens.
+*   **bcrypt**: For one-way hashing of partner API keys (10 salt rounds).
 
 ### Audit & Compliance
 
@@ -77,3 +79,79 @@ Components are organized into `/components/ui`, `/pages`, `/hooks`, and `/lib`. 
 *   **clsx + tailwind-merge**: For combining Tailwind classes.
 *   **date-fns**: Date manipulation.
 *   **nanoid**: Secure unique ID generation.
+
+## EHR Integration ("Fast Path")
+
+### Overview
+
+The EHR "Fast Path" integration enables consumers to connect their Electronic Health Records during the screening process, automatically populating health data (such as LDL cholesterol levels, medications) instead of requiring manual entry. This improves user experience and data accuracy.
+
+### OAuth Flow
+
+1. **Consumer initiates connection**: During screening, consumer clicks "Connect EHR" → `GET /api/v1/public/sessions/:id/ehr/connect`
+2. **System generates OAuth URL**: Backend creates state JWT containing sessionId and tenantId, then redirects to mock EHR aggregator (e.g., Health Gorilla)
+3. **Consumer grants consent**: Consumer authorizes access at the aggregator's OAuth page
+4. **Callback handling**: Aggregator redirects back → `GET /api/v1/public/ehr/callback?code=xxx&state=yyy`
+5. **Token exchange** (mock): System verifies state JWT, simulates token exchange, records consent in `ehr_consents` table
+6. **Session path update**: System updates `screening_sessions.path` from "manual" to "ehr_assisted"
+7. **Data retrieval**: Consumer flow fetches parsed health data → `GET /api/v1/public/sessions/:id/ehr-data`
+
+### API Endpoints
+
+All EHR endpoints are mounted under `/api/v1/public` with rate limiting.
+
+#### GET /api/v1/public/sessions/:id/ehr/connect
+
+*   **Description**: Generate OAuth connect URL for EHR aggregator
+*   **Authentication**: Session JWT (Bearer token)
+*   **Response**: `{ success: true, connectUrl: "https://..." }`
+*   **Security**: State JWT contains sessionId and tenantId for CSRF protection
+
+#### GET /api/v1/public/ehr/callback
+
+*   **Description**: Handle OAuth callback from EHR aggregator
+*   **Authentication**: None (public endpoint)
+*   **Query Parameters**: `code` (authorization code), `state` (JWT token)
+*   **Response**: HTML page with success/failure message (auto-closes popup)
+*   **Actions**: Verifies state JWT, mocks token exchange, creates consent record, updates session path, audit logs consent
+
+#### GET /api/v1/public/sessions/:id/ehr-data
+
+*   **Description**: Fetch parsed EHR data for a session
+*   **Authentication**: Session JWT (Bearer token)
+*   **Response**: `{ success: true, data: { labResults: [...], medications: [...], retrievedAt: "..." } }`
+*   **Requirements**: Active EHR consent must exist
+*   **Data Format**: Parsed FHIR data (NOT raw FHIR bundle)
+
+### Implementation Details
+
+#### Mock Data
+
+The implementation uses mock data to simulate the EHR aggregator integration:
+
+*   **OAuth Provider**: `https://sandbox.healthgorilla.example.com/oauth/authorize`
+*   **Token Exchange**: Simulated server-to-server call (no actual HTTP request)
+*   **FHIR Data**: Mock bundle containing LDL cholesterol observation (145 mg/dL) and two active medications (Atorvastatin, Metformin)
+
+#### Database Tables
+
+*   **ehr_consents**: Immutable audit log of consent grants (id, tenantId, screeningSessionId, status, providerName, scopesGranted, createdAt)
+*   **screening_sessions.path**: Updated to "ehr_assisted" when EHR data is connected
+
+#### Security Features
+
+*   **State JWT**: Prevents CSRF attacks, expires in 15 minutes
+*   **Session JWT**: Protects connect and data endpoints
+*   **Consent Validation**: Data fetching requires active consent
+*   **Audit Logging**: All consent grants are logged for compliance
+*   **Tenant Isolation**: RLS policies ensure data isolation
+
+### Production Considerations
+
+The current implementation uses mock data for development. Before production deployment:
+
+1. **Real OAuth Provider**: Replace mock aggregator URL with real EHR aggregator (e.g., Health Gorilla, CommonHealth)
+2. **Token Exchange**: Implement actual server-to-server POST to exchange authorization code for access token
+3. **FHIR API Calls**: Replace mock FHIR data with real API calls using LOINC codes (e.g., 2093-3 for LDL cholesterol)
+4. **Client Credentials**: Configure OAuth client_id and client_secret for the aggregator
+5. **Scopes**: Define appropriate FHIR scopes (e.g., `patient/*.read`, `Observation.read`, `MedicationStatement.read`)
