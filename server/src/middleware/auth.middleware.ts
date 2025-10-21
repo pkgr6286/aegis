@@ -184,3 +184,28 @@ export async function setTenantContext(db: any, tenantId: string) {
   // but we've validated the UUID format above to prevent injection
   await db.execute(sql`SET app.current_tenant_id = ${tenantId}`);
 }
+
+/**
+ * Express middleware to set tenant context for RLS enforcement
+ * This middleware must be used AFTER authenticateToken
+ * and is REQUIRED for all tenant-scoped routes
+ */
+export const setTenantContextMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.tenantId) {
+    return res.status(403).json({ error: 'Tenant context required' });
+  }
+
+  try {
+    // Import db dynamically to avoid circular dependency
+    const { db } = await import('../db/index');
+    await setTenantContext(db, req.tenantId);
+    next();
+  } catch (error) {
+    console.error('Failed to set tenant context:', error);
+    return res.status(500).json({ error: 'Failed to set tenant context' });
+  }
+};

@@ -6,16 +6,20 @@ Aegis is a multi-tenant SaaS platform designed for pharmaceutical patient assist
 
 ### Current Development Status
 
-**Step 2 Completed: Core Services & Super Admin API**
+**Step 3 Completed: Pharma Admin API (Tenant Management)**
 
 The backend now includes:
-- ✅ Complete Super Admin API for tenant management
+- ✅ Complete Super Admin API for platform-level tenant management
+- ✅ **Complete Pharma Admin API for tenant-level operations**
 - ✅ JWT-based authentication with signature verification
 - ✅ Audit logging service for compliance tracking
-- ✅ Repository pattern for database operations
+- ✅ Repository pattern for all database operations
 - ✅ Role-based access control (RBAC) middleware
-- ✅ Row-Level Security policies created for all 11 tenant-scoped tables
-- ⚠️ Application role required for RLS enforcement (see server/SECURITY.md)
+- ✅ Row-Level Security policies with tenant context middleware
+- ✅ Full CRUD APIs for brand configs, drug programs, and screener versions
+- ✅ User management (invite/remove users from tenant)
+- ✅ Partner management with API key generation/revocation
+- ⚠️ Application role required for RLS enforcement in production (see server/SECURITY.md)
 
 ## User Preferences
 
@@ -101,14 +105,53 @@ Preferred communication style: Simple, everyday language.
 - All endpoints protected by `super_admin` role requirement
 - Integrated audit logging for all operations
 
+**Pharma Admin API** (`/api/v1/admin`):
+
+*Brand Configuration Management* (`/api/v1/admin/brand-configs`):
+- `GET /` - List all brand configurations for tenant
+- `POST /` - Create new brand configuration
+- `GET /:id` - Get specific brand configuration
+- `PUT /:id` - Update brand configuration
+- `DELETE /:id` - Delete brand configuration
+
+*Drug Program Management* (`/api/v1/admin/drug-programs`):
+- `GET /` - List all drug programs for tenant
+- `POST /` - Create new drug program
+- `GET /:id` - Get specific drug program
+- `PUT /:id` - Update drug program
+- `DELETE /:id` - Delete drug program
+- `GET /:programId/screeners` - List screener versions for program
+- `POST /:programId/screeners` - Create new screener version
+- `POST /:programId/screeners/:versionId/publish` - Publish screener version
+
+*User Management* (`/api/v1/admin/users`):
+- `GET /users` - List all users in tenant
+- `POST /users/invite` - Invite new user to tenant
+- `DELETE /users/:userId` - Remove user from tenant
+
+*Partner Management* (`/api/v1/admin/partners`):
+- `GET /partners` - List all B2B partners
+- `POST /partners` - Create new partner
+- `POST /partners/:partnerId/keys` - Generate API key for partner
+- `DELETE /partners/:partnerId/keys/:keyId` - Revoke partner API key
+
+*Audit Logs* (`/api/v1/admin/audit-logs`):
+- `GET /audit-logs` - View audit logs with filtering (resourceType, userId, action, date range)
+
+All Pharma Admin endpoints require:
+- JWT authentication (`authenticateToken` middleware)
+- Tenant context set for RLS enforcement (`setTenantContextMiddleware`)
+- Appropriate tenant-level role (`requireTenantRole` middleware)
+- Automatic audit logging for all mutations
+
 **Middleware Stack**:
 - JSON/URL-encoded body parsing
 - CORS configuration for cross-origin requests
 - Request logging for debugging and monitoring
 - Zod validation middleware for request body/query/params validation
-- JWT authentication middleware with signature verification
-- Role-based access control middleware (`requireRole`, `requireSystemRole`)
-- Tenant context injection for RLS enforcement
+- JWT authentication middleware with signature verification (`authenticateToken`)
+- Role-based access control middleware (`requireRole`, `requireSystemRole`, `requireTenantRole`)
+- Tenant context injection middleware (`setTenantContextMiddleware`) for RLS enforcement
 
 **Error Handling**: Centralized error handling middleware with environment-aware error details (stack traces in development only).
 
@@ -116,7 +159,21 @@ Preferred communication style: Simple, everyday language.
 - `tenant.repository.ts` - Tenant CRUD operations
 - `user.repository.ts` - User management
 - `tenantUser.repository.ts` - Tenant membership management
+- `brandConfig.repository.ts` - Brand configuration operations
+- `drugProgram.repository.ts` - Drug program operations
+- `screenerVersion.repository.ts` - Screener version management
+- `partner.repository.ts` - Partner, API key, and configuration management
+- `auditLog.repository.ts` - Audit log queries
 - All repositories use Drizzle ORM with proper type safety
+
+**Service Layer**: Business logic abstracted through service modules:
+- `superAdmin.service.ts` - Platform administration operations
+- `pharmaAdmin.service.ts` - Tenant user and partner management
+- `brandConfig.service.ts` - Brand configuration business logic
+- `drugProgram.service.ts` - Drug program business logic
+- `screener.service.ts` - Screener version creation and publishing
+- `auditLog.service.ts` - Audit log creation (used by all services)
+- All services integrate automatic audit logging for compliance
 
 ### Frontend Architecture
 

@@ -1,0 +1,82 @@
+3. Next Step: Instruction for Replit AI (Step 3)
+Now, as the Project Manager, I will provide the next set of instructions for the AI. We will proceed with Step 3: Build the Pharma Admin API. This is the largest and most complex part of the backend, and it's the core of the client-facing product.
+
+Your turn: Please provide the following prompt to your Replit AI. This prompt builds directly on the work it has just completed.
+
+Prompt for Replit AI (Step 3):
+
+Excellent work on the Super Admin API. The implementation is perfect.
+
+First, to answer your question: "Yes, you need to create the database RLS policies with SQL." Please generate a SQL script file, scripts/setup_rls.sql, that contains all the CREATE POLICY statements required to enforce tenant isolation on every table in the app schema (e.g., tenant_users, audit_logs, drug_programs, etc.) as defined in our architecture.
+
+Next, we will complete Step 3: Build the Pharma Admin API.
+
+Your task is to build all necessary backend components for the Pharma Admin role. Please continue to follow the established patterns, placing all new files in the appropriate src/ directories.
+
+1. Implement the Pharma Admin API (/api/v1/admin):
+
+Routes (src/routes/): Create the following new route files:
+
+pharmaAdmin.routes.ts (for User Management and Partner Management)
+
+brandConfig.routes.ts
+
+drugProgram.routes.ts (including nested routes for Screeners)
+
+Validation (src/validations/): Create corresponding Zod validation files for all POST and PUT request bodies.
+
+Service (src/services/): Create new service files:
+
+pharmaAdmin.service.ts
+
+brandConfig.service.ts
+
+drugProgram.service.ts
+
+screener.service.ts
+
+Repository (append to src/db/repositories/): Create all necessary data access functions for these new services.
+
+2. API Endpoint Requirements:
+
+User Management (pharmaAdmin.routes.ts):
+
+GET /users: List all users in the admin's tenant.
+
+POST /users/invite: Invite a new user to the tenant.
+
+DELETE /users/:id: Remove a user from the tenant.
+
+Partner Management (pharmaAdmin.routes.ts):
+
+GET /partners: List all B2B partners.
+
+POST /partners: Create a new partner.
+
+POST /partners/:partnerId/keys: Generate a new API key for a partner.
+
+DELETE /partners/:partnerId/keys/:keyId: Revoke a partner's API key.
+
+Brand Management (brandConfig.routes.ts):
+
+Implement full CRUD: GET /, POST /, GET /:id, PUT /:id.
+
+Drug Program & Screener Management (drugProgram.routes.ts):
+
+Implement full CRUD for Drug Programs: GET /, POST /, GET /:id, PUT /:id.
+
+Implement routes for Screeners nested under programs:
+
+GET /:programId/screeners: Get all versions for a program.
+
+POST /:programId/screeners: Create a new screener version.
+
+POST /:programId/screeners/:versionId/publish: Set a version as active.
+
+Audit Logs (pharmaAdmin.routes.ts):
+
+GET /audit-logs: View the audit trail for the admin's tenant.
+
+3. Key Implementation Details: * All routes under /api/v1/admin must be protected by the authenticateToken and setTenantContext middleware. * Use the requireRole middleware to protect endpoints appropriately (e.g., only an admin can invite users). * Every service function that creates, updates, or deletes data must call the auditLog.service to log the event. * The "publish screener" endpoint must update the active_screener_version_id on the drug_programs table.
+
+Please generate the complete code for the new SQL script and all new backend files.
