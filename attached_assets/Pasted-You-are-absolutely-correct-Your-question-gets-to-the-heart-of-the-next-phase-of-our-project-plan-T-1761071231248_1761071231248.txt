@@ -1,0 +1,107 @@
+You are absolutely correct. Your question gets to the heart of the next phase of our project plan. The backend is an engine, but it's useless without a steering wheel and a dashboard.
+
+To answer your question directly: **Yes, we absolutely need to provide the UI definitions to Replit.** The AI can't guess what the application should look like or how the user should interact with it. Our master document contains the precise blueprints for this.
+
+As your Project Manager, I've prepared the next prompt for you to give to Replit AI. This prompt officially kicks off our frontend development, starting with the first of our three applications as planned.
+
+---
+
+### **Next Step: Instruction for Replit AI (Step 5 - Build the Super Admin UI)**
+
+**Background:** The backend is 100% complete. The Replit AI now has a full set of working APIs and a deep understanding of the project's data structure. The next logical step is to build the user interface that will consume these APIs. We will start with the Super Admin portal.
+
+**Your turn:** Please provide the following prompt to your Replit AI. This prompt is self-contained and provides all the context the AI needs to build the complete Super Admin frontend application.
+
+---
+
+**Prompt for Replit AI (Step 5):**
+
+Excellent. The entire backend API is complete and secure.
+
+We will now execute **Step 5: Build the Super Admin UI**. This is the first of our three frontend applications.
+
+Your task is to create a complete, production-grade **React application** for the **Platform Admin (Super Admin)** role. This UI should be a separate application within our project, connecting to the backend APIs we have already built.
+
+**1. Project Setup:**
+* Create a new directory: `frontend/superadmin-ui`.
+* Inside this directory, scaffold a new **React + TypeScript** application using **Vite**.
+* Install necessary libraries: `axios` for API calls, `react-router-dom` for navigation, and a component library like **Shadcn/UI** or **MUI** for tables, modals, buttons, etc.
+
+**2. UI Implementation Details:**
+* The application must be a Single-Page Application (SPA).
+* All API calls must target the backend server.
+* Implement JWT authentication: after a successful login, the JWT should be stored securely, and the `Authorization: Bearer <token>` header must be sent with every subsequent API request.
+
+**3. UI Specifications:**
+
+Below are the complete specifications for every screen the Super Admin needs. Please implement all of them.
+
+---
+
+### **Overall UI Structure**
+
+* **Layout:** A sidebar-based admin UI with a collapsible left sidebar for navigation and a top bar for the user profile and global actions.
+
+### **Sidebar Navigation Groups**
+* **OVERVIEW**
+    * Dashboard
+* **PLATFORM MANAGEMENT**
+    * Tenant Management
+    * User Management
+* **COMPLIANCE & SECURITY**
+    * Platform Audit Logs
+
+---
+### **Screen 1: Dashboard**
+* **Purpose:** Provide an at-a-glance, real-time overview of the entire Aegis platform's health and activity.
+* **UI Elements:**
+    * **Statistic Cards:** For "Total Tenants," "Active Users," "API Calls (24h)."
+    * **Chart:** A time-series chart for "New Tenants This Month."
+    * **Recent Activity Feed:** A list of the latest 5-10 audit log events.
+* **APIs Used:**
+    * `GET /api/v1/superadmin/stats`
+    * `GET /api/v1/superadmin/audit-logs?limit=5`
+
+### **Screen 2: Tenant Management**
+* **Purpose:** The central screen for creating, viewing, and managing all customer tenants.
+* **UI Elements:**
+    * A **"Create Tenant" button** that opens a modal.
+    * A **paginated table** listing all tenants.
+    * **Filters** for "Status" and a **search bar** for "Tenant Name."
+    * Each table row must have an **"Edit" button** (opens an "Edit License" modal) and an **"Invite Admin" button** (opens an "Invite Admin" modal).
+* **Fields/Columns:**
+    * **Table:** `Tenant Name`, `Tenant ID`, `Status` (use a colored chip), `Active Users`, `Created At`.
+    * **Create Modal:** `Company Name` (input).
+    * **Edit License Modal:** `Status` (dropdown), `Max Drug Programs` (number input), `EHR Integration Enabled` (toggle).
+    * **Invite Admin Modal:** `Email` (input).
+* **APIs Used:**
+    * `GET /api/v1/superadmin/tenants`
+    * `POST /api/v1/superadmin/tenants`
+    * `PUT /api/v1/superadmin/tenants/:id/license`
+    * `POST /api/v1/superadmin/tenants/:id/invite`
+
+### **Screen 3: User Management (System)**
+* **Purpose:** To manage the global system-level users (other Super Admins, support staff).
+* **UI Elements:**
+    * An **"Invite System User" button** that opens a modal.
+    * A **paginated table** of all system-level users.
+    * Each table row must have a **"Revoke Access" button** that opens a confirmation modal.
+* **Fields/Columns:**
+    * **Table:** `Email`, `First Name`, `Last Name`, `System Role` (use a chip), `Last Login`.
+    * **Invite Modal:** `Email` (input), `Role` (dropdown: `super_admin`, `support_staff`).
+* **APIs Used:**
+    * `GET /api/v1/superadmin/users`
+    * `POST /api/v1/superadmin/users/invite`
+    * `DELETE /api/v1/superadmin/users/:id/role`
+
+### **Screen 4: Platform Audit Logs**
+* **Purpose:** Provide a comprehensive, read-only view of all actions taken across all tenants.
+* **UI Elements:**
+    * **Filters:** Dropdowns for `Tenant` and `User`, a **Date Range Picker**.
+    * A **paginated table** of audit log entries.
+    * Clicking a row should open a **side drawer** showing the full JSON payload of the change.
+* **Fields/Columns:**
+    * **Table:** `Timestamp`, `Tenant`, `User Email`, `Action`, `Entity Type`.
+* **APIs Used:**
+    * `GET /api/v1/superadmin/audit-logs` (with query parameters for filtering).
+    * `GET /api/v1/superadmin/tenants` (to populate the Tenant filter dropdown).
