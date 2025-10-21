@@ -13,10 +13,25 @@
 -- The RLS policies below automatically filter all SELECT, INSERT, UPDATE,
 -- and DELETE operations to only access data belonging to the current tenant.
 --
+-- ⚠️  IMPORTANT LIMITATION - NEON DATABASE USERS:
+-- ==================================================
+-- RLS policies do NOT apply to database owners or members of pg_database_owner.
+-- In Neon databases, the default user (neondb_owner) is a database owner and
+-- will BYPASS all RLS policies.
+--
+-- For RLS to work in production, you MUST:
+-- 1. Create a separate application role without owner privileges
+-- 2. Use that role for all application queries
+-- 3. Reserve the owner account only for migrations and admin tasks
+--
+-- See "Creating Application Role" section at the end of this file.
+--
 -- MIGRATION INSTRUCTIONS:
 -- 1. Connect to your database with admin privileges
 -- 2. Execute this entire file
--- 3. Verify policies are active with: \d+ <table_name>
+-- 3. Create the application role (see bottom of file)
+-- 4. Configure your app to use the application role
+-- 5. Verify policies work with test queries (see bottom of file)
 --
 -- ============================================================================
 
@@ -236,5 +251,110 @@ CREATE POLICY tenant_isolation_policy
 -- ROLLBACK (if needed):
 -- To disable RLS on a table: ALTER TABLE <table_name> DISABLE ROW LEVEL SECURITY;
 -- To drop a policy: DROP POLICY tenant_isolation_policy ON <table_name>;
+--
+-- ============================================================================
+
+-- ============================================================================
+-- SECTION 7: CREATE APPLICATION ROLE (REQUIRED FOR RLS)
+-- ============================================================================
+
+-- ⚠️  CRITICAL: Run this section to create a non-owner role that respects RLS
+--
+-- The default Neon database user (neondb_owner) bypasses RLS because it owns
+-- the database. To enforce RLS, create an application role without owner privileges.
+
+-- Create the application role
+CREATE ROLE app_user WITH LOGIN PASSWORD 'CHANGE_THIS_PASSWORD';
+
+-- Grant connection privileges
+GRANT CONNECT ON DATABASE neondb TO app_user;
+
+-- Grant schema usage
+GRANT USAGE ON SCHEMA public TO app_user;
+
+-- Grant table privileges (but NOT ownership)
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_user;
+
+-- Set default privileges for future tables
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO app_user;
+
+-- ============================================================================
+-- SECTION 8: UPDATE APPLICATION CONNECTION STRING
+-- ============================================================================
+
+-- After creating the app_user role, update your application's DATABASE_URL:
+--
+-- Before (owner role - bypasses RLS):
+-- DATABASE_URL=postgresql://neondb_owner:password@host/neondb
+--
+-- After (application role - enforces RLS):
+-- DATABASE_URL=postgresql://app_user:CHANGE_THIS_PASSWORD@host/neondb
+--
+-- IMPORTANT: Keep the owner connection string for running migrations only!
+
+-- ============================================================================
+-- SECTION 9: TEST RLS POLICIES WITH APPLICATION ROLE
+-- ============================================================================
+
+-- Connect as the application user:
+-- psql "postgresql://app_user:CHANGE_THIS_PASSWORD@host/neondb"
+--
+-- Then run these tests:
+/*
+
+-- Create test data (as owner, not as app_user)
+-- Connect as neondb_owner first, then:
+
+INSERT INTO tenants (id, name, slug, status)
+VALUES 
+  ('11111111-1111-1111-1111-111111111111', 'Test Tenant A', 'test-a', 'active'),
+  ('22222222-2222-2222-2222-222222222222', 'Test Tenant B', 'test-b', 'active');
+
+SET app.current_tenant_id = '11111111-1111-1111-1111-111111111111';
+INSERT INTO brand_configs (tenant_id, name, config)
+VALUES ('11111111-1111-1111-1111-111111111111', 'Brand A', '{"color": "blue"}');
+
+SET app.current_tenant_id = '22222222-2222-2222-2222-222222222222';
+INSERT INTO brand_configs (tenant_id, name, config)
+VALUES ('22222222-2222-2222-2222-222222222222', 'Brand B', '{"color": "red"}');
+
+-- Now connect as app_user and test RLS:
+-- psql "postgresql://app_user:PASSWORD@host/neondb"
+
+-- Test 1: Query as Tenant A (should see ONLY Brand A)
+SET app.current_tenant_id = '11111111-1111-1111-1111-111111111111';
+SELECT name, config->>'color' as color FROM brand_configs;
+-- Expected: 1 row (Brand A - blue)
+
+-- Test 2: Query as Tenant B (should see ONLY Brand B)
+SET app.current_tenant_id = '22222222-2222-2222-2222-222222222222';
+SELECT name, config->>'color' as color FROM brand_configs;
+-- Expected: 1 row (Brand B - red)
+
+-- Test 3: Query without tenant context (should see ZERO rows)
+RESET app.current_tenant_id;
+SELECT COUNT(*) as visible_rows FROM brand_configs;
+-- Expected: 0 rows
+
+-- If all three tests pass, RLS is working correctly!
+
+*/
+
+-- ============================================================================
+-- MIGRATION SUMMARY
+-- ============================================================================
+--
+-- ✅ RLS enabled on all 11 tenant-scoped tables
+-- ✅ RLS policies created for tenant isolation
+-- ⚠️  Application role required for RLS to work (see Section 7)
+-- 📖 Test instructions provided (see Section 9)
+--
+-- NEXT STEPS:
+-- 1. Create the app_user role (Section 7)
+-- 2. Update DATABASE_URL to use app_user (Section 8)
+-- 3. Test RLS is working (Section 9)
+-- 4. Reserve neondb_owner connection for migrations only
 --
 -- ============================================================================

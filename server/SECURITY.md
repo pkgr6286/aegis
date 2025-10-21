@@ -60,36 +60,43 @@ In development, if `JWT_SECRET` is not set, the system automatically uses a fall
 
 ### Row-Level Security Setup
 
-The platform uses PostgreSQL's Row-Level Security (RLS) to enforce tenant data isolation. This must be configured before any tenant data is created.
+The platform uses PostgreSQL's Row-Level Security (RLS) to enforce tenant data isolation.
 
-#### Required SQL Bootstrap
+#### Status: ✅ RLS Policies Created
 
-Run these commands on your database BEFORE using the application:
+All RLS policies have been created using `server/migrations/001_enable_rls_policies.sql`.
 
+#### ⚠️ CRITICAL LIMITATION - Neon Database Architecture
+
+**RLS policies do NOT work with database owner accounts!**
+
+In Neon databases, the default user (`neondb_owner`) is a member of `pg_database_owner` role, which **bypasses all RLS policies** even with `FORCE ROW LEVEL SECURITY`.
+
+#### Required for Production
+
+To enforce RLS in production, you MUST:
+
+1. **Create an application role** without owner privileges:
 ```sql
--- 1. Enable RLS on all tenant-scoped tables
-ALTER TABLE tenant_users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE brand_configs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE drug_programs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE screener_versions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE screening_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE verification_codes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ehr_consents ENABLE ROW LEVEL SECURITY;
-ALTER TABLE partners ENABLE ROW LEVEL SECURITY;
-ALTER TABLE partner_api_keys ENABLE ROW LEVEL SECURITY;
-ALTER TABLE partner_configs ENABLE ROW LEVEL SECURITY;
-
--- 2. Create RLS policies for each table
--- Example for tenant_users:
-CREATE POLICY tenant_isolation_policy
-  ON tenant_users
-  FOR ALL
-  USING (tenant_id::text = current_setting('app.current_tenant_id', true))
-  WITH CHECK (tenant_id::text = current_setting('app.current_tenant_id', true));
-
--- Repeat for all other tables listed above
+CREATE ROLE app_user WITH LOGIN PASSWORD 'secure-password-here';
+GRANT CONNECT ON DATABASE neondb TO app_user;
+GRANT USAGE ON SCHEMA public TO app_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_user;
 ```
+
+2. **Update DATABASE_URL** to use the application role:
+```
+# Development/Migrations (bypasses RLS):
+DATABASE_URL=postgresql://neondb_owner:password@host/neondb
+
+# Production Application (enforces RLS):
+DATABASE_URL=postgresql://app_user:password@host/neondb
+```
+
+3. **Reserve owner account** for migrations and admin tasks only
+
+See `server/migrations/001_enable_rls_policies.sql` for complete setup instructions and test procedures.
 
 #### Tenant Context Validation
 
@@ -151,8 +158,10 @@ This codebase is currently in **DEVELOPMENT MODE** with the following status:
 - [ ] Install and configure bcrypt/argon2 (when password auth is implemented)
 - [ ] Hash all user passwords (when password auth is implemented)
 - [ ] Hash all API keys (when partner API keys are implemented)
-- [ ] Create all RLS policies on database
-- [ ] Test RLS policies with different tenant contexts
+- [x] Create all RLS policies on database
+- [ ] Create application role for RLS enforcement (see Multi-Tenant Security section)
+- [ ] Update production DATABASE_URL to use app_user role
+- [ ] Test RLS policies with app_user role and different tenant contexts
 - [ ] Implement rate limiting
 - [ ] Enable HTTPS/TLS
 - [ ] Configure CORS properly

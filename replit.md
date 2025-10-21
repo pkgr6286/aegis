@@ -14,7 +14,8 @@ The backend now includes:
 - ✅ Audit logging service for compliance tracking
 - ✅ Repository pattern for database operations
 - ✅ Role-based access control (RBAC) middleware
-- ⚠️ Row-Level Security policies (SQL implementation pending)
+- ✅ Row-Level Security policies created for all 11 tenant-scoped tables
+- ⚠️ Application role required for RLS enforcement (see server/SECURITY.md)
 
 ## User Preferences
 
