@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { db } from '../db';
 import { userSystemRoles } from '../db/schema/public';
+import { tenantUsers } from '../db/schema/core';
 import { eq } from 'drizzle-orm';
 
 /**
@@ -88,23 +89,41 @@ export class AuthService {
 
     const roles = systemRoles.map(r => r.role);
 
-    // 4. Generate JWT token
+    // 4. Get user's tenant memberships (if any)
+    const tenantMemberships = await db
+      .select()
+      .from(tenantUsers)
+      .where(eq(tenantUsers.userId, user.id));
+
+    // For pharma admin users, include the first tenant in the JWT
+    // (In the future, you might want to support multi-tenant switching)
+    const firstTenant = tenantMemberships[0];
+
+    // 5. Generate JWT token
+    const tokenPayload: any = {
+      userId: user.id,
+      email: user.email,
+      systemRoles: roles,
+    };
+
+    // Include tenant info if user belongs to a tenant
+    if (firstTenant) {
+      tokenPayload.tenantId = firstTenant.tenantId;
+      tokenPayload.tenantRole = firstTenant.role;
+    }
+
     const token = jwt.sign(
-      {
-        userId: user.id,
-        email: user.email,
-        systemRoles: roles,
-      },
+      tokenPayload,
       this.JWT_SECRET,
       {
         expiresIn: this.JWT_EXPIRES_IN,
       }
     );
 
-    // 5. Update last login timestamp
+    // 6. Update last login timestamp
     await userRepository.updateLastLogin(user.id);
 
-    // 6. Return token and user info (without password)
+    // 7. Return token and user info (without password)
     const { hashedPassword: _, ...userWithoutPassword } = user;
     
     return {
@@ -112,6 +131,8 @@ export class AuthService {
       user: {
         ...userWithoutPassword,
         systemRoles: roles,
+        tenantRole: firstTenant?.role,
+        tenantId: firstTenant?.tenantId,
       },
     };
   }
