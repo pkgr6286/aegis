@@ -20,9 +20,39 @@ import { z } from 'zod';
 
 const router = Router();
 
-// All routes require authentication, tenant context, and admin role
+// All routes require authentication and tenant context
 router.use(authenticateToken);
 router.use(setTenantContextMiddleware);
+
+/**
+ * GET /api/v1/admin/me
+ * Get the current authenticated pharma admin user
+ * This endpoint does NOT require admin role - any tenant user can access it
+ */
+router.get('/me', async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authenticated',
+      });
+    }
+
+    res.json({
+      success: true,
+      user: req.user,
+      tenantId: req.tenantId,
+    });
+  } catch (error) {
+    console.error('Error fetching current user:', error);
+    res.status(500).json({
+      error: 'Failed to fetch current user',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+// All remaining routes require admin role
 router.use(requireTenantRole('admin'));
 
 // ============================================================================

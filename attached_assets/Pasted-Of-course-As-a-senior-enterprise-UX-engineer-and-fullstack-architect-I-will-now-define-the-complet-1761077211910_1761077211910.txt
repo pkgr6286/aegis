@@ -1,0 +1,248 @@
+Of course. As a senior enterprise UX engineer and fullstack architect, I will now define the complete UI system for the **Pharma Admin / Tenant Admin** role of the Aegis platform.
+
+This specification is the blueprint for the client-facing portal, detailing every screen, user flow, and API interaction from the perspective of a user like "Ben at Kenvue." It assumes all backend APIs are implemented as previously detailed.
+
+### **Overall UI Structure**
+
+The Pharma Admin interface is a clean, professional portal focused on product management, user administration, and compliance within their own organizational tenant.
+
+- **Left Sidebar:** A collapsible navigation panel containing links to all management screens for their specific tenant.
+- **Top Bar:** A persistent header showing the **Tenant Name** (e.g., "Kenvue"), the user's profile and role (e.g., "Ben Serbiak - Admin"), and a logout button.
+
+---
+
+### **Sidebar Navigation Groups**
+
+The sidebar is organized to give the Pharma Admin a clear and intuitive workflow for managing their products and team.
+
+- **OVERVIEW**
+    - Dashboard
+- **PRODUCT & COMPLIANCE**
+    - Drug Programs
+    - Audit Logs
+- **ACCESS MANAGEMENT**
+    - User Management
+    - Partner Management
+- **SETTINGS**
+    - Brand Management
+
+---
+
+### **UI Screen Definitions**
+
+Here is the detailed breakdown for each screen accessible to the Pharma Admin.
+
+### 📘 UI: Dashboard (Tenant)
+
+|  |  |
+| --- | --- |
+| **Purpose** | Provides a real-time overview of the tenant's drug program activity, user engagement, and compliance status. This is the primary landing page after login. |
+| **Sidebar Group** | **OVERVIEW** |
+| **UI Elements** | • **Statistic Cards:** Key metrics for the tenant (e.g., "Total Screenings Today," "Active Programs," "Verification Success Rate").
+• **Charts:** Time-series charts showing "Screenings Over Time" or a pie chart of "Outcomes by Type" (`OK to Use`, `Ask a Doctor`).
+• **Recent Activity Feed:** A list of the most recent audit log events *for their tenant*. |
+| **Fields/Columns** | • **Stats:** Total Screenings, Success Rate, Active Programs, Total Users.
+• **Chart Data:** `timestamp`, `count`, `outcome_type`.
+• **Activity Feed:** `timestamp`, `user_email`, `action`, `entity_type`. |
+| **User Actions** | • View tenant-specific metrics.
+• Click on a card or chart to navigate to the relevant detailed screen (e.g., clicking "Active Programs" navigates to Drug Programs). |
+| **Triggered Flows** | User clicks "Active Programs" card → `Maps('/programs')`. |
+| **APIs Used** | • `GET /api/v1/admin/dashboard/stats` → To fetch aggregated data for the stat cards and charts for the logged-in tenant.
+• `GET /api/v1/admin/audit-logs?limit=5` → To populate the recent activity feed. |
+| **Request/Response Shape** | ```json |
+| // Sample response for GET /api/v1/admin/dashboard/stats |  |
+| { |  |
+| "success": true, |  |
+| "data": { |  |
+| "totalScreenings": 150230, |  |
+| "verificationSuccessRate": "99.8%", |  |
+| "activePrograms": 3, |  |
+| "totalUsers": 15, |  |
+| "outcomesBreakdown": [ |  |
+| { "outcome": "ok_to_use", "count": 145000 }, |  |
+| { "outcome": "ask_a_doctor", "count": 5230 } |  |
+| ] |  |
+| } |  |
+| } |  |
+
+Code snippet
+
+# 
+
+`| **Special Notes** | All data on this screen is automatically scoped to the user's `tenantId` by the backend's RLS policy. |
+
+---
+
+### 📘 UI: Drug Programs
+
+| | |
+| :--- | :--- |
+| **Purpose** | The central workspace for managing the entire lifecycle of all ACNU drug programs for the tenant, from creation to publishing screeners. |
+| **Sidebar Group** | **PRODUCT & COMPLIANCE** |
+| **UI Elements** | • **Primary Action Button:** "Create Program".<br>• **Filters:** Dropdown for "Status" (`active`, `draft`, `archived`).<br>• **Search Bar:** Search by "Program Name".<br>• **Table:** A paginated table listing all drug programs.<br>• **Table Actions:** Each row has a "Manage" button.<br>• **Detail View (Separate Page):** Clicking "Manage" navigates to a dedicated page for that program, which includes tabs for "Details," "Screener Versions," and "Analytics."<br>• **Modal (Create/Edit):** For creating or editing the program's basic details. |
+| **Fields/Columns** | • **Table Columns:** `Program Name`, `Brand Name`, `Status` (chip), `Active Screener Version`, `Last Updated`.<br>• **Modal Fields:** `Program Name`, `Brand Name`, `Brand Configuration` (dropdown). |
+| **User Actions** | • **Create:** Click "Create Program" to open the creation modal.<br>• **Manage:** Click "Manage" to go to the detailed program view.<br>• **Edit:** On the detail page, edit program details.<br>• **Screener Management:** On the "Screener Versions" tab, create new versions and publish a specific version. |
+| **Triggered Flows** | 1. **Create Program:** `Create Program` button → Opens modal → Fills form → Clicks `Save` → `POST` API call → On success, close modal, show success toast, refresh table.<br>2. **Manage Program:** `Manage` button on row → `Maps('/programs/:id')`.<br>3. **Publish Screener:** On detail page → "Screener Versions" tab → Clicks `Publish` on a specific version row → Opens confirmation modal → User confirms → `POST` API call to publish → On success, show success toast, update the "Active" tag in the table. |
+| **APIs Used** | • `GET /api/v1/admin/programs` → To populate the main table.<br>• `POST /api/v1/admin/programs` → To create a new program.<br>• `GET /api/v1/admin/programs/:id` → To fetch data for the detail page.<br>• `PUT /api/v1/admin/programs/:id` → To update program details.<br>• `GET /api/v1/admin/programs/:programId/screeners` → To list screener versions.<br>• `POST /api/v1/admin/programs/:programId/screeners` → To create a new screener version (the JSON would be created in a separate UI builder).<br>• `POST /api/v1/admin/programs/:programId/screeners/:versionId/publish` → To set a version as active. |
+| **Special Notes** | The UI for the "Screener Builder" itself is a complex application and is considered a sub-feature of this screen. |
+
+---
+
+### 📘 UI: Audit Logs (Tenant)
+
+| | |
+| :--- | :--- |
+| **Purpose** | To provide a complete, immutable, and searchable record of all actions taken by all users *within the tenant*. This is critical for internal security reviews and regulatory compliance. |
+| **Sidebar Group** | **PRODUCT & COMPLIANCE** |
+| **UI Elements** | • **Filters:** Dropdowns for `User` and `Action Type`.<br>• **Date Range Picker:** To filter logs.<br>• **Search Bar:** Free-text search.<br>• **Table:** A paginated table of audit log entries.<br>• **Drawer (Detail View):** Clicking a row opens a side drawer with the full JSON payload of the `changes` field. |
+| **Fields/Columns** | • **Table Columns:** `Timestamp`, `User Email`, `Action`, `Entity Type`, `Entity ID`.<br>• **Drawer Fields:** A formatted JSON viewer showing "old" and "new" values. |
+| **User Actions** | • **Filter & Search:** Use controls to find specific events.<br>• **View Details:** Click any row to inspect the full payload.<br>• **Export:** "Export to CSV" button. |
+| **Triggered Flows** | User selects a filter → API call with query parameters → Table refreshes. |
+| **APIs Used** | • `GET /api/v1/admin/audit-logs` → To fetch logs for the current tenant (`?userId=...`, `&action=...`).<br>• `GET /api/v1/admin/users` → To populate the "User" filter dropdown. |
+| **Special Notes** | This is a read-only screen. The backend RLS policy ensures a Tenant Admin can *only* ever see logs for their own `tenantId`. |
+
+---
+
+### 📘 UI: User Management (Tenant)
+
+| | |
+| :--- | :--- |
+| **Purpose** | To manage the team members who have access to the tenant's Aegis portal. |
+| **Sidebar Group** | **ACCESS MANAGEMENT** |
+| **UI Elements** | • **Primary Action Button:** "Invite User".<br>• **Table:** A simple table of all users in the tenant.<br>• **Table Actions:** Each row has a "Remove" button.<br>• **Modal (Invite):** A form with fields for `Email` and `Role`. |
+| **Fields/Columns** | • **Table Columns:** `Email`, `First Name`, `Last Name`, `Role` (chip: `admin`, `editor`, `viewer`), `Status`.<br>• **Modal Fields:** `Email` (text input), `Role` (dropdown). |
+| **User Actions** | • **Invite:** Click "Invite User" to open the invite modal.<br>• **Remove:** Click "Remove" on a user row to revoke their access to the tenant. |
+| **Triggered Flows** | 1. **Invite User:** `Invite` button → Opens modal → Fills form → Clicks `Send Invite` → `POST` API call → On success, close modal, show success toast, refresh table.<br>2. **Remove User:** `Remove` button → Opens confirmation modal → User confirms → `DELETE` API call → On success, show success toast, remove the row. |
+| **APIs Used** | • `GET /api/v1/admin/users` → To populate the user table.<br>• `POST /api/v1/admin/users/invite` → To invite a new user to the tenant.<br>• `DELETE /api/v1/admin/users/:id` → To remove a user (soft-delete). |
+| **Special Notes** | An admin should not be able to remove their own access. The UI should disable the "Remove" button for the currently logged-in user. |
+
+---
+
+### 📘 UI: Partner Management
+
+| | |
+| :--- | :--- |
+| **Purpose** | To manage B2B integrations with retailers and e-commerce platforms, including generating and revoking secure API keys. |
+| **Sidebar Group** | **ACCESS MANAGEMENT** |
+| **UI Elements** | • **Primary Action Button:** "Add Partner".<br>• **Table:** A table listing all configured partners.<br>• **Detail View (Drawer):** Clicking a partner row opens a side drawer showing partner details and a list of their API keys.<br>• **Modal (Create Partner):** For adding a new partner entity.<br>• **Modal (Show API Key):** A modal that displays a newly generated API key **one time only**. |
+| **Fields/Columns** | • **Table Columns:** `Partner Name`, `Type` (chip: `E-commerce`, `Retail POS`), `Status`, `API Keys`.<br>• **Drawer Fields:** Partner details, list of API keys (`Key Prefix`, `Status`, `Created At`), "Generate New Key" button.<br>• **Create Partner Modal:** `Partner Name` (text), `Type` (dropdown). |
+| **User Actions** | • **Create Partner:** Click "Add Partner" to open the creation modal.<br>• **View Details:** Click a partner row to open the details drawer.<br>• **Generate Key:** In the drawer, click "Generate New Key."<br>• **Revoke Key:** In the drawer, click the "Revoke" button next to an existing key. |
+| **Triggered Flows** | 1. **Generate Key:** `Generate New Key` button → `POST` API call → On success, open the "Show API Key" modal displaying the full key with a copy button. User is warned this is the only time they can see it.<br>2. **Revoke Key:** `Revoke` button → Opens confirmation modal → User confirms → `DELETE` API call → On success, show success toast, update the key's status to "Revoked" in the drawer. |
+| **APIs Used** | • `GET /api/v1/admin/partners` → To populate the partner table.<br>• `POST /api/v1/admin/partners` → To create a new partner.<br>• `POST /api/v1/admin/partners/:partnerId/keys` → To generate a new API key.<br>• `DELETE /api/v1/admin/partners/:partnerId/keys/:keyId` → To revoke a key. |
+| **Special Notes** | The UI must be extremely clear that a newly generated API key is shown only once. Provide a prominent "Copy to Clipboard" button. |
+
+---
+
+### 📘 UI: Brand Management
+
+| | |
+| :--- | :--- |
+| **Purpose** | To manage the look and feel of the consumer-facing screener applications by creating and editing brand configurations. |
+| **Sidebar Group** | **SETTINGS** |
+| **UI Elements** | • **Primary Action Button:** "Create Brand".<br>• **Grid/List View:** A view showing cards or rows for each created brand configuration.<br>• **Modal (Create/Edit):** A form for creating or editing a brand. |
+| **Fields/Columns** | • **Card/Row Fields:** `Brand Name`, a preview of the `Primary Color`, a thumbnail of the `Logo`.<br>• **Modal Fields:** `Brand Name` (text), `Logo URL` (text input with preview), `Primary Color` (color picker). |
+| **User Actions** | • **Create:** Click "Create Brand" to open the form modal.<br>• **Edit:** Click an existing brand card to open the form modal pre-filled with its data. |
+| **Triggered Flows** | `Create Brand` button → Opens modal → Fills form → Clicks `Save` → `POST` API call → On success, close modal, show success toast, add new brand card to the view. |
+| **APIs Used** | • `GET /api/v1/admin/brands` → To populate the view.<br>• `POST /api/v1/admin/brands` → To create a new brand.<br>• `PUT /api/v1/admin/brands/:id` → To update an existing brand. |
+| **Special Notes** | This screen allows for brand reusability. A single brand config created here can be assigned to multiple drug programs. |`
+
+Of course. As your senior architect and UX engineer, I will now create the detailed UX design document for the **Screener Builder**. This addresses the identified gap and provides a complete blueprint for this critical, complex feature.
+
+First, to confirm your question about schemas and APIs: **Yes, they are already fully defined and sufficient.**
+
+- **Schema:** The `app.screener_versions` table with its `screener_json` field is designed to store the output of this builder.
+- **APIs:** The `POST /api/v1/admin/programs/:programId/screeners` endpoint is designed to accept the JSON object that this UI will generate and save it as a new, immutable version.
+
+The task now is to design the user experience that allows a Pharma Admin to intuitively create this complex JSON object.
+
+---
+
+### **UX Design Document: The Aegis Screener Builder**
+
+**1. Vision & Guiding Principles**
+
+- **Vision:** To empower non-technical pharma administrators to build, visualize, and validate complex, FDA-compliant clinical screening workflows with confidence and ease.
+- **Guiding Principles:**
+    1. **Visual First:** The primary interface will be a visual canvas. The admin should *see* the flow, not just imagine it.
+    2. **No Code Required:** All logic will be configured through intuitive graphical user interfaces (menus, dropdowns, toggles).
+    3. **Safety & Validation:** The builder will have built-in validation to prevent the user from creating impossible or unsafe logic paths.
+    4. **Immutability:** Saving always creates a *new version*. The UI will make it clear that published screeners cannot be edited, only versioned.
+
+**2. Overall UI Structure**
+
+The Screener Builder will be a full-page, dedicated application experience launched from the "Drug Programs" detail screen. It will consist of three main panels.
+
+- **Left Panel (Node Palette):** A simple, static panel containing all the building blocks (nodes) that can be dragged onto the canvas.
+- **Center Panel (Canvas):** The main interactive workspace where the admin builds the screener flow by connecting nodes. It will support pan and zoom for large workflows.
+- **Right Panel (Properties Inspector):** A context-sensitive panel that displays the configuration options for the currently selected node on the canvas.
+
+---
+
+### **UI Component & Flow Definitions**
+
+### 📘 UI: Screener Builder Main View
+
+|  |  |
+| --- | --- |
+| **Purpose** | To provide a visual workspace for constructing the entire consumer screening flow, from the first question to the final outcomes. |
+| **Accessed From** | The "Screener Versions" tab on the "Drug Programs" detail page. The user clicks a "Create New Version" or "Clone Existing Version" button. |
+| **UI Elements** | • **Top Bar:** Contains the `Screener Version Name` (e.g., "v2.1 - Adding EHR Check"), a `Status` indicator (Draft), and the primary action buttons: `Save Draft` and `Save & Publish`.
+• **Node Palette (Left):** A list of draggable nodes:
+    - **Question Nodes:** (Yes/No, Numeric Input, Multiple Choice)
+    - **Action Nodes:** (EHR Data Check, Education Step)
+    - **Outcome Nodes:** (OK to Use, Ask a Doctor, Do Not Use)
+• **Canvas (Center):** An interactive canvas (using a library like React Flow) where nodes are placed and connected with arrows to represent the flow.
+• **Properties Inspector (Right):** A dynamic form that changes based on the selected node. |
+| **User Actions** | • **Add Node:** Drag a node from the palette onto the canvas.
+• **Connect Nodes:** Drag a handle from one node to another to create a logical path (an arrow).
+• **Configure Node:** Click a node on the canvas to open its settings in the Properties Inspector.
+• **Save/Publish:** Save the current state of the flow. |
+| **Triggered Flows** | When the user clicks `Save & Publish` → A confirmation modal appears → User confirms → The entire visual flow on the canvas is compiled into a single `screener_json` object → A `POST` API call is made to save this new version. |
+| **APIs Used** | • `POST /api/v1/admin/programs/:programId/screeners` → Takes the generated `screener_json` and `notes` to create a new, immutable `screener_versions` record. |
+| **JSON Output Shape** | ```json |
+| // The entire UI is designed to build this object |  |
+| { |  |
+| "startQuestionId": "q1_age_check", |  |
+| "defaultOutcome": "ask_a_doctor", |  |
+| "questions": { |  |
+| "q1_age_check": { "type": "yes_no", "text": "Are you over 18?" }, |  |
+| "q2_ldl_check": { "type": "numeric", "text": "What is your LDL level?", "ehrMapping": { "loinc": "2093-3", "rule": "optional" } } |  |
+| }, |  |
+| "rules": [ |  |
+| { "source": "q1_age_check", "condition": "equals", "value": "no", "targetNode": "outcome_do_not_use" }, |  |
+| { "source": "q1_age_check", "condition": "equals", "value": "yes", "targetNode": "q2_ldl_check" }, |  |
+| { "source": "q2_ldl_check", "condition": "greater_than", "value": 130, "targetNode": "outcome_ask_a_doctor" } |  |
+| ] |  |
+| } |  |
+
+Code snippet
+
+# 
+
+`| **Special Notes** | The ability to "Clone Existing Version" is a critical feature. It will pre-populate the canvas with a previous version's flow, allowing for easy iteration. |
+
+---
+
+### 📘 UI Component: Properties Inspector (for a "Question" Node)
+
+| | |
+| :--- | :--- |
+| **Purpose** | To configure the details of a specific question when it is selected on the canvas. |
+| **Location** | Right Panel. |
+| **UI Elements** | • **Form Fields:**<br>    - `Question ID`: A unique, auto-generated ID (e.g., "q1_age_check").<br>    - `Question Text`: A textarea for the consumer-facing question.<br>    - `Help Text`: An optional field for the plain-language explanation shown when a user taps the "?" icon.<br>• **EHR Integration Section:**<br>    - `Enable EHR Data Pull?` (Toggle Switch).<br>    - `EHR Data Point`: A searchable dropdown of common clinical codes (LOINC, RxNorm) that maps to the backend's FHIR parser.<br>    - `EHR Requirement Rule`: A radio group (`Optional`, `Mandatory`).<br>• **Logic Section:**<br>    - Displays the connection handles for defining logic (e.g., "On 'Yes'", "On 'No'"). The user drags these to other nodes to create the flow. |
+| **User Actions** | • User types in the question text.<br>• User optionally enables EHR integration and configures the mapping and rule.<br>• User drags the logic handles (e.g., the "Yes" dot) to another node on the canvas to define the next step. |
+| **Triggered Flows** | All changes are stored in the frontend's state. No API calls are made until the user saves the entire screener. When a user connects the "Yes" handle to another node, the frontend adds a new entry to the `rules` array in its state object. |
+| **APIs Used** | None directly. This UI component contributes to building the final `screener_json`. |
+| **Special Notes** | The UI must provide real-time validation. For example, if a "Yes/No" question's "Yes" path is not connected, the node should have a red border or warning icon indicating an incomplete flow. |
+
+---
+
+### **Update to `UI: Drug Programs` Screen**
+
+To integrate the Screener Builder, the "Screener Versions" tab within the Drug Programs detail page will be updated as follows:
+
+| | |
+| :--- | :--- |
+| **UI Elements (Updated)** | • **Primary Action Buttons:** "Create New Version" and "Clone Latest Version".<br>• **Table of Versions:** Lists all historical versions (`Version #`, `Status`, `Created By`, `Published At`).<br>• **Table Actions:** Each row has a "View" button and a "Publish" button (if it's a draft). |
+| **Triggered Flows (New)** | 1. **Create New:** User clicks `Create New Version` → `Maps('/programs/:id/screeners/new')`, which opens the blank Screener Builder UI.<br>2. **Clone:** User clicks `Clone Latest Version` → The backend is called to get the latest `screener_json` → `Maps('/programs/:id/screeners/new?cloneFrom=latest')`, which opens the Screener Builder UI pre-populated with the cloned flow.<br>3. **View:** User clicks `View` on a past version → Opens the Screener Builder UI in a **read-only mode**, showing the exact flow for that version. |
+| **APIs Used (Updated)** | • `GET /api/v1/admin/programs/:programId/screeners/:versionId` → **(New API)** To fetch the specific `screener_json` for a single version, used for cloning and viewing. |`

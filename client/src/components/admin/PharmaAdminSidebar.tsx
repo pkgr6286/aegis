@@ -11,7 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, Building2, Users, FileText, Shield } from 'lucide-react';
+import { LayoutDashboard, Pill, Users, Building2, FileText, Palette } from 'lucide-react';
 
 const navigationGroups = [
   {
@@ -20,38 +20,53 @@ const navigationGroups = [
       {
         title: 'Dashboard',
         icon: LayoutDashboard,
-        url: '/superadmin/dashboard',
+        url: '/admin/dashboard',
       },
     ],
   },
   {
-    label: 'PLATFORM MANAGEMENT',
+    label: 'PRODUCT & COMPLIANCE',
     items: [
       {
-        title: 'Tenant Management',
-        icon: Building2,
-        url: '/superadmin/tenants',
+        title: 'Drug Programs',
+        icon: Pill,
+        url: '/admin/programs',
       },
+      {
+        title: 'Audit Logs',
+        icon: FileText,
+        url: '/admin/audit-logs',
+      },
+    ],
+  },
+  {
+    label: 'ACCESS MANAGEMENT',
+    items: [
       {
         title: 'User Management',
         icon: Users,
-        url: '/superadmin/users',
+        url: '/admin/users',
+      },
+      {
+        title: 'Partner Management',
+        icon: Building2,
+        url: '/admin/partners',
       },
     ],
   },
   {
-    label: 'COMPLIANCE & SECURITY',
+    label: 'SETTINGS',
     items: [
       {
-        title: 'Platform Audit Logs',
-        icon: FileText,
-        url: '/superadmin/audit-logs',
+        title: 'Brand Management',
+        icon: Palette,
+        url: '/admin/brands',
       },
     ],
   },
 ];
 
-export function AppSidebar() {
+export function PharmaAdminSidebar() {
   const [location] = useLocation();
 
   return (
@@ -59,11 +74,11 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-            <Shield className="w-5 h-5 text-primary" />
+            <Pill className="w-5 h-5 text-primary" />
           </div>
           <div className="flex flex-col">
             <span className="text-base font-semibold">Aegis Platform</span>
-            <span className="text-xs text-muted-foreground">Super Admin</span>
+            <span className="text-xs text-muted-foreground">Pharma Admin</span>
           </div>
         </div>
       </SidebarHeader>

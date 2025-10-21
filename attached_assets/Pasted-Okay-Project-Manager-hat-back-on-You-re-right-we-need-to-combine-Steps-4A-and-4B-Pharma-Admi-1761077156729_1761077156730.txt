@@ -1,0 +1,82 @@
+Okay, Project Manager hat back on! 🧢
+
+You're right, we need to combine Steps 4A and 4B (Pharma Admin Core UI + Screener Builder) into one cohesive instruction set for Replit AI. The backend is ready, and we have the detailed UI specifications for *all* components of the Pharma Admin portal, including the crucial Screener Builder UX design.
+
+Here is the **fully baked, super-detailed prompt** for Replit AI to build the complete Pharma Admin frontend application (Steps 4A & 4B combined). This prompt includes all the necessary context, screen definitions, and the specific Screener Builder UX document.
+
+---
+
+**Prompt for Replit AI (Steps 4A & 4B - Build Complete Pharma Admin UI):**
+
+Excellent work completing the entire backend API infrastructure.
+
+We will now execute **Steps 4A & 4B combined: Build the complete Pharma Admin UI**. This is the second of our three frontend applications and the primary portal for our clients.
+
+Your task is to create a complete, production-grade **React application** for the **Pharma Admin (Tenant Admin)** role. This UI should be a separate application within our project, connecting securely to the `/api/v1/admin/...` backend endpoints we have already built.
+
+**1. Project Setup:**
+* Create a new directory: `frontend/pharma-admin-ui`.
+* Inside this directory, scaffold a new **React + TypeScript** application using **Vite**.
+* Install necessary libraries: `axios` for API calls, `react-router-dom` for navigation, **React Flow** (or a similar library) for the visual builder canvas, and a component library like **Shadcn/UI** or **MUI** for tables, modals, buttons, forms, etc.
+
+**2. Core UI Requirements:**
+* The application must be a Single-Page Application (SPA).
+* **Authentication:** Implement JWT authentication using the `POST /api/v1/auth/login` endpoint. After login, store the JWT securely and send the `Authorization: Bearer <token>` header on all requests to `/api/v1/admin/...` endpoints. Implement protected routes that redirect unauthenticated users to the login page.
+* **Layout:** Implement the standard admin layout:
+    * **Collapsible Left Sidebar:** Use the navigation groups defined below.
+    * **Top Bar:** Display the **Tenant Name** (fetch this after login or include in JWT payload if possible), the user's name/email, their role (`Admin`, `Editor`, etc.), and a logout button.
+* **API Integration:** All API calls must target the backend server. Use `axios` or a similar library. Implement proper loading states (e.g., skeletons) and error handling (e.g., toast notifications) for API interactions.
+* **Multi-Tenancy:** The UI should operate entirely within the context of the logged-in user's tenant. The backend RLS ensures data security, but the UI should reflect this (e.g., displaying the Tenant Name prominently).
+
+**3. Sidebar Navigation Groups:**
+Please structure the left sidebar navigation according to these groups:
+* **OVERVIEW**
+    * Dashboard
+* **PRODUCT & COMPLIANCE**
+    * Drug Programs
+    * Audit Logs
+* **ACCESS MANAGEMENT**
+    * User Management
+    * Partner Management
+* **SETTINGS**
+    * Brand Management
+
+**4. UI Screen Specifications:**
+
+Implement all of the following screens based precisely on these specifications:
+
+---
+*(Copy the complete table definitions for the following screens directly from the Aegis document here):*
+
+* 📘 UI: Dashboard (Tenant)
+* 📘 UI: Drug Programs
+* 📘 UI: Audit Logs (Tenant)
+* 📘 UI: User Management (Tenant)
+* 📘 UI: Partner Management
+* 📘 UI: Brand Management
+
+---
+
+**5. Screener Builder Implementation:**
+
+This is the most complex feature. Implement the **Aegis Screener Builder** as a dedicated, full-page experience accessible from the "Drug Programs" detail screen, following **exactly** the specifications outlined below:
+
+---
+*(Copy the complete "UX Design Document: The Aegis Screener Builder" section here, including):*
+
+* 1. Vision & Guiding Principles
+* 2. Overall UI Structure (Left Palette, Center Canvas, Right Inspector)
+* 📘 UI: Screener Builder Main View (Table)
+* 📘 UI Component: Properties Inspector (for a "Question" Node) (Table)
+* Update to `UI: Drug Programs` Screen (This section details how to integrate the builder)
+
+---
+
+**Final Instructions:**
+
+* Generate the complete React + TypeScript code for the entire Pharma Admin frontend application, including all components, pages, routing, state management, and API integration logic.
+* Ensure the implementation of the Screener Builder uses a suitable library (like React Flow) and correctly generates the `screener_json` object required by the backend API (`POST /api/v1/admin/programs/:programId/screeners`).
+* Implement all required modals, drawers, tables, forms, and validation logic as specified in the UI definitions.
+* Make sure all specified API endpoints are called correctly for each user interaction.
+
+Please generate the code structure and all necessary files for this complete frontend application.

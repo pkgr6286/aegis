@@ -27,21 +27,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        // Verify token by fetching current user
-        const response = await apiClient.get<{ success: boolean; user: User }>('/superadmin/me');
+        // Try Super Admin endpoint first
+        let response = await apiClient.get<{ success: boolean; user: User }>('/superadmin/me');
         
         if (response.success && response.user) {
           setUser(response.user);
-        } else {
-          apiClient.setToken(null);
+          setIsLoading(false);
+          return;
         }
-      } catch (error) {
-        // Token is invalid, clear it
-        console.error('Auth check failed:', error);
-        apiClient.setToken(null);
-      } finally {
-        setIsLoading(false);
+      } catch (superAdminError) {
+        // Super Admin check failed, try Pharma Admin endpoint
+        try {
+          const response = await apiClient.get<{ success: boolean; user: User }>('/admin/me');
+          
+          if (response.success && response.user) {
+            setUser(response.user);
+            setIsLoading(false);
+            return;
+          }
+        } catch (pharmaAdminError) {
+          // Both endpoints failed, token is invalid
+          console.error('Auth check failed for both user types');
+        }
       }
+      
+      // If we reach here, authentication failed
+      apiClient.setToken(null);
+      setIsLoading(false);
     };
 
     checkAuth();
