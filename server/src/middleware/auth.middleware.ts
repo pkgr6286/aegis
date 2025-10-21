@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { sql } from 'drizzle-orm';
 
 /**
  * Authentication Middleware
@@ -66,5 +67,15 @@ export const requireTenant = (
 export async function setTenantContext(db: any, tenantId: string) {
   // Execute: SET app.current_tenant_id = 'tenant-uuid';
   // This activates Row-Level Security policies
-  await db.execute(`SET app.current_tenant_id = '${tenantId}'`);
+  
+  // Validate tenantId is a valid UUID to prevent SQL injection
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(tenantId)) {
+    throw new Error('Invalid tenant ID format');
+  }
+  
+  // Use parameterized sql template tag
+  // Note: SET commands in PostgreSQL don't support $1 style parameters,
+  // but we've validated the UUID format above to prevent injection
+  await db.execute(sql`SET app.current_tenant_id = ${tenantId}`);
 }
