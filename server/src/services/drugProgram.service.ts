@@ -43,6 +43,8 @@ export const drugProgramService = {
       tenantId,
       ...data,
       slug,
+      createdBy: userId,
+      updatedBy: userId,
     });
 
     // Audit log
@@ -50,8 +52,8 @@ export const drugProgramService = {
       tenantId,
       userId,
       action: 'drug_program.created',
-      resourceType: 'drug_program',
-      resourceId: program.id,
+      entityType: 'drug_program',
+      entityId: program.id,
       changes: { after: program },
     });
 
@@ -73,7 +75,10 @@ export const drugProgramService = {
       throw new Error('Drug program not found');
     }
 
-    const after = await drugProgramRepository.update(tenantId, programId, data);
+    const after = await drugProgramRepository.update(tenantId, programId, {
+      ...data,
+      updatedBy: userId,
+    } as any);
 
     if (!after) {
       throw new Error('Failed to update drug program');
@@ -84,8 +89,8 @@ export const drugProgramService = {
       tenantId,
       userId,
       action: 'drug_program.updated',
-      resourceType: 'drug_program',
-      resourceId: programId,
+      entityType: 'drug_program',
+      entityId: programId,
       changes: { before, after },
     });
 
@@ -109,8 +114,8 @@ export const drugProgramService = {
       tenantId,
       userId,
       action: 'drug_program.deleted',
-      resourceType: 'drug_program',
-      resourceId: programId,
+      entityType: 'drug_program',
+      entityId: programId,
       changes: { before: program },
     });
 

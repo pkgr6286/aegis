@@ -56,8 +56,12 @@ router.post('/', async (req, res) => {
     const tenantId = req.tenantId!;
     const userId = req.user!.id;
 
+    console.log('Creating drug program - Request body:', JSON.stringify(req.body, null, 2));
+
     // Validate request body
     const data = createDrugProgramSchema.parse(req.body);
+
+    console.log('Validated data:', JSON.stringify(data, null, 2));
 
     const program = await drugProgramService.createDrugProgram(tenantId, userId, data);
 
@@ -67,6 +71,7 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.error('Validation error creating drug program:', JSON.stringify(error.errors, null, 2));
       return res.status(400).json({
         error: 'Validation error',
         details: error.errors,

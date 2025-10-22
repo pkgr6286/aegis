@@ -19,11 +19,13 @@ export const createDrugProgramSchema = baseDrugProgramSchema
     activeScreenerVersionId: true,
     createdAt: true,
     updatedAt: true,
+    createdBy: true,
+    updatedBy: true,
   })
   .extend({
     name: z.string().min(1).max(255),
-    brandName: z.string().min(1).max(255).optional(),
-    brandConfigId: z.string().uuid().optional(),
+    brandName: z.string().max(255).optional().transform(val => val || undefined),
+    brandConfigId: z.string().uuid().optional().or(z.literal('').transform(() => undefined)),
     status: z.enum(['draft', 'active', 'archived']).default('draft'),
   });
 
