@@ -1,0 +1,71 @@
+Got it. As your Project Manager, I've prepared the prompt for Replit AI to address the final frontend gaps, focusing on the shared authentication/onboarding flows and the self-service account management screen.
+
+This prompt is designed to be clear, specific, and build upon the existing codebase.
+
+Prompt for Replit AI (Step 9 - Frontend Polish: Auth & Account UIs):
+
+Excellent progress. The administrative UIs (Super Admin and Pharma Admin) are complete.
+
+We will now execute Step 9: Build Shared Auth & System UIs. This involves creating the standard authentication flows (beyond the initial login) and the self-service account management page.
+
+Assumption Check: Our master document defined several backend API endpoints for these flows (/api/v1/auth/forgot-password, /api/v1/auth/reset-password, /api/v1/auth/accept-invite, /api/v1/account/me, /api/v1/account/me/password). Please verify if you have already implemented these backend endpoints.
+
+If YES: Proceed directly to building the frontend components.
+
+If NO: Please first implement these missing backend endpoints, following all established patterns (create necessary service functions, repository functions, routes, and validators). Ensure they are secure and interact correctly with the users table.
+
+Frontend Task:
+
+Once the backend APIs are confirmed/built, create the following React frontend components and pages. These should be integrated into the existing routing and authentication context (AuthContext) shared by the admin UIs.
+
+1. Forgot Password Flow:
+
+Page (/forgot-password): Implement the "Forgot Password" screen.
+
+UI: Aegis Logo, Headline, Email input field, "Send Reset Link" button, "Back to Sign In" link.
+
+Logic: On submit, call POST /api/v1/auth/forgot-password with the email. Display a generic success/confirmation message regardless of whether the email exists.
+
+Page (/reset-password): Implement the "Reset Password" screen.
+
+UI: Aegis Logo, Headline, "New Password" input, "Confirm New Password" input, "Reset Password" button.
+
+Logic: Extract the token from the URL query parameters. On submit, call POST /api/v1/auth/reset-password with the token and newPassword. Handle success (redirect to login) and errors (e.g., invalid/expired token).
+
+2. Invitation Acceptance Flow:
+
+Page (/accept-invite): Implement the "Invitation Acceptance" screen.
+
+UI: Aegis Logo, Headline ("You've been invited..."), "First Name", "Last Name", "New Password", "Confirm New Password" inputs, "Accept & Create Account" button.
+
+Logic: Extract the inviteToken from the URL query parameters. On submit, call POST /api/v1/auth/accept-invite with the token and form data. On success, the backend returns a JWT; automatically log the user in and redirect them to their appropriate dashboard.
+
+3. My Account / Profile Screen:
+
+Component/Page (e.g., /account/profile or integrate into Top Bar dropdown): Implement the "My Account" screen.
+
+UI: Use Tabs for "Profile" and "Security".
+
+Profile Tab: Form with editable First Name and Last Name fields, "Save" button.
+
+Security Tab: Form with Current Password, New Password, Confirm New Password fields, "Update Password" button.
+
+Logic:
+
+Profile Save: Call PUT /api/v1/account/me with updated name data.
+
+Password Update: Call PUT /api/v1/account/me/password with current and new password data. Provide appropriate success/error feedback.
+
+4. Error Pages:
+
+Components (NotFoundPage, ForbiddenPage): Ensure you have created standard, user-friendly components for 404 and 403 errors, integrated with your routing setup. Include the Aegis logo and a "Go to Dashboard" button.
+
+Final Instructions:
+
+First, confirm/implement the required backend APIs if they are missing.
+
+Then, build the specified frontend pages and components, ensuring they are integrated into the existing React application structure, routing, and authentication context.
+
+Use the chosen component library (Shadcn/UI or MUI) consistently.
+
+Please generate the necessary backend code (if any) and the complete frontend code for these features.
