@@ -179,10 +179,9 @@ export async function setTenantContext(db: any, tenantId: string) {
     throw new Error('Invalid tenant ID format');
   }
   
-  // Use parameterized sql template tag
-  // Note: SET commands in PostgreSQL don't support $1 style parameters,
-  // but we've validated the UUID format above to prevent injection
-  await db.execute(sql`SET app.current_tenant_id = ${tenantId}`);
+  // Use raw SQL for SET command (PostgreSQL doesn't support parameters in SET)
+  // Safe because we validated UUID format above
+  await db.execute(sql.raw(`SET app.current_tenant_id = '${tenantId}'`));
 }
 
 /**
@@ -195,11 +194,7 @@ export const setTenantContextMiddleware = async (
   res: Response,
   next: NextFunction
 ) => {
-  console.log('[setTenantContextMiddleware] req.tenantId:', req.tenantId);
-  console.log('[setTenantContextMiddleware] req.user:', req.user);
-  
   if (!req.tenantId) {
-    console.error('[setTenantContextMiddleware] Tenant context required - req.tenantId is missing');
     return res.status(403).json({ error: 'Tenant context required' });
   }
 
@@ -207,7 +202,6 @@ export const setTenantContextMiddleware = async (
     // Import db dynamically to avoid circular dependency
     const { db } = await import('../db/index');
     await setTenantContext(db, req.tenantId);
-    console.log('[setTenantContextMiddleware] Tenant context set successfully for:', req.tenantId);
     next();
   } catch (error) {
     console.error('Failed to set tenant context:', error);
