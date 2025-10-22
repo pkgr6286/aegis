@@ -22,6 +22,8 @@ import UserManagement from "@/pages/admin/UserManagement";
 import PartnerManagement from "@/pages/admin/PartnerManagement";
 import AuditLogsPage from "@/pages/admin/AuditLogs";
 import DrugPrograms from "@/pages/admin/DrugPrograms";
+import DrugProgramDetail from "@/pages/admin/DrugProgramDetail";
+import ScreenerBuilder from "@/pages/admin/ScreenerBuilder";
 import { PharmaAdminLayout } from "@/components/admin/PharmaAdminLayout";
 
 import NotFound from "@/pages/not-found";
@@ -151,6 +153,12 @@ function Router() {
       </Route>
       <Route path="/admin/programs">
         <PharmaAdminRoute component={DrugPrograms} />
+      </Route>
+      <Route path="/admin/programs/:programId/screener/:versionId">
+        <PharmaAdminRoute component={ScreenerBuilder} />
+      </Route>
+      <Route path="/admin/programs/:id">
+        <PharmaAdminRoute component={DrugProgramDetail} />
       </Route>
       <Route path="/admin/users">
         <PharmaAdminRoute component={UserManagement} />

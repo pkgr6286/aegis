@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useLocation } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
 import { queryClient } from '@/lib/queryClient';
 import { drugProgramSchema, type DrugProgramFormData } from '@/lib/schemas';
@@ -59,6 +60,7 @@ import type { BrandConfig } from '@/types/brand';
 
 export default function DrugPrograms() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<DrugProgram | null>(null);
   const [deletingProgram, setDeletingProgram] = useState<DrugProgram | null>(null);
@@ -190,6 +192,10 @@ export default function DrugPrograms() {
     }
   };
 
+  const handleView = (programId: string) => {
+    setLocation(`/admin/programs/${programId}`);
+  };
+
   const handleDelete = (program: DrugProgram) => {
     setDeletingProgram(program);
   };
@@ -310,6 +316,15 @@ export default function DrugPrograms() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleView(program.id)}
+                          data-testid={`button-view-${program.id}`}
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          View
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
