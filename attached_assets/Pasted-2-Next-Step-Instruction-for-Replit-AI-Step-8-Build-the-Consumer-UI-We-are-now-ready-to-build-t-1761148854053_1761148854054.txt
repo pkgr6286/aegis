@@ -1,0 +1,70 @@
+2. Next Step: Instruction for Replit AI (Step 8 - Build the Consumer UI)
+We are now ready to build the final, most crucial piece of the user experience: the public-facing Consumer UI. This is Step 8 in our Master Project Plan.
+
+Your turn: Please provide the following prompt to your Replit AI. This prompt focuses entirely on building the end-user screening application.
+
+Prompt for Replit AI (Step 8 - Build the Consumer UI):
+
+Excellent work completing and fixing the authentication and account management flows. The administrative UIs are now fully polished.
+
+We will now execute Step 8: Build the Consumer UI. This is the third and final frontend application, the core patient-facing experience of the Aegis platform.
+
+Your task is to create a complete, production-grade React application for the Public Consumer role. This UI should be a separate application, designed to be white-labeled, responsive, and connect securely to the /api/v1/public/... backend endpoints.
+
+1. Project Setup:
+
+Create a new directory: frontend/consumer-ui.
+
+Inside this directory, scaffold a new React + TypeScript application using Vite.
+
+Install necessary libraries: axios for API calls, react-router-dom (or wouter), and a component library suitable for a clean, mobile-first experience (like Shadcn/UI, MUI, or Tailwind UI components).
+
+2. Core UI Requirements:
+
+No Login Required: This is a public-facing application.
+
+White-Labeling: The application must dynamically fetch and display the correct brand logo and primary color based on the drug program being accessed.
+
+Responsive Design: Must be designed mobile-first and work flawlessly on various screen sizes.
+
+Linear Flow: Implement a strict, step-by-step navigation flow. Use a visual progress indicator.
+
+Session Management: Securely handle the sessionToken received after starting a session and use it for subsequent API calls (PUT /sessions/:id, POST /sessions/:id/generate-code, etc.).
+
+Accessibility: Adhere to WCAG 2.1 AA standards (large tap targets, high contrast, ARIA attributes).
+
+3. UI Specifications:
+
+Implement the entire consumer user flow based precisely on these screen specifications:
+
+(Copy the complete table definitions for the following screens directly from the Aegis document here):
+
+📘 UI: Welcome & Session Start
+
+📘 UI: Screener Question Screen
+
+📘 UI: Data Entry Choice Screen (The "Fork")
+
+📘 UI: EHR Connection Flow (including handling the popup and messages)
+
+📘 UI: Outcome Screen (handling all 3 outcomes: OK, Ask Doctor, Do Not Use)
+
+📘 UI: Verification Code Screen (displaying code, timer, copy button)
+
+4. Screener Engine (Frontend Logic):
+
+The Screener Question Screen component must dynamically render questions based on the screener_json fetched from the backend.
+
+Implement the client-side logic to evaluate the branching rules (rules array in the JSON) to determine the next question after the user answers.
+
+Store user answers progressively in the component's state.
+
+Final Instructions:
+
+Generate the complete React + TypeScript code for the entire Consumer UI application.
+
+Ensure the application correctly fetches brand/screener data, manages the session token, dynamically renders the screener, handles both manual and EHR paths, and displays the final outcome and verification code.
+
+Implement all required UI elements (progress bar, info icons, large buttons, modals, popups, timers) as specified.
+
+Please generate the code structure and all necessary files for this complete frontend application.

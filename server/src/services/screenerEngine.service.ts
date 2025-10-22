@@ -146,8 +146,9 @@ export const screenerEngineService = {
 
   /**
    * Evaluate screener logic and determine outcome
+   * Supports both modern evaluationLogic format and legacy logic.rules format
    */
-  evaluate(screenerJson: ScreenerJSON, answers: Record<string, any>): EvaluationResult {
+  evaluate(screenerJson: any, answers: Record<string, any>): EvaluationResult {
     // First, validate all answers
     const validation = this.validateAnswers(screenerJson, answers);
     if (!validation.valid) {
@@ -159,30 +160,80 @@ export const screenerEngineService = {
       };
     }
 
-    // Evaluate rules in order (first match wins)
-    for (const rule of screenerJson.logic.rules) {
-      try {
-        const matches = this.evaluateCondition(rule.condition, answers);
-        
-        if (matches) {
-          return {
-            outcome: rule.outcome,
-            matchedRule: {
-              condition: rule.condition,
-              message: rule.message,
-            },
-          };
-        }
-      } catch (error) {
-        console.error('Error evaluating rule:', rule, error);
-        // Continue to next rule on error
-      }
+    // Support new evaluationLogic format (frontend/database format)
+    if (screenerJson.evaluationLogic) {
+      return this.evaluateLogicConditions(screenerJson.evaluationLogic, answers);
     }
 
-    // No rules matched, use default outcome
-    return {
-      outcome: screenerJson.logic.defaultOutcome,
+    // Support legacy logic.rules format (original backend format)
+    if (screenerJson.logic?.rules) {
+      for (const rule of screenerJson.logic.rules) {
+        try {
+          const matches = this.evaluateCondition(rule.condition, answers);
+          
+          if (matches) {
+            return {
+              outcome: rule.outcome,
+              matchedRule: {
+                condition: rule.condition,
+                message: rule.message,
+              },
+            };
+          }
+        } catch (error) {
+          console.error('Error evaluating rule:', rule, error);
+          // Continue to next rule on error
+        }
+      }
+
+      return {
+        outcome: screenerJson.logic.defaultOutcome,
+      };
+    }
+
+    // Fallback if no logic defined
+    return { outcome: 'ask_a_doctor' };
+  },
+
+  /**
+   * Evaluate using the new evaluationLogic format
+   * Checks okToUse, then doNotUse, then defaults to askADoctor
+   */
+  evaluateLogicConditions(evaluationLogic: any, answers: Record<string, any>): EvaluationResult {
+    const checkConditions = (conditions: any[]): boolean => {
+      if (!Array.isArray(conditions)) return false;
+      
+      return conditions.every((condition) => {
+        const answer = answers[condition.questionId];
+        if (answer === undefined || answer === null) return false;
+
+        switch (condition.operator) {
+          case 'equals':
+            return answer === condition.value;
+          case 'not_equals':
+            return answer !== condition.value;
+          case 'greater_than':
+            return Number(answer) > Number(condition.value);
+          case 'less_than':
+            return Number(answer) < Number(condition.value);
+          default:
+            return false;
+        }
+      });
     };
+
+    // Check ok_to_use first (most restrictive)
+    if (evaluationLogic.okToUse && checkConditions(evaluationLogic.okToUse)) {
+      return { outcome: 'ok_to_use' };
+    }
+
+    // Check do_not_use second
+    if (evaluationLogic.doNotUse && checkConditions(evaluationLogic.doNotUse)) {
+      return { outcome: 'do_not_use' };
+    }
+
+    // Default to ask_a_doctor (safest outcome)
+    return { outcome: 'ask_a_doctor' };
   },
 
   /**

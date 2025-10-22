@@ -7,10 +7,10 @@ import { z } from 'zod';
 /**
  * Schema for creating a new screening session
  * POST /api/v1/public/sessions
+ * Note: programSlug is extracted separately in the route handler
  */
 export const createSessionSchema = z.object({
-  programSlug: z.string().min(1).max(255),
-  path: z.enum(['manual', 'ehr_assisted', 'ehr_mandatory']).default('manual'),
+  path: z.enum(['manual', 'ehr_assisted', 'ehr_mandatory']).optional().default('manual'),
 });
 
 /**

@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { SessionProvider } from "@/contexts/SessionContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { getDefaultRoute, getUserType } from "@/lib/userHelpers";
 import Login from "@/pages/Login";
@@ -13,6 +14,12 @@ import ResetPassword from "@/pages/ResetPassword";
 import AcceptInvite from "@/pages/AcceptInvite";
 import AccountProfile from "@/pages/AccountProfile";
 import Forbidden from "@/pages/Forbidden";
+
+// Consumer Pages (Public Screening Flow)
+import Welcome from "@/pages/public/Welcome";
+import Screener from "@/pages/public/Screener";
+import Outcome from "@/pages/public/Outcome";
+import VerificationCode from "@/pages/public/VerificationCode";
 
 // Super Admin Pages
 import SuperAdminDashboard from "@/pages/Dashboard";
@@ -141,6 +148,12 @@ function Router() {
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/accept-invite" component={AcceptInvite} />
       <Route path="/403" component={Forbidden} />
+
+      {/* Consumer Screening Flow (Public) */}
+      <Route path="/screen/:slug" component={Welcome} />
+      <Route path="/screen/:slug/questions" component={Screener} />
+      <Route path="/screen/:slug/outcome" component={Outcome} />
+      <Route path="/screen/:slug/code" component={VerificationCode} />
       
       {/* Account Profile (Protected) */}
       <Route path="/account/profile" component={AccountProfile} />
@@ -195,10 +208,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <SessionProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </SessionProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

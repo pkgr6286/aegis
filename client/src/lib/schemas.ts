@@ -124,3 +124,54 @@ export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 export type AcceptInviteFormData = z.infer<typeof acceptInviteSchema>;
 export type UpdateProfileFormData = z.infer<typeof updateProfileSchema>;
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
+
+// ============================================================================
+// Consumer Screening Schemas
+// ============================================================================
+
+export const booleanAnswerSchema = z.boolean({
+  required_error: 'Please select an option',
+});
+
+export const numericAnswerSchema = z.coerce.number({
+  required_error: 'Please enter a number',
+  invalid_type_error: 'Must be a valid number',
+}).finite('Must be a finite number');
+
+export const textAnswerSchema = z.string({
+  required_error: 'This field is required',
+}).min(1, 'This field cannot be empty');
+
+export const choiceAnswerSchema = z.string({
+  required_error: 'Please select an option',
+}).min(1, 'Please select an option');
+
+/**
+ * Dynamic answer schema creator based on question type
+ */
+export function createAnswerSchema(questionType: string, min?: number, max?: number) {
+  switch (questionType) {
+    case 'boolean':
+      return booleanAnswerSchema;
+    case 'numeric':
+      let schema = numericAnswerSchema;
+      if (min !== undefined) {
+        schema = schema.min(min, `Must be at least ${min}`);
+      }
+      if (max !== undefined) {
+        schema = schema.max(max, `Must be at most ${max}`);
+      }
+      return schema;
+    case 'text':
+      return textAnswerSchema;
+    case 'choice':
+      return choiceAnswerSchema;
+    default:
+      return z.any();
+  }
+}
+
+export type BooleanAnswer = z.infer<typeof booleanAnswerSchema>;
+export type NumericAnswer = z.infer<typeof numericAnswerSchema>;
+export type TextAnswer = z.infer<typeof textAnswerSchema>;
+export type ChoiceAnswer = z.infer<typeof choiceAnswerSchema>;

@@ -1,0 +1,170 @@
+Of course. As a senior enterprise UX engineer and fullstack architect, I will now define the complete UI system for the **Public Consumer**.
+
+This is the most critical user journey in the Aegis platform. The design philosophy is centered on **simplicity, clarity, trust, and zero friction**. The entire experience is a linear, step-by-step flow designed to be completed in minutes, directly in a mobile web browser without requiring an app download.
+
+### **Overall UI Structure**
+
+The Public Consumer interface is not a dashboard, but a guided, single-task application.
+
+- **No Sidebar:** The flow is strictly linear. The user moves forward with "Next" or backward with "Back." There is no complex navigation.
+- **Minimal Top Bar:** A persistent header that serves two purposes:
+    1. **Build Trust:** Displays the pharmaceutical client's logo (e.g., "Kenvue," "AstraZeneca") to reassure the user they are in the official, safe environment.
+    2. **Provide Help:** May contain a language selector or a "?" help icon.
+
+---
+
+### **The Consumer User Flow**
+
+The user journey is a sequence of screens. The core of the application is a single "Screener" screen component that dynamically renders different questions based on the JSON configuration.
+
+1. **Welcome Screen**
+2. **Screener Question Screen(s)**
+3. **Data Entry Choice Screen (The "Fork")**
+4. **EHR Connection Flow (Popup)**
+5. **Education Screen**
+6. **Comprehension Check Screen**
+7. **Outcome Screen**
+8. **Verification Code Screen**
+
+---
+
+### **UI Screen Definitions**
+
+Here is the detailed breakdown for each screen in the consumer's journey.
+
+### 📘 UI: Welcome & Session Start
+
+|  |  |
+| --- | --- |
+| **Purpose** | To greet the user, set clear expectations for the process, and build trust before asking for any information. This is the first screen seen after scanning the QR code. |
+| **Sidebar Group** | N/A (Linear Flow) |
+| **UI Elements** | • **Branded Top Bar:** Displays the Pharma client's logo.
+• **Large Headline:** e.g., "Let's check if [Product Name] is right for you."
+• **Simple Explainer Text:** 2-3 short bullet points (e.g., "Answer a few private questions," "Takes about 3 minutes," "No app download required").
+• **Primary Action Button:** "Start Secure Screening". |
+| **Fields/Columns** | N/A (Informational screen) |
+| **User Actions** | • **Start:** User clicks the "Start Secure Screening" button. |
+| **Triggered Flows** | 1. **Initial Load:** User scans QR code → URL (`check.kenvue.com/crestor-otc`) loads → Frontend calls API to get brand/screener config.
+2. **Start Session:** User clicks "Start" button → Frontend calls API to create a session record → Backend returns a `sessionToken` → Frontend stores this token securely for the duration of the flow. |
+| **APIs Used** | • **On Load:** `GET /api/v1/public/programs/:slug` → Fetches the brand config (logo, color) and the active screener JSON.
+• **On Click "Start":** `POST /api/v1/public/sessions` → Creates the `screening_sessions` record and returns the `sessionId` and a short-lived `sessionToken`. |
+| **Request/Response Shape** | ```json |
+| // Request for POST /.../sessions |  |
+| { |  |
+| "programId": "uuid-of-the-drug-program" |  |
+| } |  |
+
+// Response from POST /.../sessions
+
+{
+
+"success": true,
+
+"data": {
+
+"sessionId": "uuid-for-this-session",
+
+"sessionToken": "a-short-lived-jwt"
+
+}
+
+}
+
+Code snippet
+
+# 
+
+`| **Special Notes** | The language must be reassuring. Words like "Secure" and "Private" are critical. The screener JSON and brand info are pre-fetched here so the rest of the flow feels instant. |
+
+---
+
+### 📘 UI: Screener Question Screen
+
+| | |
+| :--- | :--- |
+| **Purpose** | To present a single, clear question to the user. This screen is a dynamic template that re-renders for each question in the `screener_json`. |
+| **Sidebar Group** | N/A (Linear Flow) |
+| **UI Elements** | • **Progress Bar:** A visual indicator at the top showing "Step X of Y."<br>• **Question Text:** Large, legible font.<br>• **Info Icon (?):** Next to medical terms. Tapping it reveals a simple, plain-language explanation in a tooltip or small modal.<br>• **Answer Controls:** <br>    - **Yes/No:** Two large, distinct buttons.<br>    - **Multiple Choice:** Radio buttons or large tap targets.<br>    - **Numeric Input:** A large, friendly numeric keypad.<br>• **Navigation Buttons:** "Back" and "Next". |
+| **Fields/Columns** | The question and answer options are dynamically populated from the `screener_json` fetched at the start. |
+| **User Actions** | • **Answer:** Select an answer.<br>• **Navigate:** Click "Next" to proceed or "Back" to change a previous answer. |
+| **Triggered Flows** | User selects an answer → `Next` button becomes active → User clicks `Next` → Frontend evaluates the branching logic from the `screener_json` and displays the next appropriate question. **No API calls are made per question.** |
+| **APIs Used** | None. This entire process is handled client-side for speed, using the pre-fetched `screener_json`. |
+| **Special Notes** | Simplicity is key. One question per screen. Large tap targets for accessibility. The progress bar is crucial for managing user expectations and reducing drop-off. |
+
+---
+
+### 📘 UI: Data Entry Choice Screen (The "Fork")
+
+| | |
+| :--- | :--- |
+| **Purpose** | To offer the user a choice between connecting their health records for an automated, faster experience, or entering the required data manually. This screen only appears if a question is mapped to an EHR data point. |
+| **Sidebar Group** | N/A (Linear Flow) |
+| **UI Elements** | • **Question Prompt:** "To continue, we need to know your latest [e.g., LDL Cholesterol] level."<br>• **Two Large Buttons:** <br>    1. **"Connect My Patient Portal"** with helper text like "Fastest & Most Accurate".<br>    2. **"Enter My Level Manually"** with helper text like "If you know your result". |
+| **Fields/Columns** | N/A |
+| **User Actions** | User chooses one of the two paths. |
+| **Triggered Flows** | • **Click "Connect...":** Initiates the EHR Connection Flow (see next screen).<br>• **Click "Enter Manually...":** Proceeds to the standard Screener Question Screen with a numeric input. |
+| **APIs Used** | None. This is a client-side routing decision. |
+| **Special Notes** | This is a critical screen for user agency and accessibility. The manual path **must** always be an option. |
+
+---
+
+### 📘 UI: EHR Connection Flow
+
+| | |
+| :--- | :--- |
+| **Purpose** | To securely guide the user through the OAuth 2.0 process of connecting their patient portal via the 3rd-party aggregator. |
+| **Sidebar Group** | N/A (Linear Flow) |
+| **UI Elements** | • **Initial Screen:** A simple screen that says "You will be securely redirected to connect your provider."<br>• **Popup Window:** A new browser window/tab is opened to the aggregator's URL.<br>• **Success/Failure Message:** The main window listens for a message from the closing popup to know if the connection succeeded. |
+| **Fields/Columns** | The popup content is controlled by the 3rd-party aggregator. |
+| **User Actions** | • The user interacts with the 3rd-party UI in the popup (searches for their hospital, logs in, grants consent). |
+| **Triggered Flows** | 1. User clicks "Connect..." on the fork screen → Frontend calls API to get the secure URL.<br>2. Frontend opens the URL in a popup.<br>3. User completes the flow in the popup → Aggregator redirects the popup to our backend callback URL.<br>4. Backend handles the callback, and the popup closes, posting a message to the main window.<br>5. Main window receives the "success" message → Calls API to fetch the parsed data.<br>6. Frontend displays the fetched data for user confirmation (e.g., "We found LDL: 110. Use this?"). |
+| **APIs Used** | • `GET /api/v1/public/sessions/:id/ehr/connect` → **(Uses `sessionToken`)** Gets the secure OAuth URL.<br>• `GET /api/v1/public/ehr/callback` → **(No token)** Handled by the backend via the popup redirect.<br>• `GET /api/v1/public/sessions/:id/ehr-data` → **(Uses `sessionToken`)** Called after the popup closes to securely fetch the parsed FHIR data. |
+| **Special Notes** | The frontend must handle popup blockers gracefully. The entire flow must feel secure and seamless. |
+
+---
+
+### 📘 UI: Outcome Screen
+
+| | |
+| :--- | :--- |
+| **Purpose** | To clearly and empathetically deliver the final result of the screening. |
+| **Sidebar Group** | N/A (Linear Flow) |
+| **UI Elements** | • **Large Icon:** ✅ for "OK to Use", ⚠️ for "Ask a Doctor", 🚫 for "Do Not Use".<br>• **Clear Headline:** e.g., "You're cleared to use [Product Name]." or "Please speak with a professional."<br>• **Simple Explainer Text:** Provides context and a clear next step.<br>• **Action Button:** "Get My Verification Code" (for success) or "Done" (for other outcomes). |
+| **Fields/Columns** | N/A |
+| **User Actions** | User reads the outcome and clicks the action button. |
+| **Triggered Flows** | This screen is displayed **after** the user submits their final answer. The frontend bundles all `answers_json` → `PUT` API call is made → Backend's `screenerEngineService` evaluates the answers and returns the final `outcome` → Frontend displays the corresponding screen. |
+| **APIs Used** | • `PUT /api/v1/public/sessions/:id` → **(Uses `sessionToken`)** Submits the `answers_json` and receives the final `outcome` in the response. |
+| **Request/Response Shape** | ```json
+// Request for PUT /.../sessions/:id
+{
+  "answersJson": {
+    "age_check": true,
+    "ldl_level": 110
+  }
+}
+
+// Response
+{
+  "success": true,
+  "data": {
+    "sessionId": "uuid-for-this-session",
+    "outcome": "ok_to_use"
+  }
+}
+``` |
+| **Special Notes** | The language here is critical. For non-success outcomes, the tone must be helpful and guiding, not alarming or dismissive. Provide actionable next steps. |
+
+---
+
+### 📘 UI: Verification Code Screen
+
+| | |
+| :--- | :--- |
+| **Purpose** | To provide the consumer with the single-use "key" needed to purchase the product at a retailer or online. |
+| **Sidebar Group** | N/A (Linear Flow) |
+| **UI Elements** | • **Large QR Code / Barcode:** For easy scanning at a POS.<br>• **Alphanumeric Code:** The code in plain text for manual entry.<br>• **"Copy Code" Button:** One-click copy to clipboard.<br>• **Expiration Timer:** A visual countdown timer (e.g., "Expires in 14:59").<br>• **Instructions:** Simple text like "Show this code to the pharmacist." |
+| **Fields/Columns** | `code`, `expiresAt`. |
+| **User Actions** | • Show the code to a cashier.<br>• Copy the code for an e-commerce checkout. |
+| **Triggered Flows** | This screen is displayed after the user clicks "Get My Verification Code" on the success outcome screen → Frontend makes a `POST` API call → Backend generates the code, sets an expiration, and returns it → Frontend displays the code and starts the countdown timer. |
+| **APIs Used** | • `POST /api/v1/public/sessions/:id/generate-code` → **(Uses `sessionToken`)** Generates the secure, single-use `verification_code`. |
+| **Special Notes** | Make it clear that the code is single-use and time-sensitive. The UI should be bright and easy to read, even on a cracked phone screen in a brightly lit store. |`

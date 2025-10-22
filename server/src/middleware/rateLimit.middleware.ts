@@ -98,6 +98,11 @@ const verificationLimiter = new InMemoryRateLimiter(
  */
 function createRateLimitMiddleware(limiter: InMemoryRateLimiter) {
   return (req: Request, res: Response, next: NextFunction) => {
+    // Bypass rate limiting in development/test environments
+    if (process.env.NODE_ENV === 'development' || process.env.DISABLE_RATE_LIMIT === 'true') {
+      return next();
+    }
+
     // Use IP address as identifier
     // In production, consider using a combination of IP + user agent + other factors
     const identifier = req.ip || req.socket.remoteAddress || 'unknown';
