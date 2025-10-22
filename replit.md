@@ -2,174 +2,79 @@
 
 ## Overview
 
-Aegis is a multi-tenant SaaS platform designed for pharmaceutical patient assistance programs. Its purpose is to enable pharmaceutical companies to manage drug programs, patient screening sessions, and partner integrations while ensuring strict data isolation between tenants. The platform is built with enterprise-grade security and healthcare compliance (HIPAA-ready architecture) using PostgreSQL's Row-Level Security (RLS) for complete tenant data segregation. Key capabilities include a Super Admin API for platform management, a Pharma Admin API for tenant operations, a Public Consumer API for patient screening, and a Partner Verification API.
+Aegis is a multi-tenant SaaS platform for pharmaceutical patient assistance programs. It enables pharmaceutical companies to manage drug programs, patient screening, and partner integrations with strict data isolation, enterprise-grade security, and healthcare compliance (HIPAA-ready) using PostgreSQL's Row-Level Security (RLS). The platform provides Super Admin, Pharma Admin, Public Consumer, and Partner Verification APIs. Its purpose is to streamline patient assistance processes, enhance data accuracy, and ensure regulatory adherence in the pharmaceutical industry.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes
-
-**Date**: October 21, 2025
-
-**Authentication & Navigation Fixes**:
-1. **Auth Route Configuration**: Fixed API route mounting path from `/api/auth` to `/api/v1/auth` to match frontend expectations and API versioning strategy
-2. **Added /me Endpoint**: Implemented `GET /api/v1/superadmin/me` endpoint to support authentication state verification in the frontend AuthContext
-3. **Sidebar Navigation**: Fixed sidebar links to use wouter's `Link` component instead of regular `<a>` tags, enabling proper client-side SPA navigation without full page reloads
-4. **JWT Configuration**: Resolved JWT_SECRET environment variable configuration issue
-
-**Super Admin UI Features**:
-- Complete login/authentication flow with credential: admin@aegis.com / admin123
-- Dashboard with platform statistics
-- User Management page with pagination
-- Tenant Management page
-- Platform Audit Logs with filtering capabilities
-- Client-side navigation using wouter for seamless SPA experience
-
 ## System Architecture
 
-### Multi-Tenancy Strategy
-
-The platform utilizes PostgreSQL's Row-Level Security (RLS) for database-level multi-tenancy. This approach enforces automatic data isolation, enhancing security and performance. Tenant context is set before each database query, allowing RLS policies to filter data appropriately.
+Aegis uses a multi-tenancy model with PostgreSQL's Row-Level Security (RLS) for data isolation.
 
 ### Technology Stack
 
-*   **Backend**: Express.js with TypeScript, running on Node.js.
-*   **Authentication**: JWT (JSON Web Tokens) for secure, token-based authentication.
-*   **Database**: PostgreSQL (via Neon Serverless) for relational data, managed with Drizzle ORM for type-safe queries.
+*   **Backend**: Express.js with TypeScript on Node.js.
 *   **Frontend**: React 18 with TypeScript, using Vite.
-*   **UI/UX**: shadcn/ui (Radix UI primitives) with Tailwind CSS, following a "New York" design system variant for accessible and customizable components. The design aims for an enterprise SaaS aesthetic, inspired by Linear, Stripe, and Healthcare.gov, with a professional blue color palette and WCAG 2.1 AA accessibility compliance.
+*   **Database**: PostgreSQL (via Neon Serverless) managed with Drizzle ORM.
+*   **Authentication**: JWT for token-based authentication.
+*   **UI/UX**: shadcn/ui (Radix UI primitives) with Tailwind CSS, featuring an enterprise SaaS aesthetic with a professional blue color palette, adhering to WCAG 2.1 AA accessibility standards.
 *   **Validation**: Zod for runtime type validation, integrated with Drizzle and React Hook Form.
-*   **State Management**: TanStack Query for server state management and data fetching.
+*   **State Management**: TanStack Query for server state management.
 
 ### Database Schema Architecture
 
-The database schema is organized into five distinct modules: `public` (global system tables), `core` (tenant-scoped core functionality with RLS), `programs` (drug program and screener configurations), `consumer` (patient screening, verification codes), and `partners` (external partner integrations). UUID primary keys, comprehensive audit logging, enum types for data integrity, and timestamp fields are standard across tables.
+The database is modular, with schemas for public, core, programs, consumer, and partners. It uses UUID primary keys, includes comprehensive audit logging, enum types, and timestamp fields.
 
 ### Authentication & Authorization
 
-JWT-based authentication is used with cryptographic signature verification. A robust role system includes system-level roles (`super_admin`, `support_staff`) and tenant-level roles (`admin`, `editor`, `viewer`), enforced via middleware. Session management is handled by Express session middleware with a PostgreSQL store.
+Authentication is JWT-based, supporting system-level roles (super_admin, support_staff) and tenant-level roles (admin, editor, viewer), enforced via middleware.
 
 ### API Architecture
 
-The API follows a RESTful design, organized under `/api/v1/`.
+A RESTful API under `/api/v1/` includes:
+*   **Super Admin API**: For platform-level tenant management.
+*   **Pharma Admin API**: For tenant-specific operations (brand config, drug programs, user/partner management).
+*   **Public Consumer API**: Manages patient screening flows, including EHR Integration via OAuth.
+*   **Partner Verification API**: Facilitates secure verification of consumer codes by partners using API keys.
 
-*   **Super Admin API**: Manages platform-level tenant operations, requiring `super_admin` role.
-*   **Pharma Admin API**: Manages tenant-specific operations including brand configuration, drug programs, user management, and partner integrations, requiring JWT authentication and tenant-level roles.
-*   **Public Consumer API**: Handles patient screening flows (QR code -> screening -> verification code) with session JWTs and rate limiting.
-*   **EHR Integration API ("Fast Path")**: Enables consumers to connect their Electronic Health Records via OAuth for automatic health data population, reducing manual entry. Uses state JWT tokens for CSRF protection, mock FHIR data parsing, and audit logging for compliance.
-*   **Partner Verification API**: Facilitates atomic verification of consumer codes by partners using bcrypt-hashed API key authentication and rate limiting.
-
-Middleware handles JSON parsing, CORS, logging, Zod validation, various authentication methods (JWT, Session JWT, API Key), role-based access control, tenant context injection for RLS, and rate limiting. A centralized error handling system provides environment-aware error details. Data access is abstracted via a repository pattern using Drizzle ORM, and business logic is encapsulated within a service layer that also integrates automatic audit logging.
+Middleware handles JSON parsing, CORS, logging, Zod validation, authentication, role-based access control, tenant context injection for RLS, and rate limiting. Business logic is in a service layer with automatic audit logging.
 
 ### Frontend Architecture
 
-Components are organized into `/components/ui`, `/pages`, `/hooks`, and `/lib`. Styling is managed with Tailwind CSS and custom CSS variables, supporting light and dark modes. The frontend maintains full TypeScript coverage with shared types between frontend and backend.
+The frontend is structured with `/components/ui`, `/pages`, `/hooks`, and `/lib` directories. Styling uses Tailwind CSS, supporting light/dark modes, and has full TypeScript coverage.
+
+#### Pharma Admin UI Architecture
+
+Pharma Admin pages in `client/src/pages/admin/` follow strict architectural patterns, including:
+- Brand Management (`/admin/brands`)
+- User Management (`/admin/users`)
+- Partner Management (`/admin/partners`)
+- Audit Logs (`/admin/audit-logs`)
+- Drug Programs List (`/admin/programs`)
+- Drug Program Detail (`/admin/programs/:id`)
+- Screener Builder (`/admin/programs/:programId/screener/:versionId`)
+
+**Form Validation Architecture:** All forms use React Hook Form + Zod, with schemas defined in `client/src/lib/schemas.ts` and types inferred from these schemas.
+
+**API Integration Pattern:** All pages use TanStack Query v5 for server state management, employing queries for data fetching with caching and mutations for create/update/delete operations with cache invalidation via hierarchical query keys.
+
+**Design System & UI Patterns:** Leverages shadcn/ui components (Card, Table, Dialog, Button, Badge, Skeleton) and patterns like status badges and loading states. All pages include `data-testid` attributes for E2E testing.
 
 ## External Dependencies
 
 ### Database & Infrastructure
-
-*   **Neon Serverless PostgreSQL**: Primary database.
+*   **Neon Serverless PostgreSQL**: Primary relational database.
 
 ### Security & Authentication
-
-*   **jsonwebtoken**: For JWT handling and OAuth state tokens.
-*   **bcrypt**: For one-way hashing of partner API keys (10 salt rounds).
-
-### Audit & Compliance
-
-*   **Audit Log Service**: Tracks sensitive operations for compliance.
+*   **jsonwebtoken**: For JWT creation and verification.
+*   **bcrypt**: For one-way hashing of partner API keys.
 
 ### UI Component Libraries
-
-*   **Radix UI**: Provides accessible, unstyled component primitives.
+*   **Radix UI**: Accessible, unstyled UI primitives.
 *   **lucide-react**: Icon library.
-*   **react-day-picker**: Date picker.
-*   **embla-carousel-react**: Carousel functionality.
-*   **cmdk**: Command palette.
-*   **vaul**: Drawer component.
-*   **recharts**: Charting library.
 
 ### Utilities
-
-*   **Class Variance Authority (CVA)**: For managing component variants.
-*   **clsx + tailwind-merge**: For combining Tailwind classes.
-*   **date-fns**: Date manipulation.
-*   **nanoid**: Secure unique ID generation.
-
-## EHR Integration ("Fast Path")
-
-### Overview
-
-The EHR "Fast Path" integration enables consumers to connect their Electronic Health Records during the screening process, automatically populating health data (such as LDL cholesterol levels, medications) instead of requiring manual entry. This improves user experience and data accuracy.
-
-### OAuth Flow
-
-1. **Consumer initiates connection**: During screening, consumer clicks "Connect EHR" → `GET /api/v1/public/sessions/:id/ehr/connect`
-2. **System generates OAuth URL**: Backend creates state JWT containing sessionId and tenantId, then redirects to mock EHR aggregator (e.g., Health Gorilla)
-3. **Consumer grants consent**: Consumer authorizes access at the aggregator's OAuth page
-4. **Callback handling**: Aggregator redirects back → `GET /api/v1/public/ehr/callback?code=xxx&state=yyy`
-5. **Token exchange** (mock): System verifies state JWT, simulates token exchange, records consent in `ehr_consents` table
-6. **Session path update**: System updates `screening_sessions.path` from "manual" to "ehr_assisted"
-7. **Data retrieval**: Consumer flow fetches parsed health data → `GET /api/v1/public/sessions/:id/ehr-data`
-
-### API Endpoints
-
-All EHR endpoints are mounted under `/api/v1/public` with rate limiting.
-
-#### GET /api/v1/public/sessions/:id/ehr/connect
-
-*   **Description**: Generate OAuth connect URL for EHR aggregator
-*   **Authentication**: Session JWT (Bearer token)
-*   **Response**: `{ success: true, connectUrl: "https://..." }`
-*   **Security**: State JWT contains sessionId and tenantId for CSRF protection
-
-#### GET /api/v1/public/ehr/callback
-
-*   **Description**: Handle OAuth callback from EHR aggregator
-*   **Authentication**: None (public endpoint)
-*   **Query Parameters**: `code` (authorization code), `state` (JWT token)
-*   **Response**: HTML page with success/failure message (auto-closes popup)
-*   **Actions**: Verifies state JWT, mocks token exchange, creates consent record, updates session path, audit logs consent
-
-#### GET /api/v1/public/sessions/:id/ehr-data
-
-*   **Description**: Fetch parsed EHR data for a session
-*   **Authentication**: Session JWT (Bearer token)
-*   **Response**: `{ success: true, data: { labResults: [...], medications: [...], retrievedAt: "..." } }`
-*   **Requirements**: Active EHR consent must exist
-*   **Data Format**: Parsed FHIR data (NOT raw FHIR bundle)
-
-### Implementation Details
-
-#### Mock Data
-
-The implementation uses mock data to simulate the EHR aggregator integration:
-
-*   **OAuth Provider**: `https://sandbox.healthgorilla.example.com/oauth/authorize`
-*   **Token Exchange**: Simulated server-to-server call (no actual HTTP request)
-*   **FHIR Data**: Mock bundle containing LDL cholesterol observation (145 mg/dL) and two active medications (Atorvastatin, Metformin)
-
-#### Database Tables
-
-*   **ehr_consents**: Immutable audit log of consent grants (id, tenantId, screeningSessionId, status, providerName, scopesGranted, createdAt)
-*   **screening_sessions.path**: Updated to "ehr_assisted" when EHR data is connected
-
-#### Security Features
-
-*   **State JWT**: Prevents CSRF attacks, expires in 15 minutes
-*   **Session JWT**: Protects connect and data endpoints
-*   **Consent Validation**: Data fetching requires active consent
-*   **Audit Logging**: All consent grants are logged for compliance
-*   **Tenant Isolation**: RLS policies ensure data isolation
-
-### Production Considerations
-
-The current implementation uses mock data for development. Before production deployment:
-
-1. **Real OAuth Provider**: Replace mock aggregator URL with real EHR aggregator (e.g., Health Gorilla, CommonHealth)
-2. **Token Exchange**: Implement actual server-to-server POST to exchange authorization code for access token
-3. **FHIR API Calls**: Replace mock FHIR data with real API calls using LOINC codes (e.g., 2093-3 for LDL cholesterol)
-4. **Client Credentials**: Configure OAuth client_id and client_secret for the aggregator
-5. **Scopes**: Define appropriate FHIR scopes (e.g., `patient/*.read`, `Observation.read`, `MedicationStatement.read`)
+*   **Class Variance Authority (CVA)**: For managing component styling variants.
+*   **clsx + tailwind-merge**: For conditional and merging Tailwind CSS classes.
+*   **nanoid**: For secure, unique ID generation.
