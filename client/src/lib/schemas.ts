@@ -56,8 +56,8 @@ export type GenerateApiKeyFormData = z.infer<typeof generateApiKeySchema>;
 
 export const drugProgramSchema = z.object({
   name: z.string().min(1, 'Program name is required').max(255),
-  brandName: z.string().max(255).optional(),
-  brandConfigId: z.string().uuid().optional(),
+  brandName: z.string().max(255).optional().transform(val => val || undefined),
+  brandConfigId: z.string().uuid().optional().or(z.literal('').transform(() => undefined)),
   status: z.enum(['draft', 'active', 'archived']),
 });
 
