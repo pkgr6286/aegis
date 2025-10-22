@@ -85,21 +85,9 @@ function PharmaAdminRoute({ component: Component }: { component: () => JSX.Eleme
   );
 }
 
-// Root redirect component
+// Root redirect component - SIMPLE VERSION
 function RootRedirect() {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [location, setLocation] = useLocation();
-
-  useEffect(() => {
-    if (!isLoading) {
-      const targetRoute = isAuthenticated ? getDefaultRoute(user) : '/login';
-      
-      // Only redirect if we're not already at the target route
-      if (location !== targetRoute) {
-        setLocation(targetRoute);
-      }
-    }
-  }, [isAuthenticated, isLoading, user, location, setLocation]);
 
   if (isLoading) {
     return (
@@ -109,12 +97,11 @@ function RootRedirect() {
     );
   }
 
-  // Show loading while redirect is in progress
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Skeleton className="h-12 w-48" />
-    </div>
-  );
+  if (isAuthenticated) {
+    return <Redirect to={getDefaultRoute(user)} replace />;
+  }
+
+  return <Redirect to="/login" replace />;
 }
 
 function Router() {

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useState } from 'react';
+import { Redirect, useLocation } from 'wouter';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,18 +11,16 @@ import { Shield } from 'lucide-react';
 export default function Login() {
   const { login, isAuthenticated } = useAuth();
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const [, navigate] = useLocation();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      setLocation('/');
-    }
-  }, [isAuthenticated, setLocation]);
+  // Redirect if already authenticated - use replace to avoid history issues
+  if (isAuthenticated) {
+    return <Redirect to="/" replace />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +32,8 @@ export default function Login() {
         title: 'Welcome back!',
         description: 'You have successfully signed in.',
       });
-      // Redirect is handled by useEffect when isAuthenticated changes
+      // Navigate programmatically after successful login
+      navigate('/');
     } catch (error) {
       toast({
         variant: 'destructive',
