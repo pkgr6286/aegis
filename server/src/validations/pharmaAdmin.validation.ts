@@ -16,7 +16,7 @@ import { partners, partnerApiKeys } from '../db/schema/partners';
  */
 export const inviteUserSchema = z.object({
   email: z.string().email(),
-  fullName: z.string().min(1).max(255).optional(),
+  fullName: z.string().max(255).optional().transform(val => val || undefined),
   role: z.enum(['admin', 'editor', 'viewer']).default('viewer'),
 });
 

@@ -70,7 +70,7 @@ export default function BrandManagement() {
   const createMutation = useMutation({
     mutationFn: async (data: BrandConfigFormData) => {
       return await apiClient.post<{ success: boolean; data: BrandConfig }>(
-        '/api/v1/admin/brand-configs',
+        '/admin/brand-configs',
         data
       );
     },
@@ -96,7 +96,7 @@ export default function BrandManagement() {
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: BrandConfigFormData }) => {
       return await apiClient.put<{ success: boolean; data: BrandConfig }>(
-        `/api/v1/admin/brand-configs/${id}`,
+        `/admin/brand-configs/${id}`,
         data
       );
     },
@@ -122,7 +122,7 @@ export default function BrandManagement() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       return await apiClient.delete<{ success: boolean }>(
-        `/api/v1/admin/brand-configs/${id}`
+        `/admin/brand-configs/${id}`
       );
     },
     onSuccess: () => {

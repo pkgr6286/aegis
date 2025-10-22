@@ -33,9 +33,16 @@ export const drugProgramService = {
    * Create a new drug program
    */
   async createDrugProgram(tenantId: string, userId: string, data: CreateDrugProgramInput) {
+    // Generate a slug from the program name if not provided
+    const slug = data.slug || data.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
     const program = await drugProgramRepository.create({
       tenantId,
       ...data,
+      slug,
     });
 
     // Audit log

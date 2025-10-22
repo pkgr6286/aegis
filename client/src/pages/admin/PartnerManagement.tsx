@@ -96,7 +96,7 @@ export default function PartnerManagement() {
   const createMutation = useMutation({
     mutationFn: async (data: CreatePartnerFormData) => {
       return await apiClient.post<{ success: boolean; data: Partner }>(
-        '/api/v1/admin/partners',
+        '/admin/partners',
         data
       );
     },
@@ -122,7 +122,7 @@ export default function PartnerManagement() {
   const generateKeyMutation = useMutation({
     mutationFn: async ({ partnerId, data }: { partnerId: string; data: GenerateApiKeyFormData }) => {
       return await apiClient.post<{ success: boolean; data: GenerateApiKeyResponse }>(
-        `/api/v1/admin/partners/${partnerId}/keys`,
+        `/admin/partners/${partnerId}/keys`,
         data
       );
     },
@@ -153,7 +153,7 @@ export default function PartnerManagement() {
   const revokeKeyMutation = useMutation({
     mutationFn: async ({ partnerId, keyId }: { partnerId: string; keyId: string }) => {
       return await apiClient.delete<{ success: boolean }>(
-        `/api/v1/admin/partners/${partnerId}/keys/${keyId}`
+        `/admin/partners/${partnerId}/keys/${keyId}`
       );
     },
     onSuccess: () => {

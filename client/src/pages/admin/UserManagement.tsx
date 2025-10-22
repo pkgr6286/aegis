@@ -82,7 +82,7 @@ export default function UserManagement() {
   const inviteMutation = useMutation({
     mutationFn: async (data: InviteUserFormData) => {
       return await apiClient.post<{ success: boolean; data: TenantUser }>(
-        '/api/v1/admin/users/invite',
+        '/admin/users/invite',
         data
       );
     },
@@ -108,7 +108,7 @@ export default function UserManagement() {
   const removeMutation = useMutation({
     mutationFn: async (userId: string) => {
       return await apiClient.delete<{ success: boolean }>(
-        `/api/v1/admin/users/${userId}`
+        `/admin/users/${userId}`
       );
     },
     onSuccess: () => {
@@ -269,7 +269,9 @@ export default function UserManagement() {
                         : 'Never'}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {new Date(user.createdAt).toLocaleDateString()}
+                      {user.joinedAt
+                        ? new Date(user.joinedAt).toLocaleDateString()
+                        : 'N/A'}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button

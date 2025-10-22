@@ -26,7 +26,7 @@ export type BrandConfigFormData = z.infer<typeof brandConfigSchema>;
 
 export const inviteUserSchema = z.object({
   email: z.string().email('Must be a valid email address'),
-  fullName: z.string().min(1, 'Name is required').max(255).optional(),
+  fullName: z.string().max(255).optional().transform(val => val || undefined),
   role: z.enum(['admin', 'editor', 'viewer']),
 });
 

@@ -37,18 +37,27 @@ export const pharmaAdminService = {
 
     // If user doesn't exist, create them
     if (!user) {
+      // Split fullName into firstName and lastName
+      const nameParts = (data.fullName || '').trim().split(/\s+/);
+      const firstName = nameParts[0] || data.email.split('@')[0];
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
       user = await userRepository.create({
         email: data.email,
-        fullName: data.fullName,
+        // Placeholder password - user will set real password on first login
+        hashedPassword: await bcrypt.hash(nanoid(32), 10),
+        firstName,
+        lastName: lastName || undefined,
       });
     }
 
     // Add user to tenant with specified role
-    const tenantUser = await tenantRepository.addUserToTenant(
+    const tenantUser = await tenantRepository.addUserToTenant({
       tenantId,
-      user.id,
-      data.role
-    );
+      userId: user.id,
+      role: data.role,
+      createdBy: adminUserId,
+    });
 
     // Audit log
     await auditLogService.createAuditLog({

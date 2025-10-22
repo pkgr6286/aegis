@@ -1,5 +1,5 @@
 import { db } from '../index';
-import { tenants } from '../schema/public';
+import { tenants, users } from '../schema/public';
 import { tenantUsers } from '../schema/core';
 import { eq, and, sql } from 'drizzle-orm';
 
@@ -120,10 +120,25 @@ export class TenantRepository {
       conditions.push(eq(tenantUsers.role, options.role));
     }
 
-    return await db
+    // Join with users table to get email and name information
+    const results = await db
       .select()
       .from(tenantUsers)
+      .innerJoin(users, eq(tenantUsers.userId, users.id))
       .where(and(...conditions));
+
+    // Map the results to a flatter structure
+    return results.map((row) => ({
+      userId: row.tenant_users.userId,
+      tenantId: row.tenant_users.tenantId,
+      role: row.tenant_users.role,
+      joinedAt: row.tenant_users.joinedAt,
+      createdBy: row.tenant_users.createdBy,
+      email: row.users.email,
+      firstName: row.users.firstName,
+      lastName: row.users.lastName,
+      lastLoginAt: row.users.lastLoginAt,
+    }));
   }
 
   /**

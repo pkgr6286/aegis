@@ -93,7 +93,7 @@ export default function DrugPrograms() {
   const createMutation = useMutation({
     mutationFn: async (data: DrugProgramFormData) => {
       return await apiClient.post<{ success: boolean; data: DrugProgram }>(
-        '/api/v1/admin/drug-programs',
+        '/admin/drug-programs',
         data
       );
     },
@@ -119,7 +119,7 @@ export default function DrugPrograms() {
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: DrugProgramFormData }) => {
       return await apiClient.put<{ success: boolean; data: DrugProgram }>(
-        `/api/v1/admin/drug-programs/${id}`,
+        `/admin/drug-programs/${id}`,
         data
       );
     },
@@ -145,7 +145,7 @@ export default function DrugPrograms() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       return await apiClient.delete<{ success: boolean }>(
-        `/api/v1/admin/drug-programs/${id}`
+        `/admin/drug-programs/${id}`
       );
     },
     onSuccess: () => {
