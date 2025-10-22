@@ -29,55 +29,63 @@ export const pharmaAdminService = {
   },
 
   /**
-   * Invite a new user to the tenant
+   * Invite a new user to the tenant by creating an invitation token
    */
   async inviteUser(tenantId: string, adminUserId: string, data: InviteUserInput) {
-    // Check if user already exists
-    let user = await userRepository.findByEmail(data.email);
+    const { db } = await import('../db');
+    const { invitationTokens } = await import('../db/schema/public');
+    const { and, eq } = await import('drizzle-orm');
 
-    // If user doesn't exist, create them
-    if (!user) {
-      // Split fullName into firstName and lastName
-      const nameParts = (data.fullName || '').trim().split(/\s+/);
-      const firstName = nameParts[0] || data.email.split('@')[0];
-      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+    // Expire any existing active invitation tokens for this email/tenant
+    await db
+      .update(invitationTokens)
+      .set({ status: 'expired' })
+      .where(
+        and(
+          eq(invitationTokens.email, data.email),
+          eq(invitationTokens.tenantId, tenantId),
+          eq(invitationTokens.status, 'active')
+        )
+      );
 
-      user = await userRepository.create({
+    // Create new invitation token
+    const token = nanoid(32);
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    const [invitation] = await db
+      .insert(invitationTokens)
+      .values({
         email: data.email,
-        // Placeholder password - user will set real password on first login
-        hashedPassword: await bcrypt.hash(nanoid(32), 10),
-        firstName,
-        lastName: lastName || undefined,
-      });
-    }
-
-    // Add user to tenant with specified role
-    const tenantUser = await tenantRepository.addUserToTenant({
-      tenantId,
-      userId: user.id,
-      role: data.role,
-      createdBy: adminUserId,
-    });
+        token,
+        tenantId,
+        role: data.role,
+        invitedBy: adminUserId,
+        status: 'active',
+        expiresAt,
+      })
+      .returning();
 
     // Audit log
     await auditLogService.createAuditLog({
       tenantId,
       userId: adminUserId,
-      action: 'user.invited',
-      resourceType: 'tenant_user',
-      resourceId: user.id,
+      action: 'invitation.created',
+      entityType: 'invitation_token',
+      entityId: invitation.id,
       changes: {
         after: {
-          userId: user.id,
-          email: user.email,
+          email: data.email,
           role: data.role,
+          expiresAt: invitation.expiresAt,
         },
       },
     });
 
     return {
-      user,
-      tenantUser,
+      id: invitation.id,
+      email: invitation.email,
+      role: invitation.role,
+      expiresAt: invitation.expiresAt,
     };
   },
 
