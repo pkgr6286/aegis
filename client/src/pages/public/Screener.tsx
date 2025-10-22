@@ -165,11 +165,13 @@ export default function Screener() {
       setScreenerComplete();
       setEvaluation(response.data.evaluation);
 
-      console.log('[Screener] Navigating to outcome page with state');
-      // Navigate to outcome page, passing evaluation via state to avoid race condition
-      navigate(`/screen/${slug}/outcome`, { 
-        state: { evaluation: response.data.evaluation }
-      });
+      // Store evaluation in sessionStorage as a bridge to avoid React state race condition
+      // This ensures Outcome component can access it immediately
+      sessionStorage.setItem('pending_evaluation', JSON.stringify(response.data.evaluation));
+
+      console.log('[Screener] Navigating to outcome page');
+      // Navigate to outcome page
+      navigate(`/screen/${slug}/outcome`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit answers');
       setIsSubmitting(false);

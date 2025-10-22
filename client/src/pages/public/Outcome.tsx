@@ -14,15 +14,33 @@ import { CheckCircle2, AlertCircle, XCircle, ArrowRight } from 'lucide-react';
 
 export default function Outcome() {
   const { slug } = useParams<{ slug: string }>();
-  const [location, navigate] = useLocation();
-  const { evaluation: contextEvaluation, session, program } = useSession();
+  const [, navigate] = useLocation();
+  const { evaluation: contextEvaluation, session, program, setEvaluation } = useSession();
 
-  // Get evaluation from navigation state (passed during submit) or context
-  // Navigation state takes precedence to avoid race condition
-  const locationState = (location as any).state as { evaluation?: any } | undefined;
-  const evaluation = locationState?.evaluation || contextEvaluation;
+  // Get evaluation from sessionStorage (bridge from screener) or context
+  // sessionStorage takes precedence to avoid React state race condition
+  let evaluation = contextEvaluation;
+  
+  if (!evaluation) {
+    const pendingEval = sessionStorage.getItem('pending_evaluation');
+    if (pendingEval) {
+      try {
+        const parsedEval = JSON.parse(pendingEval);
+        evaluation = parsedEval;
+        // Set in context for future renders
+        if (parsedEval) {
+          setEvaluation(parsedEval);
+        }
+        // Clear from sessionStorage
+        sessionStorage.removeItem('pending_evaluation');
+        console.log('[Outcome] Loaded evaluation from sessionStorage:', evaluation);
+      } catch (e) {
+        console.error('[Outcome] Failed to parse pending evaluation:', e);
+      }
+    }
+  }
 
-  console.log('[Outcome] Rendering - location state:', locationState?.evaluation, 'context:', contextEvaluation, 'final:', evaluation);
+  console.log('[Outcome] Rendering - context:', contextEvaluation, 'final:', evaluation);
 
   // Redirect if no evaluation
   useEffect(() => {
