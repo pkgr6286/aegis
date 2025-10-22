@@ -3,8 +3,8 @@ import type { User } from '@/types/api';
 export function getUserType(user: User | null): 'superadmin' | 'pharma-admin' | 'none' {
   if (!user) return 'none';
   
-  // Super Admin has system role
-  if (user.systemRole) {
+  // Super Admin has system role (check both singular and plural for compatibility)
+  if (user.systemRole || (user.systemRoles && user.systemRoles.length > 0)) {
     return 'superadmin';
   }
   

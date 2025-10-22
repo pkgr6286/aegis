@@ -20,7 +20,8 @@ export interface User {
   email: string;
   firstName: string | null;
   lastName: string | null;
-  systemRole: 'super_admin' | 'support_staff' | null;
+  systemRole?: 'super_admin' | 'support_staff' | null;  // Singular (for display)
+  systemRoles?: Array<'super_admin' | 'support_staff'>; // Plural (from JWT)
   tenantRole: 'admin' | 'editor' | 'viewer' | null;
   lastLoginAt: string | null;
   createdAt: string;
