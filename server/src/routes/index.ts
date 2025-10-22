@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import authRoutes from './auth.routes';
+import accountRoutes from './account.routes';
 import superAdminRoutes from './superAdmin.routes';
 import brandConfigRoutes from './brandConfig.routes';
 import drugProgramRoutes from './drugProgram.routes';
@@ -28,6 +29,9 @@ router.get('/health', (req, res) => {
 
 // Mount auth routes (public)
 router.use('/v1/auth', authRoutes);
+
+// Mount account routes (protected - requires authentication)
+router.use('/v1/account', accountRoutes);
 
 // Mount super admin routes (protected)
 // All routes under /api/v1/superadmin require authentication and super_admin role

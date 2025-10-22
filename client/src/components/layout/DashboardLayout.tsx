@@ -13,7 +13,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, User as UserIcon } from 'lucide-react';
+import { LogOut, User as UserIcon, Settings } from 'lucide-react';
+import { Link } from 'wouter';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -72,6 +73,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <span>{user?.email}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                <Link href="/account/profile">
+                  <DropdownMenuItem data-testid="button-my-account">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Account Settings</span>
+                  </DropdownMenuItem>
+                </Link>
                 <DropdownMenuItem onClick={handleLogout} data-testid="button-logout">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>

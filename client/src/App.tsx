@@ -8,6 +8,11 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { getDefaultRoute, getUserType } from "@/lib/userHelpers";
 import Login from "@/pages/Login";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
+import AcceptInvite from "@/pages/AcceptInvite";
+import AccountProfile from "@/pages/AccountProfile";
+import Forbidden from "@/pages/Forbidden";
 
 // Super Admin Pages
 import SuperAdminDashboard from "@/pages/Dashboard";
@@ -132,6 +137,13 @@ function Router() {
       
       {/* Public Routes */}
       <Route path="/login" component={Login} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/accept-invite" component={AcceptInvite} />
+      <Route path="/403" component={Forbidden} />
+      
+      {/* Account Profile (Protected) */}
+      <Route path="/account/profile" component={AccountProfile} />
       
       {/* Super Admin Routes */}
       <Route path="/superadmin/dashboard">
