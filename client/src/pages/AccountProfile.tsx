@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { updateProfileSchema, changePasswordSchema, type UpdateProfileFormData, type ChangePasswordFormData } from '@/lib/schemas';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient } from '@/lib/queryClient';
+import { apiClient } from '@/lib/apiClient';
 import { User, Lock, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -49,21 +50,7 @@ export default function AccountProfile() {
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: UpdateProfileFormData) => {
-      const res = await fetch('/api/v1/account/me', {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || 'Failed to update profile');
-      }
-
-      return res.json();
+      return await apiClient.put('/account/me', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/v1/account/me'] });
@@ -84,24 +71,10 @@ export default function AccountProfile() {
   // Change password mutation
   const changePasswordMutation = useMutation({
     mutationFn: async (data: ChangePasswordFormData) => {
-      const res = await fetch('/api/v1/account/me/password', {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          currentPassword: data.currentPassword,
-          newPassword: data.newPassword,
-        }),
+      return await apiClient.put('/account/me/password', {
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
       });
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || 'Failed to change password');
-      }
-
-      return res.json();
     },
     onSuccess: () => {
       passwordForm.reset();
