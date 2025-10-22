@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { Switch, Route, Redirect, useLocation } from "wouter";
+import { useEffect, useRef } from "react";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -25,7 +25,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Protected Route wrapper for Super Admin
 function SuperAdminRoute({ component: Component }: { component: () => JSX.Element }) {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [location] = useLocation();
+  const [, setLocation] = useLocation();
+  const hasRedirected = useRef(false);
 
   if (isLoading) {
     return (
@@ -38,13 +39,17 @@ function SuperAdminRoute({ component: Component }: { component: () => JSX.Elemen
     );
   }
 
-  if (!isAuthenticated) {
-    return <Redirect to="/login" />;
+  if (!isAuthenticated && !hasRedirected.current) {
+    hasRedirected.current = true;
+    setTimeout(() => setLocation('/login'), 0);
+    return <div className="min-h-screen flex items-center justify-center"><Skeleton className="h-12 w-48" /></div>;
   }
 
   const userType = getUserType(user);
-  if (userType !== 'superadmin') {
-    return <Redirect to={getDefaultRoute(user)} />;
+  if (userType !== 'superadmin' && !hasRedirected.current) {
+    hasRedirected.current = true;
+    setTimeout(() => setLocation(getDefaultRoute(user)), 0);
+    return <div className="min-h-screen flex items-center justify-center"><Skeleton className="h-12 w-48" /></div>;
   }
 
   return (
@@ -57,6 +62,8 @@ function SuperAdminRoute({ component: Component }: { component: () => JSX.Elemen
 // Protected Route wrapper for Pharma Admin
 function PharmaAdminRoute({ component: Component }: { component: () => JSX.Element }) {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
+  const hasRedirected = useRef(false);
 
   if (isLoading) {
     return (
@@ -69,13 +76,17 @@ function PharmaAdminRoute({ component: Component }: { component: () => JSX.Eleme
     );
   }
 
-  if (!isAuthenticated) {
-    return <Redirect to="/login" />;
+  if (!isAuthenticated && !hasRedirected.current) {
+    hasRedirected.current = true;
+    setTimeout(() => setLocation('/login'), 0);
+    return <div className="min-h-screen flex items-center justify-center"><Skeleton className="h-12 w-48" /></div>;
   }
 
   const userType = getUserType(user);
-  if (userType !== 'pharma-admin') {
-    return <Redirect to={getDefaultRoute(user)} />;
+  if (userType !== 'pharma-admin' && !hasRedirected.current) {
+    hasRedirected.current = true;
+    setTimeout(() => setLocation(getDefaultRoute(user)), 0);
+    return <div className="min-h-screen flex items-center justify-center"><Skeleton className="h-12 w-48" /></div>;
   }
 
   return (
@@ -85,23 +96,25 @@ function PharmaAdminRoute({ component: Component }: { component: () => JSX.Eleme
   );
 }
 
-// Root redirect component - SIMPLE VERSION
+// Root redirect component - NO <Redirect> COMPONENT
 function RootRedirect() {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
+  const hasRedirected = useRef(false);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Skeleton className="h-12 w-48" />
-      </div>
-    );
+  // Only redirect once when auth state is determined
+  if (!isLoading && !hasRedirected.current) {
+    hasRedirected.current = true;
+    const targetRoute = isAuthenticated ? getDefaultRoute(user) : '/login';
+    // Use setTimeout to avoid updating during render
+    setTimeout(() => setLocation(targetRoute), 0);
   }
 
-  if (isAuthenticated) {
-    return <Redirect to={getDefaultRoute(user)} replace />;
-  }
-
-  return <Redirect to="/login" replace />;
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Skeleton className="h-12 w-48" />
+    </div>
+  );
 }
 
 function Router() {

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Redirect, useLocation } from 'wouter';
+import { useState, useRef } from 'react';
+import { useLocation } from 'wouter';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,10 +16,12 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const hasRedirected = useRef(false);
 
-  // Redirect if already authenticated - use replace to avoid history issues
-  if (isAuthenticated) {
-    return <Redirect to="/" replace />;
+  // Redirect if already authenticated - use setTimeout to avoid render loop
+  if (isAuthenticated && !hasRedirected.current) {
+    hasRedirected.current = true;
+    setTimeout(() => navigate('/'), 0);
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
