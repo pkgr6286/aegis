@@ -2,79 +2,350 @@
 
 ## Overview
 
-Aegis is a multi-tenant SaaS platform for pharmaceutical patient assistance programs. It enables pharmaceutical companies to manage drug programs, patient screening, and partner integrations with strict data isolation, enterprise-grade security, and healthcare compliance (HIPAA-ready) using PostgreSQL's Row-Level Security (RLS). The platform provides Super Admin, Pharma Admin, Public Consumer, and Partner Verification APIs. Its purpose is to streamline patient assistance processes, enhance data accuracy, and ensure regulatory adherence in the pharmaceutical industry.
+Aegis is a multi-tenant SaaS platform designed for pharmaceutical patient assistance programs. Its primary purpose is to enable pharmaceutical companies to efficiently manage drug programs, patient screening, and partner integrations while ensuring strict data isolation, enterprise-grade security, and healthcare compliance (HIPAA-ready) through PostgreSQL's Row-Level Security (RLS). The platform features a Super Admin API, Pharma Admin API, Public Consumer API, and Partner Verification API. The business vision aims to streamline patient assistance processes, enhance data accuracy, and guarantee regulatory adherence within the pharmaceutical industry.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### October 22, 2025 - Pharma Admin UI Complete Implementation
+
+**Summary**: Built comprehensive Pharma Admin UI with 6 complete pages following enterprise healthcare design patterns. All pages use React Hook Form + Zod validation with shadcn/ui components.
+
+**Completed Pages:**
+
+1. **Brand Management** (/admin/brands)
+   - CRUD operations for brand configurations
+   - Color picker integration using react-colorful
+   - Logo URL management with visual preview
+   - Real-time client-side validation with FormField components
+
+2. **User Management** (/admin/users)
+   - Invite users by email with role selection (admin, editor, viewer)
+   - User list with status badges and removal actions
+   - Pagination support for large tenant user lists
+   - Proper tenant scoping via RLS
+
+3. **Partner Management** (/admin/partners)
+   - Create/edit B2B partners with contact information
+   - API key generation with secure one-time display
+   - Key revocation with confirmation dialogs
+   - Dual form handling (partner + API key forms)
+
+4. **Audit Logs** (/admin/audit-logs)
+   - Comprehensive audit log viewer with filtering
+   - Advanced filters: entity type, action, date range
+   - Reactive filtering using form.watch()
+   - Pagination with offset-based navigation
+
+5. **Drug Programs List** (/admin/programs)
+   - CRUD operations for drug programs
+   - Status badges (active, draft, archived)
+   - Brand configuration selection dropdown
+   - Public slug management for consumer URLs
+
+6. **Drug Program Detail** (/admin/programs/:id)
+   - Tabbed interface: Overview, Screener Versions, Settings
+   - Program info, brand visualization, active version display
+   - Screener versions list with status tracking
+   - Navigation to screener builder (placeholder ready)
+
+**Test Credentials:**
+- Pharma Admin: pharma@kenvue.com / pharma123
+- Super Admin: admin@aegis.com / admin123
+
+**Technical Patterns:**
+- All forms use useForm + zodResolver + FormField components
+- Schemas defined in client/src/lib/schemas.ts
+- Types in client/src/types/
+- TanStack Query for API integration
+- 20+ data-testid attributes per page
+
+### October 21, 2025 - Authentication & Super Admin UI
+
+- Fixed API route mounting path from /api/auth to /api/v1/auth
+- Implemented GET /api/v1/superadmin/me endpoint
+- Fixed sidebar navigation to use wouter Link component
+- Complete Super Admin UI: Dashboard, User Management, Tenant Management, Audit Logs
+
 ## System Architecture
 
-Aegis uses a multi-tenancy model with PostgreSQL's Row-Level Security (RLS) for data isolation.
+The platform utilizes a multi-tenancy model, leveraging PostgreSQL's Row-Level Security (RLS) for robust data isolation.
 
 ### Technology Stack
 
 *   **Backend**: Express.js with TypeScript on Node.js.
 *   **Frontend**: React 18 with TypeScript, using Vite.
 *   **Database**: PostgreSQL (via Neon Serverless) managed with Drizzle ORM.
-*   **Authentication**: JWT for token-based authentication.
-*   **UI/UX**: shadcn/ui (Radix UI primitives) with Tailwind CSS, featuring an enterprise SaaS aesthetic with a professional blue color palette, adhering to WCAG 2.1 AA accessibility standards.
+*   **Authentication**: JWT for secure, token-based authentication.
+*   **UI/UX**: shadcn/ui (Radix UI primitives) with Tailwind CSS, following an enterprise SaaS aesthetic with a professional blue color palette, and adhering to WCAG 2.1 AA accessibility standards.
 *   **Validation**: Zod for runtime type validation, integrated with Drizzle and React Hook Form.
 *   **State Management**: TanStack Query for server state management.
 
 ### Database Schema Architecture
 
-The database is modular, with schemas for public, core, programs, consumer, and partners. It uses UUID primary keys, includes comprehensive audit logging, enum types, and timestamp fields.
+The database is organized into modular schemas: public, core, programs, consumer, and partners. It uses UUID primary keys, includes comprehensive audit logging, enum types, and timestamp fields across all tables.
 
 ### Authentication & Authorization
 
-Authentication is JWT-based, supporting system-level roles (super_admin, support_staff) and tenant-level roles (admin, editor, viewer), enforced via middleware.
+Authentication is JWT-based, supporting both system-level roles (super_admin, support_staff) and tenant-level roles (admin, editor, viewer), enforced via middleware. Session management is handled by Express session with a PostgreSQL store.
 
 ### API Architecture
 
-A RESTful API under `/api/v1/` includes:
+A RESTful API is structured under /api/v1/ and comprises:
 *   **Super Admin API**: For platform-level tenant management.
-*   **Pharma Admin API**: For tenant-specific operations (brand config, drug programs, user/partner management).
-*   **Public Consumer API**: Manages patient screening flows, including EHR Integration via OAuth.
+*   **Pharma Admin API**: For tenant-specific operations like brand configuration, drug programs, and user/partner management.
+*   **Public Consumer API**: Manages patient screening flows, including an EHR Integration for automated data population via OAuth.
 *   **Partner Verification API**: Facilitates secure verification of consumer codes by partners using API keys.
 
-Middleware handles JSON parsing, CORS, logging, Zod validation, authentication, role-based access control, tenant context injection for RLS, and rate limiting. Business logic is in a service layer with automatic audit logging.
+Middleware handles JSON parsing, CORS, logging, Zod validation, various authentication methods, role-based access control, tenant context injection for RLS, and rate limiting. A centralized error handling system is implemented, and business logic is encapsulated within a service layer that includes automatic audit logging.
 
 ### Frontend Architecture
 
-The frontend is structured with `/components/ui`, `/pages`, `/hooks`, and `/lib` directories. Styling uses Tailwind CSS, supporting light/dark modes, and has full TypeScript coverage.
+The frontend is structured with /components/ui, /pages, /hooks, and /lib directories. Styling is managed with Tailwind CSS, supporting light/dark modes, and the entire frontend is built with full TypeScript coverage.
 
 #### Pharma Admin UI Architecture
 
-Pharma Admin pages in `client/src/pages/admin/` follow strict architectural patterns, including:
-- Brand Management (`/admin/brands`)
-- User Management (`/admin/users`)
-- Partner Management (`/admin/partners`)
-- Audit Logs (`/admin/audit-logs`)
-- Drug Programs List (`/admin/programs`)
-- Drug Program Detail (`/admin/programs/:id`)
-- Screener Builder (`/admin/programs/:programId/screener/:versionId`)
+All Pharma Admin pages are located in client/src/pages/admin/ and follow strict architectural patterns.
 
-**Form Validation Architecture:** All forms use React Hook Form + Zod, with schemas defined in `client/src/lib/schemas.ts` and types inferred from these schemas.
+**Page Structure:**
+- BrandManagement.tsx (/admin/brands) - Brand configuration CRUD with color picker
+- UserManagement.tsx (/admin/users) - Tenant user invitation and management
+- PartnerManagement.tsx (/admin/partners) - B2B partner and API key management
+- AuditLogs.tsx (/admin/audit-logs) - Audit log viewer with advanced filtering
+- DrugPrograms.tsx (/admin/programs) - Drug program list and CRUD operations
+- DrugProgramDetail.tsx (/admin/programs/:id) - Program detail with tabs
+- ScreenerBuilder.tsx (/admin/programs/:programId/screener/:versionId) - Visual screener builder (placeholder)
 
-**API Integration Pattern:** All pages use TanStack Query v5 for server state management, employing queries for data fetching with caching and mutations for create/update/delete operations with cache invalidation via hierarchical query keys.
+**Routing Configuration:**
 
-**Design System & UI Patterns:** Leverages shadcn/ui components (Card, Table, Dialog, Button, Badge, Skeleton) and patterns like status badges and loading states. All pages include `data-testid` attributes for E2E testing.
+Routes are defined in `client/src/App.tsx` using wouter:
+
+```typescript
+<Route path="/admin/dashboard">
+  <PharmaAdminRoute component={PharmaAdminDashboard} />
+</Route>
+<Route path="/admin/brands">
+  <PharmaAdminRoute component={BrandManagement} />
+</Route>
+<Route path="/admin/users">
+  <PharmaAdminRoute component={UserManagement} />
+</Route>
+<Route path="/admin/partners">
+  <PharmaAdminRoute component={PartnerManagement} />
+</Route>
+<Route path="/admin/audit-logs">
+  <PharmaAdminRoute component={AuditLogsPage} />
+</Route>
+<Route path="/admin/programs">
+  <PharmaAdminRoute component={DrugPrograms} />
+</Route>
+<Route path="/admin/programs/:programId/screener/:versionId">
+  <PharmaAdminRoute component={ScreenerBuilder} />
+</Route>
+<Route path="/admin/programs/:id">
+  <PharmaAdminRoute component={DrugProgramDetail} />
+</Route>
+```
+
+**Form Validation Architecture:**
+
+Every form follows the React Hook Form + Zod pattern with these steps:
+
+1. **Schema Definition** - Zod schemas in `client/src/lib/schemas.ts` define validation rules
+2. **Type Inference** - TypeScript types inferred from schemas using `z.infer<typeof schema>`
+3. **Form Initialization** - useForm hook with zodResolver and typed defaultValues
+4. **Component Structure** - Form, FormField, FormItem, FormControl, FormLabel, FormMessage from shadcn
+5. **Real-time Validation** - Client-side validation with instant error feedback
+6. **Submission Handling** - form.handleSubmit with typed data parameter
+
+**Form Validation Code Example:**
+
+```typescript
+// 1. Schema Definition (client/src/lib/schemas.ts)
+import { z } from 'zod';
+
+export const inviteUserSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  name: z.string().min(1, 'Name is required'),
+  role: z.enum(['admin', 'editor', 'viewer']),
+});
+
+export type InviteUserFormData = z.infer<typeof inviteUserSchema>;
+
+// 2. Component Implementation (client/src/pages/admin/UserManagement.tsx)
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+
+const form = useForm<InviteUserFormData>({
+  resolver: zodResolver(inviteUserSchema),
+  defaultValues: {
+    email: '',
+    name: '',
+    role: 'viewer',
+  },
+});
+
+const handleSubmit = (data: InviteUserFormData) => {
+  inviteMutation.mutate(data);
+};
+
+// 3. Form JSX
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+    <FormField
+      control={form.control}
+      name="email"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Email *</FormLabel>
+          <FormControl>
+            <Input {...field} type="email" data-testid="input-email" />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+    <FormField
+      control={form.control}
+      name="role"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Role *</FormLabel>
+          <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <FormControl>
+              <SelectTrigger data-testid="select-role">
+                <SelectValue />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="editor">Editor</SelectItem>
+              <SelectItem value="viewer">Viewer</SelectItem>
+            </SelectContent>
+          </Select>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  </form>
+</Form>
+```
+
+**Shared Validation Schemas (client/src/lib/schemas.ts):**
+- brandConfigSchema: name, logoUrl, primaryColor, secondaryColor
+- inviteUserSchema: email, name, role (enum: admin/editor/viewer)
+- partnerSchema: name, description, contactEmail, contactPhone
+- apiKeySchema: name, permissions array
+- auditLogFilterSchema: entityType, action, startDate, endDate
+- drugProgramSchema: name, brandName, slug, status, brandConfigId
+
+**Shared TypeScript Types (client/src/types/):**
+- brand.ts: BrandConfig, BrandConfigFormData
+- drugProgram.ts: DrugProgram, ScreenerVersion
+- partner.ts: Partner, ApiKey
+- audit.ts: AuditLog, AuditLogFilters
+
+**API Integration Pattern:**
+
+All pages use TanStack Query v5 for server state management. Queries fetch data with automatic caching. Mutations handle create/update/delete with cache invalidation. Hierarchical query keys enable targeted invalidation.
+
+**TanStack Query Code Example:**
+
+```typescript
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiClient } from '@/lib/apiClient';
+import { queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+
+// Query - Fetch data
+const { data, isLoading } = useQuery({
+  queryKey: ['/api/v1/admin/brands'],
+});
+
+const brands = (data as { success: boolean; data: BrandConfig[] })?.data || [];
+
+// Mutation - Create data
+const { toast } = useToast();
+
+const createMutation = useMutation({
+  mutationFn: async (formData: BrandConfigFormData) => {
+    const res = await apiClient.post('/api/v1/admin/brands', formData);
+    return res.json();
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/v1/admin/brands'] });
+    toast({
+      title: 'Brand created successfully',
+      description: 'The brand configuration has been saved.',
+    });
+    setDialogOpen(false);
+    form.reset();
+  },
+  onError: (error) => {
+    toast({
+      title: 'Failed to create brand',
+      description: error.message,
+      variant: 'destructive',
+    });
+  },
+});
+
+// Usage in form submission
+const handleSubmit = (data: BrandConfigFormData) => {
+  createMutation.mutate(data);
+};
+```
+
+**Hierarchical Query Keys Example:**
+
+```typescript
+// Fetch program details
+const { data: programData } = useQuery({
+  queryKey: ['/api/v1/admin/drug-programs', programId],
+});
+
+// Fetch screener versions for a program
+const { data: versionsData } = useQuery({
+  queryKey: ['/api/v1/admin/drug-programs', programId, 'screeners'],
+});
+
+// Invalidate all queries for a specific program
+queryClient.invalidateQueries({
+  queryKey: ['/api/v1/admin/drug-programs', programId],
+});
+```
+
+**Design System & UI Patterns:**
+
+Components: Card, Table, Dialog, Button, Badge, Skeleton
+Patterns: Status badges, loading states, empty states with CTAs
+All pages include 20-25 data-testid attributes for E2E testing
+
+**Testing Attributes Naming Convention:**
+- Interactive elements: button-{action}, input-{field}
+- Display elements: text-{content}, badge-{status}
+- Dynamic elements: card-{type}-{id}, row-{entity}-{id}
 
 ## External Dependencies
 
 ### Database & Infrastructure
-*   **Neon Serverless PostgreSQL**: Primary relational database.
+*   **Neon Serverless PostgreSQL**: The primary relational database.
 
 ### Security & Authentication
-*   **jsonwebtoken**: For JWT creation and verification.
-*   **bcrypt**: For one-way hashing of partner API keys.
+*   **jsonwebtoken**: Used for JWT creation and verification.
+*   **bcrypt**: Employed for one-way hashing of partner API keys.
 
 ### UI Component Libraries
-*   **Radix UI**: Accessible, unstyled UI primitives.
-*   **lucide-react**: Icon library.
+*   **Radix UI**: Provides accessible, unstyled UI primitives.
+*   **lucide-react**: The icon library used throughout the application.
 
 ### Utilities
 *   **Class Variance Authority (CVA)**: For managing component styling variants.
 *   **clsx + tailwind-merge**: For conditional and merging Tailwind CSS classes.
-*   **nanoid**: For secure, unique ID generation.
+*   **nanoid**: Used for secure, unique ID generation.
