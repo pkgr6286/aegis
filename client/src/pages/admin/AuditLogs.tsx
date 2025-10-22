@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { apiClient } from '@/lib/apiClient';
+import { auditLogFilterSchema, type AuditLogFilterFormData } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -25,23 +28,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileText, Search, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
-import type { AuditLog, AuditLogQuery } from '@/types/auditLog';
+import type { AuditLog } from '@/types/auditLog';
 
 export default function AuditLogsPage() {
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
-  const [filters, setFilters] = useState<AuditLogQuery>({
-    limit: 20,
-    offset: 0,
+  const [currentPage, setCurrentPage] = useState(0);
+
+  // Filter form setup
+  const filterForm = useForm<AuditLogFilterFormData>({
+    resolver: zodResolver(auditLogFilterSchema),
+    defaultValues: {
+      resourceType: undefined,
+      action: undefined,
+      userId: undefined,
+      startDate: undefined,
+      endDate: undefined,
+    },
   });
+
+  const filters = filterForm.watch();
 
   // Fetch audit logs
   const { data: logsData, isLoading } = useQuery({
-    queryKey: ['/api/v1/admin/audit-logs', filters],
+    queryKey: ['/api/v1/admin/audit-logs', filters, currentPage],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filters.resourceType) params.append('resourceType', filters.resourceType);
@@ -49,8 +72,8 @@ export default function AuditLogsPage() {
       if (filters.userId) params.append('userId', filters.userId);
       if (filters.startDate) params.append('startDate', filters.startDate);
       if (filters.endDate) params.append('endDate', filters.endDate);
-      params.append('limit', String(filters.limit || 20));
-      params.append('offset', String(filters.offset || 0));
+      params.append('limit', '20');
+      params.append('offset', String(currentPage * 20));
 
       return await apiClient.get<{ success: boolean; data: AuditLog[] }>(
         `/api/v1/admin/audit-logs?${params.toString()}`
@@ -59,27 +82,24 @@ export default function AuditLogsPage() {
   });
 
   const logs = logsData?.data || [];
-  const currentPage = Math.floor((filters.offset || 0) / (filters.limit || 20)) + 1;
 
   const handleNextPage = () => {
-    setFilters({
-      ...filters,
-      offset: (filters.offset || 0) + (filters.limit || 20),
-    });
+    setCurrentPage(prev => prev + 1);
   };
 
   const handlePrevPage = () => {
-    setFilters({
-      ...filters,
-      offset: Math.max(0, (filters.offset || 0) - (filters.limit || 20)),
-    });
+    setCurrentPage(prev => Math.max(0, prev - 1));
   };
 
   const handleResetFilters = () => {
-    setFilters({
-      limit: 20,
-      offset: 0,
+    filterForm.reset({
+      resourceType: undefined,
+      action: undefined,
+      userId: undefined,
+      startDate: undefined,
+      endDate: undefined,
     });
+    setCurrentPage(0);
   };
 
   const getActionBadgeVariant = (action: string): "default" | "secondary" | "outline" => {
@@ -126,69 +146,119 @@ export default function AuditLogsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Resource Type */}
-            <div className="space-y-2">
-              <Label htmlFor="resourceType">Resource Type</Label>
-              <Input
-                id="resourceType"
-                data-testid="input-resource-type"
-                placeholder="e.g., DrugProgram"
-                value={filters.resourceType || ''}
-                onChange={(e) => setFilters({ ...filters, resourceType: e.target.value || undefined, offset: 0 })}
+          <Form {...filterForm}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Resource Type */}
+              <FormField
+                control={filterForm.control}
+                name="resourceType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Resource Type</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        data-testid="input-resource-type"
+                        placeholder="e.g., DrugProgram"
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          field.onChange(e.target.value || undefined);
+                          setCurrentPage(0);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Action */}
+              <FormField
+                control={filterForm.control}
+                name="action"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Action</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        data-testid="input-action"
+                        placeholder="e.g., create, update"
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          field.onChange(e.target.value || undefined);
+                          setCurrentPage(0);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Start Date */}
+              <FormField
+                control={filterForm.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Date</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        data-testid="input-start-date"
+                        type="date"
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          field.onChange(e.target.value || undefined);
+                          setCurrentPage(0);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* End Date */}
+              <FormField
+                control={filterForm.control}
+                name="endDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>End Date</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        data-testid="input-end-date"
+                        type="date"
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          field.onChange(e.target.value || undefined);
+                          setCurrentPage(0);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
 
-            {/* Action */}
-            <div className="space-y-2">
-              <Label htmlFor="action">Action</Label>
-              <Input
-                id="action"
-                data-testid="input-action"
-                placeholder="e.g., create, update"
-                value={filters.action || ''}
-                onChange={(e) => setFilters({ ...filters, action: e.target.value || undefined, offset: 0 })}
-              />
+            <div className="flex gap-2 mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetFilters}
+                data-testid="button-reset-filters"
+              >
+                Reset Filters
+              </Button>
+              <div className="text-sm text-muted-foreground flex items-center">
+                {logs.length} log{logs.length !== 1 ? 's' : ''} found
+              </div>
             </div>
-
-            {/* Start Date */}
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                data-testid="input-start-date"
-                type="date"
-                value={filters.startDate || ''}
-                onChange={(e) => setFilters({ ...filters, startDate: e.target.value || undefined, offset: 0 })}
-              />
-            </div>
-
-            {/* End Date */}
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                data-testid="input-end-date"
-                type="date"
-                value={filters.endDate || ''}
-                onChange={(e) => setFilters({ ...filters, endDate: e.target.value || undefined, offset: 0 })}
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2 mt-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetFilters}
-              data-testid="button-reset-filters"
-            >
-              Reset Filters
-            </Button>
-            <div className="text-sm text-muted-foreground flex items-center">
-              {logs.length} log{logs.length !== 1 ? 's' : ''} found
-            </div>
-          </div>
+          </Form>
         </CardContent>
       </Card>
 

@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { apiClient } from '@/lib/apiClient';
 import { queryClient } from '@/lib/queryClient';
+import { drugProgramSchema, type DrugProgramFormData } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -37,12 +40,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Pill, Edit, Trash2, Eye, FileText } from 'lucide-react';
-import type { DrugProgram, CreateDrugProgramInput, UpdateDrugProgramInput } from '@/types/drugProgram';
+import type { DrugProgram } from '@/types/drugProgram';
 import type { BrandConfig } from '@/types/brand';
 
 export default function DrugPrograms() {
@@ -50,10 +62,15 @@ export default function DrugPrograms() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<DrugProgram | null>(null);
   const [deletingProgram, setDeletingProgram] = useState<DrugProgram | null>(null);
-  const [formData, setFormData] = useState<CreateDrugProgramInput>({
-    name: '',
-    brandName: '',
-    status: 'draft',
+
+  // Form setup
+  const form = useForm<DrugProgramFormData>({
+    resolver: zodResolver(drugProgramSchema),
+    defaultValues: {
+      name: '',
+      brandName: '',
+      status: 'draft',
+    },
   });
 
   // Fetch drug programs
@@ -72,7 +89,7 @@ export default function DrugPrograms() {
 
   // Create mutation
   const createMutation = useMutation({
-    mutationFn: async (data: CreateDrugProgramInput) => {
+    mutationFn: async (data: DrugProgramFormData) => {
       return await apiClient.post<{ success: boolean; data: DrugProgram }>(
         '/api/v1/admin/drug-programs',
         data
@@ -85,7 +102,7 @@ export default function DrugPrograms() {
         description: 'Drug program created successfully',
       });
       setCreateDialogOpen(false);
-      resetForm();
+      form.reset();
     },
     onError: (error: any) => {
       toast({
@@ -98,7 +115,7 @@ export default function DrugPrograms() {
 
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdateDrugProgramInput }) => {
+    mutationFn: async ({ id, data }: { id: string; data: DrugProgramFormData }) => {
       return await apiClient.put<{ success: boolean; data: DrugProgram }>(
         `/api/v1/admin/drug-programs/${id}`,
         data
@@ -111,7 +128,7 @@ export default function DrugPrograms() {
         description: 'Drug program updated successfully',
       });
       setEditingProgram(null);
-      resetForm();
+      form.reset();
     },
     onError: (error: any) => {
       toast({
@@ -146,21 +163,17 @@ export default function DrugPrograms() {
     },
   });
 
-  const resetForm = () => {
-    setFormData({
+  const handleCreate = () => {
+    form.reset({
       name: '',
       brandName: '',
       status: 'draft',
     });
-  };
-
-  const handleCreate = () => {
-    resetForm();
     setCreateDialogOpen(true);
   };
 
   const handleEdit = (program: DrugProgram) => {
-    setFormData({
+    form.reset({
       name: program.name,
       brandName: program.brandName || '',
       brandConfigId: program.brandConfigId,
@@ -169,20 +182,11 @@ export default function DrugPrograms() {
     setEditingProgram(program);
   };
 
-  const handleSubmit = () => {
-    if (!formData.name.trim()) {
-      toast({
-        title: 'Validation Error',
-        description: 'Program name is required',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+  const handleSubmit = (data: DrugProgramFormData) => {
     if (editingProgram) {
-      updateMutation.mutate({ id: editingProgram.id, data: formData });
+      updateMutation.mutate({ id: editingProgram.id, data });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(data);
     }
   };
 
@@ -339,7 +343,7 @@ export default function DrugPrograms() {
         if (!open) {
           setCreateDialogOpen(false);
           setEditingProgram(null);
-          resetForm();
+          form.reset();
         }
       }}>
         <DialogContent data-testid="dialog-program-form">
@@ -352,96 +356,124 @@ export default function DrugPrograms() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {/* Program Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Program Name (Internal) *</Label>
-              <Input
-                id="name"
-                data-testid="input-program-name"
-                placeholder="e.g., Crestor OTC 5mg Program"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-4">
+              {/* Program Name */}
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Program Name (Internal) *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        data-testid="input-program-name"
+                        placeholder="e.g., Crestor OTC 5mg Program"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            {/* Brand Name */}
-            <div className="space-y-2">
-              <Label htmlFor="brandName">Brand Name (Consumer-Facing)</Label>
-              <Input
-                id="brandName"
-                data-testid="input-brand-name"
-                placeholder="e.g., Crestor-OTC"
-                value={formData.brandName}
-                onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
+              {/* Brand Name */}
+              <FormField
+                control={form.control}
+                name="brandName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Brand Name (Consumer-Facing)</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        data-testid="input-brand-name"
+                        placeholder="e.g., Crestor-OTC"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            {/* Brand Config */}
-            <div className="space-y-2">
-              <Label htmlFor="brandConfigId">Brand Configuration (Optional)</Label>
-              <Select
-                value={formData.brandConfigId || 'none'}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, brandConfigId: value === 'none' ? undefined : value })
-                }
-              >
-                <SelectTrigger id="brandConfigId" data-testid="select-brand-config">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none" data-testid="option-no-brand">No Brand</SelectItem>
-                  {brands.map((brand) => (
-                    <SelectItem key={brand.id} value={brand.id} data-testid={`option-brand-${brand.id}`}>
-                      {brand.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              {/* Brand Config */}
+              <FormField
+                control={form.control}
+                name="brandConfigId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Brand Configuration (Optional)</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(value === 'none' ? undefined : value)}
+                      value={field.value || 'none'}
+                    >
+                      <FormControl>
+                        <SelectTrigger data-testid="select-brand-config">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none" data-testid="option-no-brand">No Brand</SelectItem>
+                        {brands.map((brand) => (
+                          <SelectItem key={brand.id} value={brand.id} data-testid={`option-brand-${brand.id}`}>
+                            {brand.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Status */}
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value: 'draft' | 'active' | 'archived') =>
-                  setFormData({ ...formData, status: value })
-                }
-              >
-                <SelectTrigger id="status" data-testid="select-status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft" data-testid="option-draft">Draft</SelectItem>
-                  <SelectItem value="active" data-testid="option-active">Active</SelectItem>
-                  <SelectItem value="archived" data-testid="option-archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+              {/* Status */}
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-status">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="draft" data-testid="option-draft">Draft</SelectItem>
+                        <SelectItem value="active" data-testid="option-active">Active</SelectItem>
+                        <SelectItem value="archived" data-testid="option-archived">Archived</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setCreateDialogOpen(false);
-                setEditingProgram(null);
-                resetForm();
-              }}
-              data-testid="button-cancel"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={createMutation.isPending || updateMutation.isPending}
-              data-testid="button-submit"
-            >
-              {(createMutation.isPending || updateMutation.isPending) && 'Saving...'}
-              {!createMutation.isPending && !updateMutation.isPending && (editingProgram ? 'Update' : 'Create')}
-            </Button>
-          </DialogFooter>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setCreateDialogOpen(false);
+                    setEditingProgram(null);
+                    form.reset();
+                  }}
+                  data-testid="button-cancel"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                  data-testid="button-submit"
+                >
+                  {(createMutation.isPending || updateMutation.isPending) && 'Saving...'}
+                  {!createMutation.isPending && !updateMutation.isPending && (editingProgram ? 'Update' : 'Create')}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 

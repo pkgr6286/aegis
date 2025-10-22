@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { apiClient } from '@/lib/apiClient';
 import { queryClient } from '@/lib/queryClient';
+import { inviteUserSchema, type InviteUserFormData } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -37,21 +40,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Trash2, Users, Shield, Eye, Edit3 } from 'lucide-react';
-import type { TenantUser, InviteUserInput } from '@/types/tenantUser';
+import type { TenantUser } from '@/types/tenantUser';
 
 export default function UserManagement() {
   const { toast } = useToast();
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [removingUser, setRemovingUser] = useState<TenantUser | null>(null);
-  const [formData, setFormData] = useState<InviteUserInput>({
-    email: '',
-    fullName: '',
-    role: 'viewer',
+
+  // Form setup
+  const form = useForm<InviteUserFormData>({
+    resolver: zodResolver(inviteUserSchema),
+    defaultValues: {
+      email: '',
+      fullName: '',
+      role: 'viewer',
+    },
   });
 
   // Fetch users
@@ -63,7 +80,7 @@ export default function UserManagement() {
 
   // Invite mutation
   const inviteMutation = useMutation({
-    mutationFn: async (data: InviteUserInput) => {
+    mutationFn: async (data: InviteUserFormData) => {
       return await apiClient.post<{ success: boolean; data: TenantUser }>(
         '/api/v1/admin/users/invite',
         data
@@ -76,7 +93,7 @@ export default function UserManagement() {
         description: 'Invitation sent successfully',
       });
       setInviteDialogOpen(false);
-      resetForm();
+      form.reset();
     },
     onError: (error: any) => {
       toast({
@@ -111,16 +128,8 @@ export default function UserManagement() {
     },
   });
 
-  const resetForm = () => {
-    setFormData({
-      email: '',
-      fullName: '',
-      role: 'viewer',
-    });
-  };
-
   const handleInvite = () => {
-    setFormData({
+    form.reset({
       email: '',
       fullName: '',
       role: 'viewer',
@@ -128,17 +137,8 @@ export default function UserManagement() {
     setInviteDialogOpen(true);
   };
 
-  const handleSubmit = () => {
-    if (!formData.email.trim()) {
-      toast({
-        title: 'Validation Error',
-        description: 'Email is required',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    inviteMutation.mutate(formData);
+  const handleSubmit = (data: InviteUserFormData) => {
+    inviteMutation.mutate(data);
   };
 
   const handleRemove = (user: TenantUser) => {
@@ -294,7 +294,7 @@ export default function UserManagement() {
       <Dialog open={inviteDialogOpen} onOpenChange={(open) => {
         if (!open) {
           setInviteDialogOpen(false);
-          resetForm();
+          form.reset();
         }
       }}>
         <DialogContent data-testid="dialog-invite-user">
@@ -305,96 +305,117 @@ export default function UserManagement() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {/* Email */}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                data-testid="input-email"
-                type="email"
-                placeholder="user@example.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-4">
+              {/* Email */}
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        data-testid="input-email"
+                        type="email"
+                        placeholder="user@example.com"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            {/* Full Name */}
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                data-testid="input-full-name"
-                placeholder="John Doe"
-                value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+              {/* Full Name */}
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        data-testid="input-full-name"
+                        placeholder="John Doe"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            {/* Role */}
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select
-                value={formData.role}
-                onValueChange={(value: 'admin' | 'editor' | 'viewer') =>
-                  setFormData({ ...formData, role: value })
-                }
-              >
-                <SelectTrigger id="role" data-testid="select-role">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="viewer" data-testid="option-viewer">
-                    <div className="flex items-center gap-2">
-                      <Eye className="w-4 h-4" />
-                      <div>
-                        <div className="font-medium">Viewer</div>
-                        <div className="text-xs text-muted-foreground">Read-only access</div>
-                      </div>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="editor" data-testid="option-editor">
-                    <div className="flex items-center gap-2">
-                      <Edit3 className="w-4 h-4" />
-                      <div>
-                        <div className="font-medium">Editor</div>
-                        <div className="text-xs text-muted-foreground">Can create and edit content</div>
-                      </div>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="admin" data-testid="option-admin">
-                    <div className="flex items-center gap-2">
-                      <Shield className="w-4 h-4" />
-                      <div>
-                        <div className="font-medium">Admin</div>
-                        <div className="text-xs text-muted-foreground">Full access and user management</div>
-                      </div>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+              {/* Role */}
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-role">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="viewer" data-testid="option-viewer">
+                          <div className="flex items-center gap-2">
+                            <Eye className="w-4 h-4" />
+                            <div>
+                              <div className="font-medium">Viewer</div>
+                              <div className="text-xs text-muted-foreground">Read-only access</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="editor" data-testid="option-editor">
+                          <div className="flex items-center gap-2">
+                            <Edit3 className="w-4 h-4" />
+                            <div>
+                              <div className="font-medium">Editor</div>
+                              <div className="text-xs text-muted-foreground">Can create and edit content</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="admin" data-testid="option-admin">
+                          <div className="flex items-center gap-2">
+                            <Shield className="w-4 h-4" />
+                            <div>
+                              <div className="font-medium">Admin</div>
+                              <div className="text-xs text-muted-foreground">Full access and user management</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setInviteDialogOpen(false);
-                resetForm();
-              }}
-              data-testid="button-cancel"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={inviteMutation.isPending}
-              data-testid="button-submit"
-            >
-              {inviteMutation.isPending ? 'Sending...' : 'Send Invitation'}
-            </Button>
-          </DialogFooter>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setInviteDialogOpen(false);
+                    form.reset();
+                  }}
+                  data-testid="button-cancel"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={inviteMutation.isPending}
+                  data-testid="button-submit"
+                >
+                  {inviteMutation.isPending ? 'Sending...' : 'Send Invitation'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 

@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { apiClient } from '@/lib/apiClient';
 import { queryClient } from '@/lib/queryClient';
+import { brandConfigSchema, type BrandConfigFormData } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -22,24 +25,37 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Palette, Trash2, Edit } from 'lucide-react';
 import { HexColorPicker } from 'react-colorful';
-import type { BrandConfig, CreateBrandConfigInput, UpdateBrandConfigInput } from '@/types/brand';
+import type { BrandConfig } from '@/types/brand';
 
 export default function BrandManagement() {
   const { toast } = useToast();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState<BrandConfig | null>(null);
   const [deletingBrand, setDeletingBrand] = useState<BrandConfig | null>(null);
-  const [formData, setFormData] = useState<CreateBrandConfigInput>({
-    name: '',
-    config: {
-      logoUrl: '',
-      primaryColor: '#3b82f6',
-      secondaryColor: '#8b5cf6',
+
+  // Form setup
+  const form = useForm<BrandConfigFormData>({
+    resolver: zodResolver(brandConfigSchema),
+    defaultValues: {
+      name: '',
+      config: {
+        logoUrl: '',
+        primaryColor: '#3b82f6',
+        secondaryColor: '#8b5cf6',
+      },
     },
   });
 
@@ -52,7 +68,7 @@ export default function BrandManagement() {
 
   // Create mutation
   const createMutation = useMutation({
-    mutationFn: async (data: CreateBrandConfigInput) => {
+    mutationFn: async (data: BrandConfigFormData) => {
       return await apiClient.post<{ success: boolean; data: BrandConfig }>(
         '/api/v1/admin/brand-configs',
         data
@@ -65,7 +81,7 @@ export default function BrandManagement() {
         description: 'Brand configuration created successfully',
       });
       setCreateDialogOpen(false);
-      resetForm();
+      form.reset();
     },
     onError: (error: any) => {
       toast({
@@ -78,7 +94,7 @@ export default function BrandManagement() {
 
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdateBrandConfigInput }) => {
+    mutationFn: async ({ id, data }: { id: string; data: BrandConfigFormData }) => {
       return await apiClient.put<{ success: boolean; data: BrandConfig }>(
         `/api/v1/admin/brand-configs/${id}`,
         data
@@ -91,7 +107,7 @@ export default function BrandManagement() {
         description: 'Brand configuration updated successfully',
       });
       setEditingBrand(null);
-      resetForm();
+      form.reset();
     },
     onError: (error: any) => {
       toast({
@@ -126,19 +142,8 @@ export default function BrandManagement() {
     },
   });
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      config: {
-        logoUrl: '',
-        primaryColor: '#3b82f6',
-        secondaryColor: '#8b5cf6',
-      },
-    });
-  };
-
   const handleCreate = () => {
-    setFormData({
+    form.reset({
       name: '',
       config: {
         logoUrl: '',
@@ -150,7 +155,7 @@ export default function BrandManagement() {
   };
 
   const handleEdit = (brand: BrandConfig) => {
-    setFormData({
+    form.reset({
       name: brand.name,
       config: {
         logoUrl: brand.config.logoUrl || '',
@@ -161,20 +166,11 @@ export default function BrandManagement() {
     setEditingBrand(brand);
   };
 
-  const handleSubmit = () => {
-    if (!formData.name.trim()) {
-      toast({
-        title: 'Validation Error',
-        description: 'Brand name is required',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+  const handleSubmit = (data: BrandConfigFormData) => {
     if (editingBrand) {
-      updateMutation.mutate({ id: editingBrand.id, data: formData });
+      updateMutation.mutate({ id: editingBrand.id, data });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(data);
     }
   };
 
@@ -208,7 +204,7 @@ export default function BrandManagement() {
         <div>
           <h1 className="text-3xl font-bold" data-testid="text-page-title">Brand Management</h1>
           <p className="text-muted-foreground">
-            Configure brand assets and colors for your drug programs
+            Configure brand identities for your drug programs
           </p>
         </div>
         <Button onClick={handleCreate} data-testid="button-create-brand">
@@ -224,7 +220,7 @@ export default function BrandManagement() {
             <Palette className="w-12 h-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No brands configured</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Create your first brand configuration to customize the appearance of your drug programs
+              Create your first brand configuration to customize the patient experience
             </p>
             <Button onClick={handleCreate} data-testid="button-create-first-brand">
               <Plus className="w-4 h-4 mr-2" />
@@ -235,63 +231,58 @@ export default function BrandManagement() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {brands.map((brand) => (
-            <Card key={brand.id} className="hover-elevate" data-testid={`card-brand-${brand.id}`}>
+            <Card key={brand.id} data-testid={`card-brand-${brand.id}`}>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span data-testid={`text-brand-name-${brand.id}`}>{brand.name}</span>
-                  <Palette className="w-5 h-5 text-muted-foreground" />
+                <CardTitle className="flex items-center gap-2" data-testid={`text-name-${brand.id}`}>
+                  <Palette className="w-5 h-5" />
+                  {brand.name}
                 </CardTitle>
-                <CardDescription>
-                  Brand Configuration
-                </CardDescription>
+                <CardDescription>Brand Configuration</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Logo Preview */}
                 {brand.config.logoUrl && (
                   <div>
-                    <Label className="text-xs text-muted-foreground">Logo</Label>
-                    <div className="mt-1 flex items-center justify-center h-20 bg-muted rounded-md overflow-hidden">
-                      <img
-                        src={brand.config.logoUrl}
-                        alt={`${brand.name} logo`}
-                        className="max-h-full max-w-full object-contain"
-                        data-testid={`img-brand-logo-${brand.id}`}
-                      />
-                    </div>
+                    <p className="text-sm font-medium mb-2">Logo</p>
+                    <img
+                      src={brand.config.logoUrl}
+                      alt={brand.name}
+                      className="h-12 object-contain"
+                      data-testid={`img-logo-${brand.id}`}
+                    />
                   </div>
                 )}
-
-                {/* Color Swatches */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs text-muted-foreground w-24">Primary</Label>
-                    <div
-                      className="w-12 h-8 rounded border"
-                      style={{ backgroundColor: brand.config.primaryColor || '#3b82f6' }}
-                      data-testid={`swatch-primary-${brand.id}`}
-                    />
-                    <span className="text-xs font-mono text-muted-foreground">
-                      {brand.config.primaryColor || '#3b82f6'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs text-muted-foreground w-24">Secondary</Label>
-                    <div
-                      className="w-12 h-8 rounded border"
-                      style={{ backgroundColor: brand.config.secondaryColor || '#8b5cf6' }}
-                      data-testid={`swatch-secondary-${brand.id}`}
-                    />
-                    <span className="text-xs font-mono text-muted-foreground">
-                      {brand.config.secondaryColor || '#8b5cf6'}
-                    </span>
+                <div>
+                  <p className="text-sm font-medium mb-2">Colors</p>
+                  <div className="flex gap-2">
+                    {brand.config.primaryColor && (
+                      <div className="flex flex-col items-center gap-1">
+                        <div
+                          className="w-12 h-12 rounded-md border"
+                          style={{ backgroundColor: brand.config.primaryColor }}
+                          data-testid={`color-primary-${brand.id}`}
+                        />
+                        <span className="text-xs text-muted-foreground">Primary</span>
+                      </div>
+                    )}
+                    {brand.config.secondaryColor && (
+                      <div className="flex flex-col items-center gap-1">
+                        <div
+                          className="w-12 h-12 rounded-md border"
+                          style={{ backgroundColor: brand.config.secondaryColor }}
+                          data-testid={`color-secondary-${brand.id}`}
+                        />
+                        <span className="text-xs text-muted-foreground">Secondary</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="flex gap-2 justify-end">
+              <CardFooter className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handleEdit(brand)}
+                  className="flex-1"
                   data-testid={`button-edit-${brand.id}`}
                 >
                   <Edit className="w-4 h-4 mr-2" />
@@ -303,8 +294,7 @@ export default function BrandManagement() {
                   onClick={() => handleDelete(brand)}
                   data-testid={`button-delete-${brand.id}`}
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </CardFooter>
             </Card>
@@ -317,158 +307,136 @@ export default function BrandManagement() {
         if (!open) {
           setCreateDialogOpen(false);
           setEditingBrand(null);
-          resetForm();
+          form.reset();
         }
       }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-brand-form">
+        <DialogContent data-testid="dialog-brand-form">
           <DialogHeader>
             <DialogTitle data-testid="text-dialog-title">
               {editingBrand ? 'Edit Brand' : 'Create Brand'}
             </DialogTitle>
             <DialogDescription>
-              Configure brand assets and colors for your drug programs
+              Configure brand identity with logo and colors
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {/* Brand Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Brand Name *</Label>
-              <Input
-                id="name"
-                data-testid="input-brand-name"
-                placeholder="e.g., Kenvue Primary Brand"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-4">
+              {/* Brand Name */}
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Brand Name *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        data-testid="input-brand-name"
+                        placeholder="e.g., Crestor"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            {/* Logo URL */}
-            <div className="space-y-2">
-              <Label htmlFor="logoUrl">Logo URL</Label>
-              <Input
-                id="logoUrl"
-                data-testid="input-logo-url"
-                type="url"
-                placeholder="https://example.com/logo.png"
-                value={formData.config.logoUrl}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    config: { ...formData.config, logoUrl: e.target.value },
-                  })
-                }
+              {/* Logo URL */}
+              <FormField
+                control={form.control}
+                name="config.logoUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Logo URL</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        data-testid="input-logo-url"
+                        placeholder="https://example.com/logo.png"
+                      />
+                    </FormControl>
+                    <FormDescription>Optional: URL to brand logo image</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {formData.config.logoUrl && (
-                <div className="mt-2 flex items-center justify-center h-24 bg-muted rounded-md overflow-hidden">
-                  <img
-                    src={formData.config.logoUrl}
-                    alt="Logo preview"
-                    className="max-h-full max-w-full object-contain"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                </div>
-              )}
-            </div>
 
-            {/* Primary Color */}
-            <div className="space-y-2">
-              <Label htmlFor="primaryColor">Primary Color</Label>
-              <div className="flex gap-4 items-start">
-                <div className="flex-1">
-                  <HexColorPicker
-                    color={formData.config.primaryColor}
-                    onChange={(color) =>
-                      setFormData({
-                        ...formData,
-                        config: { ...formData.config, primaryColor: color },
-                      })
-                    }
-                    style={{ width: '100%' }}
-                  />
-                </div>
-                <div className="space-y-2 w-32">
-                  <Input
-                    id="primaryColor"
-                    data-testid="input-primary-color"
-                    value={formData.config.primaryColor}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        config: { ...formData.config, primaryColor: e.target.value },
-                      })
-                    }
-                    placeholder="#3b82f6"
-                  />
-                  <div
-                    className="w-full h-12 rounded border"
-                    style={{ backgroundColor: formData.config.primaryColor }}
-                  />
-                </div>
-              </div>
-            </div>
+              {/* Primary Color */}
+              <FormField
+                control={form.control}
+                name="config.primaryColor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Primary Color</FormLabel>
+                    <FormControl>
+                      <div className="space-y-2">
+                        <HexColorPicker
+                          color={field.value || '#3b82f6'}
+                          onChange={field.onChange}
+                          data-testid="picker-primary-color"
+                        />
+                        <Input
+                          {...field}
+                          data-testid="input-primary-color"
+                          placeholder="#3b82f6"
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Secondary Color */}
-            <div className="space-y-2">
-              <Label htmlFor="secondaryColor">Secondary Color</Label>
-              <div className="flex gap-4 items-start">
-                <div className="flex-1">
-                  <HexColorPicker
-                    color={formData.config.secondaryColor}
-                    onChange={(color) =>
-                      setFormData({
-                        ...formData,
-                        config: { ...formData.config, secondaryColor: color },
-                      })
-                    }
-                    style={{ width: '100%' }}
-                  />
-                </div>
-                <div className="space-y-2 w-32">
-                  <Input
-                    id="secondaryColor"
-                    data-testid="input-secondary-color"
-                    value={formData.config.secondaryColor}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        config: { ...formData.config, secondaryColor: e.target.value },
-                      })
-                    }
-                    placeholder="#8b5cf6"
-                  />
-                  <div
-                    className="w-full h-12 rounded border"
-                    style={{ backgroundColor: formData.config.secondaryColor }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+              {/* Secondary Color */}
+              <FormField
+                control={form.control}
+                name="config.secondaryColor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Secondary Color</FormLabel>
+                    <FormControl>
+                      <div className="space-y-2">
+                        <HexColorPicker
+                          color={field.value || '#8b5cf6'}
+                          onChange={field.onChange}
+                          data-testid="picker-secondary-color"
+                        />
+                        <Input
+                          {...field}
+                          data-testid="input-secondary-color"
+                          placeholder="#8b5cf6"
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setCreateDialogOpen(false);
-                setEditingBrand(null);
-                resetForm();
-              }}
-              data-testid="button-cancel"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={createMutation.isPending || updateMutation.isPending}
-              data-testid="button-submit"
-            >
-              {(createMutation.isPending || updateMutation.isPending) && 'Saving...'}
-              {!createMutation.isPending && !updateMutation.isPending && (editingBrand ? 'Update' : 'Create')}
-            </Button>
-          </DialogFooter>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setCreateDialogOpen(false);
+                    setEditingBrand(null);
+                    form.reset();
+                  }}
+                  data-testid="button-cancel"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                  data-testid="button-submit"
+                >
+                  {(createMutation.isPending || updateMutation.isPending) && 'Saving...'}
+                  {!createMutation.isPending && !updateMutation.isPending && (editingBrand ? 'Update' : 'Create')}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
@@ -479,7 +447,6 @@ export default function BrandManagement() {
             <AlertDialogTitle>Delete Brand Configuration?</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete "{deletingBrand?.name}"? This action cannot be undone.
-              Any drug programs using this brand will need to be reconfigured.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -490,7 +457,7 @@ export default function BrandManagement() {
               data-testid="button-confirm-delete"
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete Brand'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

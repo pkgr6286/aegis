@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { apiClient } from '@/lib/apiClient';
 import { queryClient } from '@/lib/queryClient';
+import { createPartnerSchema, generateApiKeySchema, type CreatePartnerFormData, type GenerateApiKeyFormData } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -37,12 +40,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Store, ShoppingCart, Key, Trash2, Eye, EyeOff, Copy, Check } from 'lucide-react';
-import type { Partner, CreatePartnerInput, GenerateApiKeyInput, GenerateApiKeyResponse, PartnerApiKey } from '@/types/partner';
+import type { Partner, GenerateApiKeyResponse, PartnerApiKey } from '@/types/partner';
 
 export default function PartnerManagement() {
   const { toast } = useToast();
@@ -53,16 +65,24 @@ export default function PartnerManagement() {
   const [revokingKey, setRevokingKey] = useState<PartnerApiKey | null>(null);
   const [copiedKey, setCopiedKey] = useState(false);
   const [showKey, setShowKey] = useState(false);
-  
-  const [formData, setFormData] = useState<CreatePartnerInput>({
-    name: '',
-    type: 'ecommerce',
-    status: 'active',
+
+  // Partner form setup
+  const partnerForm = useForm<CreatePartnerFormData>({
+    resolver: zodResolver(createPartnerSchema),
+    defaultValues: {
+      name: '',
+      type: 'ecommerce',
+      status: 'active',
+    },
   });
 
-  const [keyFormData, setKeyFormData] = useState<GenerateApiKeyInput>({
-    description: '',
-    expiresInDays: undefined,
+  // API Key form setup
+  const keyForm = useForm<GenerateApiKeyFormData>({
+    resolver: zodResolver(generateApiKeySchema),
+    defaultValues: {
+      description: '',
+      expiresInDays: undefined,
+    },
   });
 
   // Fetch partners
@@ -74,7 +94,7 @@ export default function PartnerManagement() {
 
   // Create mutation
   const createMutation = useMutation({
-    mutationFn: async (data: CreatePartnerInput) => {
+    mutationFn: async (data: CreatePartnerFormData) => {
       return await apiClient.post<{ success: boolean; data: Partner }>(
         '/api/v1/admin/partners',
         data
@@ -87,7 +107,7 @@ export default function PartnerManagement() {
         description: 'Partner created successfully',
       });
       setCreateDialogOpen(false);
-      resetForm();
+      partnerForm.reset();
     },
     onError: (error: any) => {
       toast({
@@ -100,7 +120,7 @@ export default function PartnerManagement() {
 
   // Generate API key mutation
   const generateKeyMutation = useMutation({
-    mutationFn: async ({ partnerId, data }: { partnerId: string; data: GenerateApiKeyInput }) => {
+    mutationFn: async ({ partnerId, data }: { partnerId: string; data: GenerateApiKeyFormData }) => {
       return await apiClient.post<{ success: boolean; data: GenerateApiKeyResponse }>(
         `/api/v1/admin/partners/${partnerId}/keys`,
         data
@@ -118,7 +138,7 @@ export default function PartnerManagement() {
         description: 'Save the key - it will not be shown again!',
       });
       setGenerateKeyDialogOpen(false);
-      resetKeyForm();
+      keyForm.reset();
     },
     onError: (error: any) => {
       toast({
@@ -153,48 +173,31 @@ export default function PartnerManagement() {
     },
   });
 
-  const resetForm = () => {
-    setFormData({
+  const handleCreate = () => {
+    partnerForm.reset({
       name: '',
       type: 'ecommerce',
       status: 'active',
     });
-  };
-
-  const resetKeyForm = () => {
-    setKeyFormData({
-      description: '',
-      expiresInDays: undefined,
-    });
-  };
-
-  const handleCreate = () => {
-    resetForm();
     setCreateDialogOpen(true);
   };
 
-  const handleSubmit = () => {
-    if (!formData.name.trim()) {
-      toast({
-        title: 'Validation Error',
-        description: 'Partner name is required',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    createMutation.mutate(formData);
+  const handleSubmit = (data: CreatePartnerFormData) => {
+    createMutation.mutate(data);
   };
 
   const handleGenerateKey = (partner: Partner) => {
     setSelectedPartner(partner);
-    resetKeyForm();
+    keyForm.reset({
+      description: '',
+      expiresInDays: undefined,
+    });
     setGenerateKeyDialogOpen(true);
   };
 
-  const handleSubmitKey = () => {
+  const handleSubmitKey = (data: GenerateApiKeyFormData) => {
     if (selectedPartner) {
-      generateKeyMutation.mutate({ partnerId: selectedPartner.id, data: keyFormData });
+      generateKeyMutation.mutate({ partnerId: selectedPartner.id, data });
     }
   };
 
@@ -344,7 +347,7 @@ export default function PartnerManagement() {
       <Dialog open={createDialogOpen} onOpenChange={(open) => {
         if (!open) {
           setCreateDialogOpen(false);
-          resetForm();
+          partnerForm.reset();
         }
       }}>
         <DialogContent data-testid="dialog-create-partner">
@@ -355,87 +358,105 @@ export default function PartnerManagement() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {/* Partner Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Partner Name *</Label>
-              <Input
-                id="name"
-                data-testid="input-partner-name"
-                placeholder="e.g., CVS E-Commerce"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          <Form {...partnerForm}>
+            <form onSubmit={partnerForm.handleSubmit(handleSubmit)} className="space-y-4 py-4">
+              {/* Partner Name */}
+              <FormField
+                control={partnerForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Partner Name *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        data-testid="input-partner-name"
+                        placeholder="e.g., CVS E-Commerce"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            {/* Type */}
-            <div className="space-y-2">
-              <Label htmlFor="type">Partner Type</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value: 'ecommerce' | 'retail_pos') =>
-                  setFormData({ ...formData, type: value })
-                }
-              >
-                <SelectTrigger id="type" data-testid="select-type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ecommerce" data-testid="option-ecommerce">
-                    <div className="flex items-center gap-2">
-                      <ShoppingCart className="w-4 h-4" />
-                      <span>E-Commerce</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="retail_pos" data-testid="option-retail-pos">
-                    <div className="flex items-center gap-2">
-                      <Store className="w-4 h-4" />
-                      <span>Retail POS</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              {/* Type */}
+              <FormField
+                control={partnerForm.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Partner Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-type">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="ecommerce" data-testid="option-ecommerce">
+                          <div className="flex items-center gap-2">
+                            <ShoppingCart className="w-4 h-4" />
+                            <span>E-Commerce</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="retail_pos" data-testid="option-retail-pos">
+                          <div className="flex items-center gap-2">
+                            <Store className="w-4 h-4" />
+                            <span>Retail POS</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Status */}
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value: 'active' | 'inactive') =>
-                  setFormData({ ...formData, status: value })
-                }
-              >
-                <SelectTrigger id="status" data-testid="select-status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active" data-testid="option-active">Active</SelectItem>
-                  <SelectItem value="inactive" data-testid="option-inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+              {/* Status */}
+              <FormField
+                control={partnerForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-status">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="active" data-testid="option-active">Active</SelectItem>
+                        <SelectItem value="inactive" data-testid="option-inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setCreateDialogOpen(false);
-                resetForm();
-              }}
-              data-testid="button-cancel"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={createMutation.isPending}
-              data-testid="button-submit"
-            >
-              {createMutation.isPending ? 'Creating...' : 'Create Partner'}
-            </Button>
-          </DialogFooter>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setCreateDialogOpen(false);
+                    partnerForm.reset();
+                  }}
+                  data-testid="button-cancel"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending}
+                  data-testid="button-submit"
+                >
+                  {createMutation.isPending ? 'Creating...' : 'Create Partner'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
@@ -443,7 +464,7 @@ export default function PartnerManagement() {
       <Dialog open={generateKeyDialogOpen} onOpenChange={(open) => {
         if (!open) {
           setGenerateKeyDialogOpen(false);
-          resetKeyForm();
+          keyForm.reset();
         }
       }}>
         <DialogContent data-testid="dialog-generate-key">
@@ -454,57 +475,71 @@ export default function PartnerManagement() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Description (Optional)</Label>
-              <Input
-                id="description"
-                data-testid="input-key-description"
-                placeholder="e.g., Production API Key"
-                value={keyFormData.description}
-                onChange={(e) => setKeyFormData({ ...keyFormData, description: e.target.value })}
+          <Form {...keyForm}>
+            <form onSubmit={keyForm.handleSubmit(handleSubmitKey)} className="space-y-4 py-4">
+              {/* Description */}
+              <FormField
+                control={keyForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        data-testid="input-key-description"
+                        placeholder="e.g., Production API Key"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            {/* Expiration */}
-            <div className="space-y-2">
-              <Label htmlFor="expiresInDays">Expires In Days (Optional)</Label>
-              <Input
-                id="expiresInDays"
-                data-testid="input-expires-days"
-                type="number"
-                placeholder="Leave empty for no expiration"
-                value={keyFormData.expiresInDays || ''}
-                onChange={(e) =>
-                  setKeyFormData({
-                    ...keyFormData,
-                    expiresInDays: e.target.value ? parseInt(e.target.value) : undefined,
-                  })
-                }
+              {/* Expiration */}
+              <FormField
+                control={keyForm.control}
+                name="expiresInDays"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Expires In Days (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        data-testid="input-expires-days"
+                        type="number"
+                        placeholder="Leave empty for no expiration"
+                        value={field.value || ''}
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-          </div>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setGenerateKeyDialogOpen(false);
-                resetKeyForm();
-              }}
-              data-testid="button-cancel-key"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmitKey}
-              disabled={generateKeyMutation.isPending}
-              data-testid="button-submit-key"
-            >
-              {generateKeyMutation.isPending ? 'Generating...' : 'Generate Key'}
-            </Button>
-          </DialogFooter>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setGenerateKeyDialogOpen(false);
+                    keyForm.reset();
+                  }}
+                  data-testid="button-cancel-key"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={generateKeyMutation.isPending}
+                  data-testid="button-submit-key"
+                >
+                  {generateKeyMutation.isPending ? 'Generating...' : 'Generate Key'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
