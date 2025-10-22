@@ -1,0 +1,426 @@
+import { useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiClient } from '@/lib/apiClient';
+import { queryClient } from '@/lib/queryClient';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { UserPlus, Trash2, Users, Shield, Eye, Edit3 } from 'lucide-react';
+import type { TenantUser, InviteUserInput } from '@/types/tenantUser';
+
+export default function UserManagement() {
+  const { toast } = useToast();
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [removingUser, setRemovingUser] = useState<TenantUser | null>(null);
+  const [formData, setFormData] = useState<InviteUserInput>({
+    email: '',
+    fullName: '',
+    role: 'viewer',
+  });
+
+  // Fetch users
+  const { data: usersData, isLoading } = useQuery({
+    queryKey: ['/api/v1/admin/users'],
+  });
+
+  const users = (usersData as { success: boolean; data: TenantUser[] })?.data || [];
+
+  // Invite mutation
+  const inviteMutation = useMutation({
+    mutationFn: async (data: InviteUserInput) => {
+      return await apiClient.post<{ success: boolean; data: TenantUser }>(
+        '/api/v1/admin/users/invite',
+        data
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/v1/admin/users'] });
+      toast({
+        title: 'User invited',
+        description: 'Invitation sent successfully',
+      });
+      setInviteDialogOpen(false);
+      resetForm();
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to invite user',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Remove mutation
+  const removeMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return await apiClient.delete<{ success: boolean }>(
+        `/api/v1/admin/users/${userId}`
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/v1/admin/users'] });
+      toast({
+        title: 'User removed',
+        description: 'User removed from tenant successfully',
+      });
+      setRemovingUser(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to remove user',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const resetForm = () => {
+    setFormData({
+      email: '',
+      fullName: '',
+      role: 'viewer',
+    });
+  };
+
+  const handleInvite = () => {
+    setFormData({
+      email: '',
+      fullName: '',
+      role: 'viewer',
+    });
+    setInviteDialogOpen(true);
+  };
+
+  const handleSubmit = () => {
+    if (!formData.email.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Email is required',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    inviteMutation.mutate(formData);
+  };
+
+  const handleRemove = (user: TenantUser) => {
+    setRemovingUser(user);
+  };
+
+  const confirmRemove = () => {
+    if (removingUser) {
+      removeMutation.mutate(removingUser.userId);
+    }
+  };
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <Shield className="w-4 h-4" />;
+      case 'editor':
+        return <Edit3 className="w-4 h-4" />;
+      case 'viewer':
+        return <Eye className="w-4 h-4" />;
+      default:
+        return null;
+    }
+  };
+
+  const getRoleVariant = (role: string): "default" | "secondary" | "outline" => {
+    switch (role) {
+      case 'admin':
+        return 'default';
+      case 'editor':
+        return 'secondary';
+      case 'viewer':
+        return 'outline';
+      default:
+        return 'outline';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-8">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">User Management</h1>
+            <p className="text-muted-foreground">Loading users...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold" data-testid="text-page-title">User Management</h1>
+          <p className="text-muted-foreground">
+            Manage user access and roles for your tenant
+          </p>
+        </div>
+        <Button onClick={handleInvite} data-testid="button-invite-user">
+          <UserPlus className="w-4 h-4 mr-2" />
+          Invite User
+        </Button>
+      </div>
+
+      {/* Users Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            Tenant Users ({users.length})
+          </CardTitle>
+          <CardDescription>
+            Users with access to this tenant and their roles
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {users.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <Users className="w-12 h-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No users yet</h3>
+              <p className="text-muted-foreground text-center mb-4">
+                Invite users to collaborate on this tenant
+              </p>
+              <Button onClick={handleInvite} data-testid="button-invite-first-user">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Invite User
+              </Button>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Last Login</TableHead>
+                  <TableHead>Joined</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id} data-testid={`row-user-${user.userId}`}>
+                    <TableCell className="font-medium" data-testid={`text-email-${user.userId}`}>
+                      {user.email || 'N/A'}
+                    </TableCell>
+                    <TableCell data-testid={`text-name-${user.userId}`}>
+                      {user.firstName && user.lastName
+                        ? `${user.firstName} ${user.lastName}`
+                        : 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={getRoleVariant(user.role)}
+                        className="flex items-center gap-1 w-fit"
+                        data-testid={`badge-role-${user.userId}`}
+                      >
+                        {getRoleIcon(user.role)}
+                        <span className="capitalize">{user.role}</span>
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {user.lastLoginAt
+                        ? new Date(user.lastLoginAt).toLocaleDateString()
+                        : 'Never'}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemove(user)}
+                        data-testid={`button-remove-${user.userId}`}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Remove
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Invite Dialog */}
+      <Dialog open={inviteDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setInviteDialogOpen(false);
+          resetForm();
+        }
+      }}>
+        <DialogContent data-testid="dialog-invite-user">
+          <DialogHeader>
+            <DialogTitle data-testid="text-dialog-title">Invite User</DialogTitle>
+            <DialogDescription>
+              Send an invitation to a new user to join this tenant
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Email */}
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                data-testid="input-email"
+                type="email"
+                placeholder="user@example.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </div>
+
+            {/* Full Name */}
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input
+                id="fullName"
+                data-testid="input-full-name"
+                placeholder="John Doe"
+                value={formData.fullName}
+                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+              />
+            </div>
+
+            {/* Role */}
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value: 'admin' | 'editor' | 'viewer') =>
+                  setFormData({ ...formData, role: value })
+                }
+              >
+                <SelectTrigger id="role" data-testid="select-role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="viewer" data-testid="option-viewer">
+                    <div className="flex items-center gap-2">
+                      <Eye className="w-4 h-4" />
+                      <div>
+                        <div className="font-medium">Viewer</div>
+                        <div className="text-xs text-muted-foreground">Read-only access</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="editor" data-testid="option-editor">
+                    <div className="flex items-center gap-2">
+                      <Edit3 className="w-4 h-4" />
+                      <div>
+                        <div className="font-medium">Editor</div>
+                        <div className="text-xs text-muted-foreground">Can create and edit content</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="admin" data-testid="option-admin">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4" />
+                      <div>
+                        <div className="font-medium">Admin</div>
+                        <div className="text-xs text-muted-foreground">Full access and user management</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setInviteDialogOpen(false);
+                resetForm();
+              }}
+              data-testid="button-cancel"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={inviteMutation.isPending}
+              data-testid="button-submit"
+            >
+              {inviteMutation.isPending ? 'Sending...' : 'Send Invitation'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Remove Confirmation */}
+      <AlertDialog open={!!removingUser} onOpenChange={(open) => !open && setRemovingUser(null)}>
+        <AlertDialogContent data-testid="dialog-remove-confirmation">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove User?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove {removingUser?.email} from this tenant?
+              They will lose all access to tenant resources.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-remove">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmRemove}
+              disabled={removeMutation.isPending}
+              data-testid="button-confirm-remove"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {removeMutation.isPending ? 'Removing...' : 'Remove User'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}

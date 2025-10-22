@@ -17,6 +17,11 @@ import SuperAdminAuditLogs from "@/pages/AuditLogs";
 
 // Pharma Admin Pages
 import PharmaAdminDashboard from "@/pages/admin/Dashboard";
+import BrandManagement from "@/pages/admin/BrandManagement";
+import UserManagement from "@/pages/admin/UserManagement";
+import PartnerManagement from "@/pages/admin/PartnerManagement";
+import AuditLogsPage from "@/pages/admin/AuditLogs";
+import DrugPrograms from "@/pages/admin/DrugPrograms";
 import { PharmaAdminLayout } from "@/components/admin/PharmaAdminLayout";
 
 import NotFound from "@/pages/not-found";
@@ -145,19 +150,19 @@ function Router() {
         <PharmaAdminRoute component={PharmaAdminDashboard} />
       </Route>
       <Route path="/admin/programs">
-        <PharmaAdminRoute component={() => <div className="p-8">Drug Programs - Coming Soon</div>} />
+        <PharmaAdminRoute component={DrugPrograms} />
       </Route>
       <Route path="/admin/users">
-        <PharmaAdminRoute component={() => <div className="p-8">User Management - Coming Soon</div>} />
+        <PharmaAdminRoute component={UserManagement} />
       </Route>
       <Route path="/admin/partners">
-        <PharmaAdminRoute component={() => <div className="p-8">Partner Management - Coming Soon</div>} />
+        <PharmaAdminRoute component={PartnerManagement} />
       </Route>
       <Route path="/admin/brands">
-        <PharmaAdminRoute component={() => <div className="p-8">Brand Management - Coming Soon</div>} />
+        <PharmaAdminRoute component={BrandManagement} />
       </Route>
       <Route path="/admin/audit-logs">
-        <PharmaAdminRoute component={() => <div className="p-8">Audit Logs - Coming Soon</div>} />
+        <PharmaAdminRoute component={AuditLogsPage} />
       </Route>
 
       {/* 404 Fallback */}
