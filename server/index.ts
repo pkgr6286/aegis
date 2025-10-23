@@ -45,9 +45,23 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Setup Vite in development mode
+// Setup Vite in development mode or serve static files in production
 if (process.env.NODE_ENV !== 'production') {
   setupVite(app, server);
+} else {
+  // Production: serve static files
+  const { fileURLToPath } = await import('url');
+  const { dirname, join } = await import('path');
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  
+  // Serve static files from dist/client
+  app.use(express.static(join(__dirname, '../client')));
+  
+  // SPA fallback: serve index.html for all non-API routes
+  app.get('*', (req, res) => {
+    res.sendFile(join(__dirname, '../client/index.html'));
+  });
 }
 
 // Error handling middleware
