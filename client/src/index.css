@@ -15,7 +15,7 @@
   --elevate-2: rgba(0,0,0, .08);
 
   /* Zend Color System - Modern Minimalism with Forest Green */
-  --background: 120 100% 50%;  /* BRIGHT GREEN TEST - App background */
+  --background: 210 20% 98%;  /* #F9FAFB - App background */
 
   --foreground: 220 13% 17%;  /* #1F2937 - Main text */
 
@@ -33,7 +33,7 @@
 
   --sidebar-border: 214 15% 91%;
 
-  --sidebar-primary: 158 43% 16%;  /* #1D463A - Forest Green primary */
+  --sidebar-primary: 158 60% 35%;  /* #2B9970 - Brighter Forest Green for visibility */
 
   --sidebar-primary-foreground: 0 0% 100%;  /* White text on forest green */
 
@@ -41,7 +41,7 @@
 
   --sidebar-accent-foreground: 220 13% 17%;
 
-  --sidebar-ring: 158 43% 16%;  /* Forest green focus ring */
+  --sidebar-ring: 158 60% 35%;  /* Brighter forest green focus ring */
 
   --popover: 0 0% 100%;
 
@@ -49,7 +49,7 @@
 
   --popover-border: 214 15% 91%;
 
-  --primary: 158 43% 16%;  /* #1D463A - Forest Green */
+  --primary: 158 60% 35%;  /* #2B9970 - Brighter Forest Green (more visible) */
 
   --primary-foreground: 0 0% 100%;
 
