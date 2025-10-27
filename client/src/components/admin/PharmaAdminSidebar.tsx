@@ -86,7 +86,7 @@ export function PharmaAdminSidebar() {
       <SidebarContent>
         {navigationGroups.map((group) => (
           <SidebarGroup key={group.label}>
-            <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground px-3 py-2">
+            <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/70 px-3 py-2">
               {group.label}
             </SidebarGroupLabel>
             <SidebarGroupContent>

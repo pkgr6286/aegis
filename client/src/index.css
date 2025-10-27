@@ -27,21 +27,21 @@
 
   --card-border: 214 15% 91%;  /* #E4E7EB */
 
-  --sidebar: 220 14% 96%;  /* #F3F4F6 - Subtle muted background */
+  --sidebar: 158 60% 35%;  /* #2B9970 - Forest Green background for entire sidebar */
 
-  --sidebar-foreground: 220 13% 17%;
+  --sidebar-foreground: 0 0% 100%;  /* White text on green sidebar */
 
-  --sidebar-border: 214 15% 91%;
+  --sidebar-border: 158 50% 30%;  /* Slightly darker green for subtle borders */
 
-  --sidebar-primary: 158 60% 35%;  /* #2B9970 - Brighter Forest Green for visibility */
+  --sidebar-primary: 0 0% 100%;  /* White background for active items */
 
-  --sidebar-primary-foreground: 0 0% 100%;  /* White text on forest green */
+  --sidebar-primary-foreground: 158 60% 35%;  /* Forest green text on white active items */
 
-  --sidebar-accent: 220 14% 96%;  /* #F3F4F6 */
+  --sidebar-accent: 158 55% 40%;  /* Lighter green for hover */
 
-  --sidebar-accent-foreground: 220 13% 17%;
+  --sidebar-accent-foreground: 0 0% 100%;  /* White text on hover */
 
-  --sidebar-ring: 158 60% 35%;  /* Brighter forest green focus ring */
+  --sidebar-ring: 0 0% 100%;  /* White focus ring */
 
   --popover: 0 0% 100%;
 
@@ -174,21 +174,21 @@
 
   --card-border: 220 12% 18%;
 
-  --sidebar: 218 15% 15%;
+  --sidebar: 158 43% 30%;  /* Darker forest green for dark mode sidebar */
 
-  --sidebar-foreground: 210 20% 98%;
+  --sidebar-foreground: 0 0% 100%;  /* White text on green sidebar */
 
-  --sidebar-border: 220 12% 22%;
+  --sidebar-border: 158 40% 25%;  /* Even darker green for borders */
 
-  --sidebar-primary: 158 43% 38%;  /* #2B6F54 - Lighter green for dark mode */
+  --sidebar-primary: 0 0% 100%;  /* White background for active items */
 
-  --sidebar-primary-foreground: 210 20% 98%;
+  --sidebar-primary-foreground: 158 43% 30%;  /* Dark green text on white active items */
 
-  --sidebar-accent: 220 10% 22%;
+  --sidebar-accent: 158 45% 35%;  /* Slightly lighter green for hover */
 
-  --sidebar-accent-foreground: 210 20% 98%;
+  --sidebar-accent-foreground: 0 0% 100%;  /* White text on hover */
 
-  --sidebar-ring: 158 43% 38%;  /* Forest green ring */
+  --sidebar-ring: 0 0% 100%;  /* White focus ring */
 
   --popover: 220 12% 20%;
 
