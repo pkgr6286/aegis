@@ -122,21 +122,34 @@ export default function Login() {
       </div>
 
       {/* Right Column - Login Form */}
-      <div className="w-full lg:w-[40%] bg-background flex items-center justify-center p-6 lg:p-12">
-        <div className="w-full max-w-md">
-          <Card className="border-0 shadow-lg">
-            <CardHeader className="space-y-1 pb-6">
-              <CardTitle className="text-2xl font-semibold text-center">
-                Admin Portal
+      <div className="w-full lg:w-[40%] bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-6 lg:p-12 relative">
+        {/* Decorative blur circles */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-sidebar/5 rounded-full blur-3xl" />
+        
+        <div className="w-full max-w-md relative z-10">
+          {/* Logo above card */}
+          <div className="mb-8 text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-sidebar shadow-lg mb-4">
+              <Shield className="w-7 h-7 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight">Aegis Platform</h1>
+            <p className="text-sm text-muted-foreground mt-1">Secure Admin Access</p>
+          </div>
+
+          <Card className="border shadow-2xl shadow-primary/5 backdrop-blur-sm bg-card/95">
+            <CardHeader className="space-y-1 pb-6 pt-8">
+              <CardTitle className="text-xl font-semibold text-center">
+                Welcome Back
               </CardTitle>
               <p className="text-sm text-muted-foreground text-center">
-                Sign in to access your dashboard
+                Enter your credentials to continue
               </p>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+            <CardContent className="px-8 pb-8">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
                   <Input
                     id="email"
                     type="email"
@@ -147,27 +160,27 @@ export default function Login() {
                     autoComplete="email"
                     disabled={isLoading}
                     data-testid="input-email"
-                    className="h-11"
+                    className="h-12 bg-background/50 border-border/50 focus:border-primary transition-colors"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     autoComplete="current-password"
                     disabled={isLoading}
                     data-testid="input-password"
-                    className="h-11"
+                    className="h-12 bg-background/50 border-border/50 focus:border-primary transition-colors"
                   />
                 </div>
                 <Button
                   type="submit"
-                  className="w-full h-11"
+                  className="w-full h-12 text-base font-medium shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all"
                   disabled={isLoading}
                   data-testid="button-login"
                 >
@@ -175,10 +188,10 @@ export default function Login() {
                 </Button>
               </form>
 
-              <div className="mt-6 text-center">
+              <div className="mt-6 pt-6 border-t text-center">
                 <p className="text-sm text-muted-foreground">
-                  Don't have an account?{' '}
-                  <a href="mailto:support@aegis.com" className="text-primary hover:underline font-medium">
+                  Need help?{' '}
+                  <a href="mailto:support@aegis.com" className="text-primary hover:underline font-medium transition-colors">
                     Contact Support
                   </a>
                 </p>
@@ -187,9 +200,10 @@ export default function Login() {
           </Card>
 
           {/* Mobile Logo */}
-          <div className="lg:hidden mt-8 flex items-center justify-center gap-2 text-muted-foreground">
-            <Shield className="w-5 h-5" />
-            <span className="text-sm font-medium">Aegis Platform</span>
+          <div className="lg:hidden mt-8 text-center">
+            <p className="text-xs text-muted-foreground">
+              © 2025 Aegis Platform. All rights reserved.
+            </p>
           </div>
         </div>
       </div>
