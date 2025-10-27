@@ -55,15 +55,15 @@ export function AppSidebar() {
   const [location] = useLocation();
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-            <Shield className="w-5 h-5 text-primary" />
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/20">
+            <Shield className="w-5 h-5 text-white" />
           </div>
           <div className="flex flex-col">
             <span className="text-base font-semibold">Aegis Platform</span>
-            <span className="text-xs text-muted-foreground">Super Admin</span>
+            <span className="text-xs text-sidebar-foreground/70">Super Admin</span>
           </div>
         </div>
       </SidebarHeader>
@@ -71,7 +71,7 @@ export function AppSidebar() {
       <SidebarContent>
         {navigationGroups.map((group) => (
           <SidebarGroup key={group.label}>
-            <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground px-3 py-2">
+            <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/70 px-3 py-2">
               {group.label}
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -103,7 +103,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-4">
-        <div className="text-xs text-muted-foreground">
+        <div className="text-xs text-sidebar-foreground/70">
           v1.0.0 | © 2025 Aegis
         </div>
       </SidebarFooter>
