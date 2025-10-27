@@ -3,6 +3,8 @@ import { createServer } from 'http';
 import { setupVite, log } from './vite';
 import routes from './src/routes';
 import session from 'express-session';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 const app = express();
 const server = createServer(app);
@@ -50,8 +52,6 @@ if (process.env.NODE_ENV !== 'production') {
   setupVite(app, server);
 } else {
   // Production: serve static files
-  const { fileURLToPath } = await import('url');
-  const { dirname, join } = await import('path');
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
   
