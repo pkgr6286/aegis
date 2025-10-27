@@ -10,6 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
 } from '@/components/ui/sidebar';
 import { LayoutDashboard, Building2, Users, FileText, Shield } from 'lucide-react';
 
@@ -107,6 +108,7 @@ export function AppSidebar() {
           v1.0.0 | © 2025 Aegis
         </div>
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }

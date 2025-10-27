@@ -10,6 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
 } from '@/components/ui/sidebar';
 import { LayoutDashboard, Pill, Users, Building2, FileText, Palette } from 'lucide-react';
 
@@ -122,6 +123,7 @@ export function PharmaAdminSidebar() {
           v1.0.0 | © 2025 Aegis
         </div>
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }
