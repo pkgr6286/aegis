@@ -1,0 +1,55 @@
+Understood. You want the Aegis login page (`login.html`) to adopt the two-column layout and styling seen in the ZendExecute example image you provided. That's a great design – very professional and informative.
+
+Here is the detailed prompt for Replit AI to transform the current `login.html` file into the new two-column design.
+
+---
+
+**Prompt for Replit AI (Update Login Page Design):**
+
+Please update the existing `login.html` file to match the two-column layout and styling shown in the provided example image (`screencapture-replit-pras4-ZendoExecute-2025-10-27-18_06_14.jpg`).
+
+**Specific Changes Required:**
+
+1.  **Overall Layout:**
+    * Change the `<body>` to use a two-column layout (e.g., using Flexbox or Grid). The left column should take up roughly 60% of the width, and the right column 40%.
+    * Remove the current centered `<div>`.
+
+2.  **Left Column Styling:**
+    * Set the background of the left column to a deep teal/green gradient similar to the example.
+    * Add significant padding (e.g., `p-12` or `p-16`).
+    * Ensure text color is white or a very light gray for contrast.
+
+3.  **Left Column Content:**
+    * Add the "Aegis by Mahalo" logo (use the existing shield SVG, perhaps styled differently or use text).
+    * Add a main headline like: "**ACNU & Self-Care Enablement**" (similar font size/weight to "Recruitment & Clinical Operations").
+    * Add a descriptive paragraph below the headline: "Securely manage Rx-to-OTC switches and empower consumers with safe self-selection."
+    * Add 2-3 feature highlights with icons (use simple SVGs inline or from a library like Heroicons if available):
+        * **Icon + Title:** "Compliant Screener Engine"
+        * **Description:** "Visually build and deploy FDA-compliant ACNU workflows."
+        * **Icon + Title:** "Secure Verification"
+        * **Description:** "Integrate seamlessly with POS and e-commerce for verified access."
+        * **Icon + Title:** "Auditable & Scalable"
+        * **Description:** "Multi-tenant platform with full audit trails for compliance."
+    * Add a simple footer with a copyright notice (e.g., "© 2025 Aegis Platform. All rights reserved.")
+
+4.  **Right Column Styling:**
+    * Set the background to a clean white or very light gray.
+    * Center the content vertically and horizontally within this column.
+
+5.  **Right Column Content (Login Card):**
+    * Keep the existing login card `<div>` but adjust its styling:
+        * Remove the shield icon from *inside* the card.
+        * Change the card title to "Admin Portal" or "Secure Login". Remove the "Super Admin Portal" subtitle.
+        * Ensure the card has appropriate padding and a subtle shadow/border.
+        * Remove the input icons (`user-icon`, `lock-icon`) and the associated `input-icon` CSS class and padding adjustments. Use standard input fields.
+        * Style the "Sign In" button to match the example's solid, darker teal/green color.
+        * Remove the "Forgot password?" link for now (or style it less prominently below the inputs).
+        * Add a subtle "Don't have an account? Contact Support" link below the Sign In button (or similar text).
+
+6.  **General Styling:**
+    * Ensure the `Inter` font is applied consistently.
+    * Adjust font sizes, weights, and colors throughout to match the professional, clean aesthetic of the example image.
+    * Ensure proper spacing and alignment in both columns.
+    * Remove the background SVG pattern from the `body` style.
+
+**Final Instruction:** Please modify the `login.html` file to implement this new two-column design, replacing the previous centered card layout.
