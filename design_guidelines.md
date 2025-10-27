@@ -1,154 +1,267 @@
-# Aegis Platform - Design Guidelines
+# Aegis Platform - Design System
 
-## Project Context
-**Note:** This is currently a backend-only implementation with no UI. These guidelines are provided for future frontend development of this multi-tenant SaaS platform serving pharmaceutical companies and patient assistance programs.
+## Design Philosophy
 
-## Design Approach: Enterprise SaaS System
+**Selected Approach:** Modern Minimalism with Hierarchy via Tone
 
-**Selected Approach:** Design System-Based (Healthcare Enterprise Focus)  
-**Primary Reference:** Linear + Stripe + Healthcare.gov aesthetic  
-**Rationale:** Enterprise healthcare SaaS requires trust, clarity, and HIPAA-compliant professionalism over creative flourishes.
+The Aegis Platform design system is inspired by clean, modular, modern admin interfaces. It prioritizes information density while maintaining visual breathing space, using grayscale tonal shifts rather than hard color contrast to separate regions.
 
 ---
 
-## Core Design Principles
+## Core Principles
 
-1. **Clinical Clarity:** Information hierarchy optimized for healthcare compliance officers and program administrators
-2. **Trust-First:** Conservative, professional aesthetic reflecting pharmaceutical industry standards
-3. **Multi-Tenant Awareness:** Clear visual indicators of tenant context without overwhelming users
-4. **Accessibility Compliance:** WCAG 2.1 AA minimum for healthcare regulatory requirements
-
----
-
-## Color Palette
-
-### Light Mode
-- **Primary Brand:** 210 85% 45% (Professional Blue - trust, medical)
-- **Secondary Accent:** 210 75% 35% (Darker Blue - actions)
-- **Success States:** 142 71% 45% (Medical Green)
-- **Warning/Alert:** 38 92% 50% (Attention Orange)
-- **Error States:** 0 84% 60% (Clear Red)
-- **Neutral Base:** 220 15% 97% (Cool Gray backgrounds)
-- **Text Primary:** 220 20% 20% (High contrast)
-- **Text Secondary:** 220 10% 45%
-
-### Dark Mode
-- **Primary Brand:** 210 75% 55%
-- **Background:** 220 15% 12%
-- **Surface:** 220 12% 18%
-- **Text Primary:** 220 15% 95%
+| Principle | Description |
+|-----------|-------------|
+| **Modern Minimalism** | Clean UI with minimal borders, soft shadows, and generous spacing |
+| **Hierarchy via Tone** | Use grayscale tonal shifts rather than hard color contrast to separate regions |
+| **Functional Calm** | Prioritize information density while maintaining visual breathing space |
+| **Consistency Everywhere** | Uniform typography, color logic, and component proportions |
+| **Subtle Motion** | Microinteractions only where it helps comprehension — not decoration |
 
 ---
 
-## Typography
+## Color System
 
-**Primary Font:** Inter (via Google Fonts CDN)  
-**Monospace Font:** JetBrains Mono (for data/IDs)
+### Primary Theme: Elegant Forest-Green & Neutral Gray Palette
 
-### Hierarchy
-- **H1:** 2.25rem (36px), font-semibold - Page titles
-- **H2:** 1.875rem (30px), font-semibold - Section headers
-- **H3:** 1.5rem (24px), font-medium - Card titles
-- **Body Large:** 1.125rem (18px), font-normal - Primary content
-- **Body:** 1rem (16px), font-normal - Standard text
-- **Small:** 0.875rem (14px), font-normal - Metadata, captions
-- **Micro:** 0.75rem (12px), font-medium - Labels, tags
+#### Light Mode (Default)
 
----
+| Token | Color | HSL | Usage |
+|-------|-------|-----|-------|
+| `--color-primary` | #1D463A | 158 43% 16% | Primary accent (buttons, highlights, active items) |
+| `--color-primary-light` | #2B6F54 | 158 43% 38% | Hover or secondary accent |
+| `--color-bg` | #F9FAFB | 210 20% 98% | App background |
+| `--color-surface` | #FFFFFF | 0 0% 100% | Panels, cards, tables |
+| `--color-border` | #E4E7EB | 214 15% 91% | Dividers, table outlines |
+| `--color-text-main` | #1F2937 | 220 13% 17% | Headings and important text |
+| `--color-text-secondary` | #6B7280 | 220 9% 46% | Secondary labels, descriptions |
+| `--color-accent` | #00A884 | 166 100% 33% | Graphs, positive metrics, tags |
+| `--color-error` | #EF4444 | 0 84% 60% | Error states |
+| `--color-warning` | #F59E0B | 38 92% 54% | Warnings or pending items |
+| `--color-success` | #10B981 | 142 76% 48% | Confirmations, success alerts |
+| `--color-muted-bg` | #F3F4F6 | 220 14% 96% | Table rows, subtle backgrounds |
 
-## Layout System
+#### Dark Mode
 
-**Spacing Primitives:** Tailwind units of 2, 4, 6, 8, 12, 16  
-**Container Max-Width:** max-w-7xl  
-**Grid System:** 12-column responsive grid
+- **Primary:** #2B6F54 (lighter green for contrast)
+- **Background:** #1A1D21 (deep gray)
+- **Surface:** #242830 (elevated gray)
+- **Text:** #F9FAFB (light gray)
+- **Borders:** Subtle tonal shifts from surface colors
 
-### Dashboard Layout
-- **Sidebar:** Fixed 16rem width (collapsed: 4rem)
-- **Main Content:** Fluid with max-w-7xl container
-- **Top Navigation:** 4rem height, sticky
-- **Content Padding:** p-6 on mobile, p-8 on desktop
+#### Status Indicators
 
----
-
-## Component Library
-
-### Navigation
-- **Tenant Switcher:** Prominent dropdown in top-left (logo + tenant name)
-- **Primary Nav:** Vertical sidebar with icon + label pattern
-- **Breadcrumbs:** Always visible for deep navigation hierarchies
-- **User Menu:** Top-right avatar dropdown with role badge
-
-### Data Display
-- **Tables:** Stripe-style with alternating row backgrounds, sticky headers
-- **Cards:** Subtle shadow (shadow-sm), rounded-lg, border
-- **Status Badges:** Pill-shaped with color-coded backgrounds (not just borders)
-- **Metrics Panels:** Large numerals with trend indicators and sparklines
-
-### Forms
-- **Input Fields:** Consistent height (h-10), clear focus states with ring-2
-- **Validation:** Inline error messages below fields, success checkmarks
-- **Multi-Step Forms:** Progress indicator with completed/current/upcoming states
-- **Tenant Context:** Always visible indicator when creating tenant-scoped data
-
-### Data Entry
-- **Search:** Cmd+K global search with keyboard shortcuts
-- **Filters:** Collapsible filter panel, applied filters shown as removable chips
-- **Bulk Actions:** Checkbox selection with action bar appearing at top
-
-### Overlays
-- **Modals:** Centered, max-w-2xl, with backdrop blur
-- **Slide-overs:** Right-aligned for detail views (w-96 to w-1/2)
-- **Toasts:** Top-right stacking notifications with auto-dismiss
-- **Confirmation Dialogs:** Destructive actions require explicit confirmation
+- **Active Study:** #10B981 (success green)
+- **Pending:** #F59E0B (warning amber)
+- **Completed:** #6B7280 (neutral gray)
+- **Cancelled:** #EF4444 (error red)
 
 ---
 
-## Animations
+## Typography System
 
-**Philosophy:** Minimal, functional motion only  
-**Duration:** 150-200ms for micro-interactions  
-**Easing:** ease-in-out for natural feel
+### Font Stack
 
-### Use Cases
-- Dropdown menus: slide-in with fade
-- Toast notifications: slide-in from top-right
-- Loading states: subtle pulse on skeletons
-- **Avoid:** Page transitions, decorative animations, parallax
+- **Primary:** 'Inter', 'Manrope', system-ui, sans-serif
+- **Monospace:** 'JetBrains Mono', monospace (for IDs, timestamps, code)
+
+### Type Scale
+
+| Type | Font | Size | Weight | Usage |
+|------|------|------|--------|-------|
+| **Display / Title** | Inter / Manrope | 28-32px | 600-700 | Section titles, hero headers |
+| **Heading** | Inter / Manrope | 20-24px | 600 | Module titles |
+| **Subheading** | Inter / Manrope | 16-18px | 500 | Card headers, table titles |
+| **Body** | Inter / Manrope | 14-16px | 400-500 | Primary content text |
+| **Caption / Label** | Inter / Manrope | 12-13px | 400 | Metadata, small UI text |
+
+### Typography Rules
+
+- Avoid all caps
+- Keep line-height loose (1.5-1.7)
+- Use consistent spacing between title → subtitle → content
 
 ---
 
-## Enterprise-Specific Patterns
+## Layout Foundation
 
-### Audit Trail Display
-- Timeline view with user avatars, timestamps, and action descriptions
-- Expandable change diffs for data modifications
+### Overall Structure
 
-### Tenant Isolation Visual Cues
-- Subtle tenant color accent in header (configurable per tenant)
-- Tenant logo watermark in background of main content area (very low opacity)
+```
+┌────────────────────────────┬────────────────────────────┐
+│ Sidebar                    │ Top Bar                   │
+│ (Fixed navigation)          │ Search / Profile / Filter  │
+│                            │                           │
+│                            │ Main Panel                │
+│                            │ - Cards, Tables, Charts    │
+│                            │ - Forms, Modals, Lists     │
+└────────────────────────────┴────────────────────────────┘
+```
 
-### Role-Based UI
-- Disabled states for actions user lacks permission for (with tooltip explaining why)
-- Progressive disclosure: advanced features hidden behind "Advanced" toggles for admin roles
+### Characteristics
+
+- **Left Sidebar:** Clean background with subtle borders, compact typography
+- **Top Bar:** Light background with search and user menu
+- **Main Area:** White surfaces, grid layout for dashboard cards and tables
+- **Cards:** Rounded corners (12px), soft shadows, structured padding (24px)
+
+---
+
+## Spacing & Layout Grid
+
+| Token | Value | Description |
+|-------|-------|-------------|
+| `--space-xxs` | 4px | Micro gaps |
+| `--space-xs` | 8px | Between label and input |
+| `--space-sm` | 12px | Between form fields |
+| `--space-md` | 16px | Standard internal padding |
+| `--space-lg` | 24px | Section spacing |
+| `--space-xl` | 32px | Major block gap |
+| `--radius-sm` | 6px | Small buttons, tags |
+| `--radius-md` | 12px | Cards, modals |
+| `--radius-lg` | 16px | Hero banners or large containers |
+
+---
+
+## Core Components
+
+### Sidebar Navigation
+- Collapsible left nav with icons
+- Active highlight bar
+- Hover tooltip
+- Clean background with subtle separation
+
+### Top Bar
+- Contains global search, filters, and user menu/avatar
+- Light background
+- Minimal visual weight
+
+### Stat Card (Metric Card)
+- Compact card with metric + label + icon
+- Supports color-coded states (default, success, warning)
+- 12px border radius
+- Soft shadow
+
+### Data Table
+- Striped rows (optional)
+- Hover highlight
+- Sticky header
+- Action buttons (Edit/View)
+- Clean borders
+
+### Filter Panel
+- Compact dropdowns + search bar above data views
+- Subtle background
+- Aligned with table content
+
+### Form Elements
+- Consistent input styling
+- Rounded corners (8px for inputs)
+- Light borders
+- Includes text, dropdown, datepicker, toggle
+- Clear focus states
+
+### Modal / Drawer
+- Rounded 16px
+- Dimmed backdrop
+- Center or side-sliding
+- Clean header with close button
+
+### Notification / Toast
+- Top-right stacked
+- Subtle animation
+- Light color scheme
+- Auto-dismiss
+
+### Chart Block
+- Soft gray grid
+- Brand-accent highlight bars or lines
+- Minimal axes
+- Clean data presentation
+
+---
+
+## Motion Guidelines
+
+| Element | Motion Spec |
+|---------|-------------|
+| **Hover** | Soft scale (1.02x) or background tint |
+| **Click** | Quick feedback (100-150ms) |
+| **Modal open** | Fade-in + slight upward motion |
+| **Dropdown** | Slide-down (ease-in-out, 120ms) |
+| **Sidebar expand/collapse** | Smooth width transition |
+
+---
+
+## Iconography
+
+| Property | Spec |
+|----------|------|
+| **Style** | Line-based (Lucide / Tabler / Phosphor) |
+| **Stroke** | 1.75-2px |
+| **Corners** | Rounded |
+| **Size** | 20-24px sidebar, 16px inline |
+| **Consistency** | Uniform padding and alignment grid |
+
+---
+
+## Theming
+
+| Mode | Description |
+|------|-------------|
+| **Light (Default)** | Neutral background with white cards and dark text |
+| **Dark Mode** | Inverted palette with deep gray surfaces and green accents |
+
+---
+
+## Component Mapping
+
+| Component | Usage | Key Features |
+|-----------|-------|--------------|
+| **Sidebar** | Navigation with icons and active state | Forest-green accents for active items |
+| **Header / Top Bar** | Search, actions, avatar | Minimal visual weight |
+| **Stat Card** | Metrics display | 12px radius, soft shadows |
+| **Table** | Data display with actions | Clean borders, hover states |
+| **Chart** | Dashboard visualizations | Green accent colors |
+| **Form** | User input | 8px input radius, clear focus rings |
+| **Modal** | Overlays and dialogs | 16px radius, backdrop blur |
+| **Toast** | Notifications | Subtle animations |
+
+---
+
+## Accessibility & Polish
+
+- WCAG 2.1 AA contrast minimum (4.5:1 text, 3:1 UI)
+- Focus visible on all interactive elements
+- Semantic HTML with ARIA labels
+- Skip navigation link for keyboard users
+- Reduced motion respected via `prefers-reduced-motion`
+- Error messages announced to screen readers
+- All form fields properly labeled
+
+---
+
+## Key Principle
+
+**Clean, professional design that stays out of the way.** Information hierarchy is conveyed through subtle tonal shifts rather than heavy borders or colors. Every interaction should feel smooth and intentional.
+
+---
+
+## Healthcare-Specific Considerations
+
+### Multi-Tenant Awareness
+- Clear visual indicators of tenant context without overwhelming users
+- Tenant-specific color accents in header (configurable per tenant)
 
 ### Compliance Features
 - Timestamp displays always in user's timezone with UTC in tooltip
 - Permanent record indicators (locked icons) for audit-required data
 - Export buttons for compliance reporting with format options (CSV, PDF)
 
----
+### Audit Trail Display
+- Timeline view with user avatars, timestamps, and action descriptions
+- Expandable change diffs for data modifications
 
-## Icon System
-
-**Library:** Heroicons (outline for navigation, solid for actions)  
-**Size:** w-5 h-5 standard, w-4 h-4 for inline text icons
-
----
-
-## Accessibility
-
-- All form inputs have associated labels (never placeholder-only)
-- Color is never the only indicator of state
-- Keyboard navigation fully supported with visible focus indicators
-- Skip navigation links for screen readers
-- ARIA labels on all icon-only buttons
+### Role-Based UI
+- Disabled states for actions user lacks permission for (with tooltip explaining why)
+- Progressive disclosure: advanced features hidden behind "Advanced" toggles for admin roles
