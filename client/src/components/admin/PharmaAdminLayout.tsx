@@ -47,9 +47,9 @@ export function PharmaAdminLayout({ children }: PharmaAdminLayoutProps) {
         <PharmaAdminSidebar />
         <div className="flex flex-col flex-1">
           {/* Top Bar */}
-          <header className="flex items-center justify-between p-4 border-b bg-background">
+          <header className="flex items-center justify-between p-4 border-b bg-background shrink-0 z-10">
             <div className="flex items-center gap-4">
-              <SidebarTrigger data-testid="button-sidebar-toggle" />
+              <SidebarTrigger data-testid="button-sidebar-toggle" className="shrink-0" />
               <div>
                 <h2 className="text-sm font-semibold">
                   {/* TODO: Fetch tenant name from tenantId */}

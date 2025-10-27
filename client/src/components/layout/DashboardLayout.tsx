@@ -43,9 +43,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <AppSidebar />
         <div className="flex flex-col flex-1 overflow-hidden">
           {/* Top Bar */}
-          <header className="flex items-center justify-between h-16 px-6 border-b border-border bg-card shrink-0">
+          <header className="flex items-center justify-between h-16 px-6 border-b border-border bg-card shrink-0 z-10">
             <div className="flex items-center gap-4">
-              <SidebarTrigger data-testid="button-sidebar-toggle" />
+              <SidebarTrigger data-testid="button-sidebar-toggle" className="shrink-0" />
             </div>
 
             {/* User Menu */}
