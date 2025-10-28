@@ -1,20 +1,18 @@
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
-import { HelpCircle, List, Hash, Type } from 'lucide-react';
+import { HelpCircle, List, Hash } from 'lucide-react';
 import type { QuestionNodeData } from '@/types/screener';
 
 const questionTypeIcons = {
-  yes_no: HelpCircle,
-  multiple_choice: List,
+  boolean: HelpCircle,
+  choice: List,
   numeric: Hash,
-  text: Type,
 };
 
 const questionTypeLabels = {
-  yes_no: 'Yes/No',
-  multiple_choice: 'Multiple Choice',
+  boolean: 'Yes/No',
+  choice: 'Multiple Choice',
   numeric: 'Numeric',
-  text: 'Text Input',
 };
 
 export const QuestionNode = memo(({ data, selected }: NodeProps) => {

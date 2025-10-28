@@ -3,7 +3,7 @@ import { Node, Edge } from '@xyflow/react';
 /**
  * Screener Question Types
  */
-export type QuestionType = 'yes_no' | 'multiple_choice' | 'numeric' | 'text';
+export type QuestionType = 'boolean' | 'choice' | 'numeric';
 
 /**
  * Screener Outcome Types
@@ -27,7 +27,7 @@ export interface ScreenerQuestion {
   type: QuestionType;
   text: string;
   required: boolean;
-  options?: string[]; // For multiple_choice
+  options?: string[]; // For choice questions
   validation?: QuestionValidation;
 }
 

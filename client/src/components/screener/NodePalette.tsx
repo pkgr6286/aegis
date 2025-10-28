@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { HelpCircle, List, Hash, Type, Target, Plus } from 'lucide-react';
+import { HelpCircle, List, Hash, Target, Plus } from 'lucide-react';
 import type { QuestionType } from '@/types/screener';
 
 interface NodePaletteProps {
@@ -30,11 +30,11 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
             variant="outline"
             size="sm"
             className="w-full justify-start gap-2"
-            onClick={() => onAddNode('question', 'yes_no')}
-            data-testid="button-add-yes-no"
+            onClick={() => onAddNode('question', 'boolean')}
+            data-testid="button-add-boolean"
           >
             <HelpCircle className="w-4 h-4" />
-            <span className="flex-1 text-left">Yes/No</span>
+            <span className="flex-1 text-left">Yes/No (Boolean)</span>
             <Plus className="w-3 h-3 opacity-50" />
           </Button>
 
@@ -42,8 +42,8 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
             variant="outline"
             size="sm"
             className="w-full justify-start gap-2"
-            onClick={() => onAddNode('question', 'multiple_choice')}
-            data-testid="button-add-multiple-choice"
+            onClick={() => onAddNode('question', 'choice')}
+            data-testid="button-add-choice"
           >
             <List className="w-4 h-4" />
             <span className="flex-1 text-left">Multiple Choice</span>
@@ -59,18 +59,6 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
           >
             <Hash className="w-4 h-4" />
             <span className="flex-1 text-left">Numeric</span>
-            <Plus className="w-3 h-3 opacity-50" />
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full justify-start gap-2"
-            onClick={() => onAddNode('question', 'text')}
-            data-testid="button-add-text"
-          >
-            <Type className="w-4 h-4" />
-            <span className="flex-1 text-left">Text Input</span>
             <Plus className="w-3 h-3 opacity-50" />
           </Button>
         </CardContent>

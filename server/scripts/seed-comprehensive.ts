@@ -92,31 +92,31 @@ const PHARMA_TENANTS: TenantData[] = [
         questions: [
           {
             id: 'age_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you 18 years of age or older?',
             required: true,
           },
           {
             id: 'pregnancy_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you currently pregnant, planning to become pregnant, or breastfeeding?',
             required: true,
           },
           {
             id: 'maoi_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Have you taken a Monoamine Oxidase Inhibitor (MAOI) antidepressant (e.g., Phenelzine, Tranylcypromine) in the last 14 days? If unsure, select Yes.',
             required: true,
           },
           {
             id: 'glaucoma_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Do you have narrow-angle glaucoma or severe urinary retention?',
             required: true,
           },
           {
             id: 'other_sleep_meds',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you currently taking any other prescription or over-the-counter sleep medication?',
             required: true,
           },
@@ -181,32 +181,32 @@ const PHARMA_TENANTS: TenantData[] = [
         questions: [
           {
             id: 'age_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you 18 years of age or older?',
             required: true,
           },
           {
             id: 'diagnosis_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Has a doctor diagnosed you with Asthma or COPD (Chronic Obstructive Pulmonary Disease)?',
             required: true,
           },
           {
             id: 'rescue_inhaler_freq',
-            type: 'multiple_choice',
+            type: 'choice',
             text: 'How often do you typically use your rescue inhaler (e.g., Albuterol) for sudden symptoms?',
             required: true,
             options: ['Less than twice a week', '2-3 times a week', 'Most days', 'Multiple times a day'],
           },
           {
             id: 'acute_attack',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you currently experiencing a severe asthma attack or sudden worsening of breathing? This medication is NOT for rescue use.',
             required: true,
           },
           {
             id: 'heart_conditions',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Do you have any heart conditions (like high blood pressure or irregular heartbeat)?',
             required: true,
           },
@@ -271,37 +271,37 @@ const PHARMA_TENANTS: TenantData[] = [
         questions: [
           {
             id: 'age_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you male and 18 years of age or older?',
             required: true,
           },
           {
             id: 'indication_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you seeking this medication to treat symptoms of erectile dysfunction (difficulty getting or keeping an erection)?',
             required: true,
           },
           {
             id: 'nitrates_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you currently taking ANY form of nitrate medication (e.g., nitroglycerin for chest pain, amyl nitrite)? Taking Viagra with nitrates can cause a dangerous drop in blood pressure.',
             required: true,
           },
           {
             id: 'heart_health_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Has a doctor advised you that sexual activity is inadvisable due to heart problems? Or have you experienced chest pain during sex in the last 6 months?',
             required: true,
           },
           {
             id: 'severe_conditions',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Do you have severe liver or kidney problems, low blood pressure, or have you had a recent heart attack or stroke (within 6 months)?',
             required: true,
           },
           {
             id: 'other_ed_meds',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you taking any other medications for erectile dysfunction (prescription or otherwise)?',
             required: true,
           },
@@ -371,43 +371,43 @@ const PHARMA_TENANTS: TenantData[] = [
         questions: [
           {
             id: 'age_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you male and 18 years of age or older?',
             required: true,
           },
           {
             id: 'indication_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you seeking this medication for erectile dysfunction (ED) or benign prostatic hyperplasia (BPH) symptoms?',
             required: true,
           },
           {
             id: 'nitrates_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you currently taking ANY form of nitrate medication (e.g., nitroglycerin for chest pain)? Taking Cialis with nitrates can cause a dangerous drop in blood pressure.',
             required: true,
           },
           {
             id: 'heart_health_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Has a doctor advised you that sexual activity is inadvisable due to heart problems? Or have you had a recent heart attack or stroke (within 6 months)?',
             required: true,
           },
           {
             id: 'severe_conditions',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Do you have severe liver or kidney problems, or low blood pressure?',
             required: true,
           },
           {
             id: 'alpha_blocker_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you taking alpha-blockers (e.g., for BPH or high blood pressure)?',
             required: true,
           },
           {
             id: 'other_ed_meds',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you taking any other medications for erectile dysfunction?',
             required: true,
           },
@@ -482,25 +482,25 @@ const PHARMA_TENANTS: TenantData[] = [
         questions: [
           {
             id: 'age_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you 18 years of age or older?',
             required: true,
           },
           {
             id: 'pregnancy_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you currently pregnant, planning to become pregnant, or breastfeeding?',
             required: true,
           },
           {
             id: 'liver_disease',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Do you have active liver disease or unexplained persistent elevated liver enzymes?',
             required: true,
           },
           {
             id: 'current_statin',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you currently taking another statin or cholesterol-lowering prescription medication?',
             required: true,
           },
@@ -516,7 +516,7 @@ const PHARMA_TENANTS: TenantData[] = [
           },
           {
             id: 'risk_factors',
-            type: 'multiple_choice',
+            type: 'choice',
             text: 'Do you have any of the following cardiovascular risk factors?',
             required: true,
             options: ['None', 'High blood pressure', 'Diabetes', 'Current smoker', 'Family history of early heart disease'],
@@ -597,32 +597,32 @@ const PHARMA_TENANTS: TenantData[] = [
         questions: [
           {
             id: 'age_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you 18 years of age or older?',
             required: true,
           },
           {
             id: 'diagnosis_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Has a doctor diagnosed you with Type 2 Diabetes or Pre-diabetes based on an A1c test?',
             required: true,
           },
           {
             id: 'kidney_check',
-            type: 'multiple_choice',
+            type: 'choice',
             text: 'Do you have kidney disease? If unsure, select "I do not know".',
             required: true,
             options: ['No kidney disease', 'Mild kidney disease', 'Moderate to severe kidney disease', 'I do not know'],
           },
           {
             id: 'pancreatitis_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Have you ever had pancreatitis (inflammation of the pancreas)?',
             required: true,
           },
           {
             id: 'current_diabetes_meds',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you currently taking insulin or any other prescription medication for diabetes?',
             required: true,
           },
@@ -692,7 +692,7 @@ const PHARMA_TENANTS: TenantData[] = [
         questions: [
           {
             id: 'age_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you 18 years of age or older?',
             required: true,
           },
@@ -718,31 +718,31 @@ const PHARMA_TENANTS: TenantData[] = [
           },
           {
             id: 'thyroid_cancer_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Do you or any family members have a history of Medullary Thyroid Carcinoma (MTC) or Multiple Endocrine Neoplasia syndrome type 2 (MEN 2)? If unsure, select Yes.',
             required: true,
           },
           {
             id: 'pancreatitis_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Have you ever had pancreatitis (inflammation of the pancreas)?',
             required: true,
           },
           {
             id: 'kidney_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Do you have severe kidney problems or are you on dialysis?',
             required: true,
           },
           {
             id: 'pregnancy_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you currently pregnant, planning to become pregnant, or breastfeeding?',
             required: true,
           },
           {
             id: 'other_glp1_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you currently using other GLP-1 agonists (e.g., Ozempic, Wegovy, Mounjaro) or insulin?',
             required: true,
           },
@@ -813,31 +813,31 @@ const PHARMA_TENANTS: TenantData[] = [
         questions: [
           {
             id: 'age_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you 18 years of age or older?',
             required: true,
           },
           {
             id: 'cancer_type_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Have you been previously diagnosed and successfully treated (currently in remission) for Colorectal Cancer Stage III?',
             required: true,
           },
           {
             id: 'treatment_history_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Did you complete your primary treatment (surgery plus adjuvant chemotherapy) between 6 and 18 months ago?',
             required: true,
           },
           {
             id: 'liver_function_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Have your recent liver function tests (AST/ALT) been within the normal range? If unsure, select No.',
             required: true,
           },
           {
             id: 'contraindications_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Do you have any of the following: severe bleeding disorders, uncontrolled high blood pressure, or recent surgery (within 4 weeks)?',
             required: true,
           },
@@ -902,37 +902,37 @@ const PHARMA_TENANTS: TenantData[] = [
         questions: [
           {
             id: 'age_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you between 25 and 65 years old?',
             required: true,
           },
           {
             id: 'indication_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you seeking this product ONLY to temporarily improve the appearance of moderate to severe crow\'s feet lines?',
             required: true,
           },
           {
             id: 'neuro_disorder_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Do you have any neuromuscular disorder (e.g., ALS, myasthenia gravis, Lambert-Eaton syndrome)?',
             required: true,
           },
           {
             id: 'skin_infection_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Do you have a skin infection at the planned injection site?',
             required: true,
           },
           {
             id: 'allergy_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you allergic to botulinum toxin products or any ingredients in this product?',
             required: true,
           },
           {
             id: 'pregnancy_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you currently pregnant, planning to become pregnant, or breastfeeding?',
             required: true,
           },
@@ -1002,31 +1002,31 @@ const PHARMA_TENANTS: TenantData[] = [
         questions: [
           {
             id: 'age_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you 18 years of age or older?',
             required: true,
           },
           {
             id: 'pregnancy_check',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you currently pregnant, planning to become pregnant, or breastfeeding?',
             required: true,
           },
           {
             id: 'liver_disease',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Do you have active liver disease or unexplained persistent elevated liver enzymes?',
             required: true,
           },
           {
             id: 'current_statin',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Are you currently taking another statin or cholesterol-lowering prescription medication?',
             required: true,
           },
           {
             id: 'swallowing_difficulty',
-            type: 'yes_no',
+            type: 'boolean',
             text: 'Do you have difficulty swallowing or any intestinal blockage?',
             required: true,
           },
@@ -1352,9 +1352,9 @@ async function seedComprehensiveData() {
         const questions = pharmaData.drugProgram.screenerJson.questions;
         
         for (const question of questions) {
-          if (question.type === 'yes_no') {
-            // 70% say no (safe answers), 30% say yes
-            answersJson[question.id] = faker.datatype.boolean({ probability: 0.3 }) ? 'yes' : 'no';
+          if (question.type === 'boolean') {
+            // 70% say false (safe answers), 30% say true
+            answersJson[question.id] = faker.datatype.boolean({ probability: 0.3 });
           } else if (question.type === 'numeric') {
             if (question.id.includes('ldl')) {
               // LDL cholesterol: 100-200 mg/dL range
@@ -1368,7 +1368,7 @@ async function seedComprehensiveData() {
             } else {
               answersJson[question.id] = faker.number.int({ min: 0, max: 200 });
             }
-          } else if (question.type === 'multiple_choice' && question.options) {
+          } else if (question.type === 'choice' && question.options) {
             answersJson[question.id] = faker.helpers.arrayElement(question.options);
           }
         }
@@ -1376,10 +1376,10 @@ async function seedComprehensiveData() {
         // Determine outcome based on simple logic (simplified)
         let outcome: 'ok_to_use' | 'ask_a_doctor' | 'do_not_use';
         const hasDoNotUseAnswer = Object.entries(answersJson).some(([key, value]) => {
-          if (key.includes('age') && value === 'no') return true;
-          if (key.includes('pregnancy') && value === 'yes') return true;
-          if (key.includes('maoi') && value === 'yes') return true;
-          if (key.includes('nitrate') && value === 'yes') return true;
+          if (key.includes('age') && value === false) return true;
+          if (key.includes('pregnancy') && value === true) return true;
+          if (key.includes('maoi') && value === true) return true;
+          if (key.includes('nitrate') && value === true) return true;
           return false;
         });
 

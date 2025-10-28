@@ -128,7 +128,7 @@ export default function ScreenerBuilder() {
             questionType,
             questionText: 'Enter your question here',
             required: true,
-            options: questionType === 'multiple_choice' ? ['Option 1', 'Option 2'] : undefined,
+            options: questionType === 'choice' ? ['Option 1', 'Option 2'] : undefined,
           },
         };
       } else {

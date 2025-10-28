@@ -105,7 +105,7 @@ function QuestionProperties({
       required,
     };
 
-    if (data.questionType === 'multiple_choice') {
+    if (data.questionType === 'choice') {
       updates.options = options;
     }
 
@@ -180,7 +180,7 @@ function QuestionProperties({
           />
         </div>
 
-        {data.questionType === 'multiple_choice' && (
+        {data.questionType === 'choice' && (
           <div className="space-y-2">
             <Label className="text-xs">Options</Label>
             <div className="space-y-2">
