@@ -57,6 +57,8 @@ export interface ScreenerJSON {
   questions: ScreenerQuestion[];
   logic: ScreenerLogic;
   disclaimers?: string[];
+  nodes?: ScreenerNode[]; // Visual flow nodes for builder
+  edges?: ScreenerEdge[]; // Visual flow edges for builder
 }
 
 /**

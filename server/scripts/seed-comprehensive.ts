@@ -48,6 +48,93 @@ function createFullName() {
   };
 }
 
+// Helper to generate visual flow nodes and edges from questions and logic
+function generateFlowNodesAndEdges(screenerJson: ScreenerJSON): { nodes: any[]; edges: any[] } {
+  const nodes: any[] = [];
+  const edges: any[] = [];
+  
+  // Start node
+  nodes.push({
+    id: 'start-1',
+    type: 'start',
+    position: { x: 250, y: 50 },
+    data: { label: 'Start' },
+  });
+
+  // Question nodes
+  let yPos = 200;
+  screenerJson.questions.forEach((question, index) => {
+    const nodeId = `question-${question.id}`;
+    nodes.push({
+      id: nodeId,
+      type: 'question',
+      position: { x: 250, y: yPos },
+      data: {
+        label: `Question ${index + 1}`,
+        questionId: question.id,
+        questionType: question.type,
+        questionText: question.text,
+        required: question.required,
+        options: question.options,
+        validation: question.validation,
+      },
+    });
+    
+    // Connect start to first question, or previous question to current
+    if (index === 0) {
+      edges.push({
+        id: `start-to-${question.id}`,
+        source: 'start-1',
+        target: nodeId,
+      });
+    } else {
+      edges.push({
+        id: `${screenerJson.questions[index - 1].id}-to-${question.id}`,
+        source: `question-${screenerJson.questions[index - 1].id}`,
+        target: nodeId,
+      });
+    }
+    
+    yPos += 180;
+  });
+
+  // Outcome nodes (create unique outcomes from logic rules)
+  const outcomes = new Set<string>();
+  screenerJson.logic.rules.forEach(rule => outcomes.add(rule.outcome));
+  outcomes.add(screenerJson.logic.defaultOutcome);
+
+  const outcomeArray = Array.from(outcomes);
+  const outcomeSpacing = 300;
+  const outcomeStartX = 100;
+  
+  outcomeArray.forEach((outcome, index) => {
+    const nodeId = `outcome-${outcome}`;
+    const rule = screenerJson.logic.rules.find(r => r.outcome === outcome);
+    nodes.push({
+      id: nodeId,
+      type: 'outcome',
+      position: { x: outcomeStartX + (index * outcomeSpacing), y: yPos + 100 },
+      data: {
+        label: outcome.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        outcome,
+        message: rule?.message || (outcome === screenerJson.logic.defaultOutcome ? 'Based on your answers, you may use this product.' : ''),
+      },
+    });
+
+    // Connect last question to outcomes
+    if (screenerJson.questions.length > 0) {
+      const lastQuestion = screenerJson.questions[screenerJson.questions.length - 1];
+      edges.push({
+        id: `${lastQuestion.id}-to-${outcome}`,
+        source: `question-${lastQuestion.id}`,
+        target: nodeId,
+      });
+    }
+  });
+
+  return { nodes, edges };
+}
+
 interface TenantData {
   name: string;
   domain: string;
@@ -1283,11 +1370,20 @@ async function seedComprehensiveData() {
 
       // Step 6: Create screener version
       console.log(`   📝 Creating screener version...`);
+      
+      // Generate visual flow nodes and edges
+      const { nodes, edges } = generateFlowNodesAndEdges(pharmaData.drugProgram.screenerJson);
+      const screenerJsonWithFlow = {
+        ...pharmaData.drugProgram.screenerJson,
+        nodes,
+        edges,
+      };
+      
       const [screenerVersion] = await db.insert(screenerVersions).values({
         tenantId: tenant.id,
         drugProgramId: program.id,
         version: 1,
-        screenerJson: pharmaData.drugProgram.screenerJson,
+        screenerJson: screenerJsonWithFlow,
         notes: 'Initial version - comprehensive ACNU screening',
         createdBy: adminUser.id,
         updatedBy: adminUser.id,

@@ -68,11 +68,11 @@ export default function ScreenerBuilder() {
     if (screenersData?.data && !isLoaded && !isNewVersion) {
       // Find the screener version we're editing
       const screenerVersion = screenersData.data.find((s: any) => s.id === versionId);
-      if (screenerVersion?.screenerJson?.flow) {
-        const flowData = screenerVersion.screenerJson.flow;
-        if (flowData.nodes && flowData.edges) {
-          setNodes(flowData.nodes);
-          setEdges(flowData.edges);
+      if (screenerVersion?.screenerJson) {
+        const screenerJson = screenerVersion.screenerJson;
+        if (screenerJson.nodes && screenerJson.edges) {
+          setNodes(screenerJson.nodes);
+          setEdges(screenerJson.edges);
           setIsLoaded(true);
           
           // Show success message
