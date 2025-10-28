@@ -5,6 +5,7 @@ import superAdminRoutes from './superAdmin.routes';
 import brandConfigRoutes from './brandConfig.routes';
 import drugProgramRoutes from './drugProgram.routes';
 import pharmaAdminRoutes from './pharmaAdmin.routes';
+import clinicianRoutes from './clinician.routes';
 import publicRoutes from './public.routes';
 import ehrRoutes from './ehr.routes';
 import verificationRoutes from './verification.routes';
@@ -44,6 +45,11 @@ router.use('/v1/superadmin', authenticateToken, requireRole('super_admin'), supe
 router.use('/v1/admin/brand-configs', brandConfigRoutes);
 router.use('/v1/admin/drug-programs', drugProgramRoutes);
 router.use('/v1/admin', pharmaAdminRoutes);
+
+// Mount Clinician routes (protected)
+// All Clinician routes require authentication, tenant context, and clinician role (or admin)
+// Middleware chain: authenticateToken → setTenantContext → requireTenantRole (handled in route file)
+router.use('/v1/clinician', clinicianRoutes);
 
 // Mount Public Consumer routes (rate-limited)
 // These endpoints power the consumer screening flow (QR code → screening → verification code)
