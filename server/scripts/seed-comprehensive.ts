@@ -1,0 +1,1453 @@
+#!/usr/bin/env tsx
+/**
+ * Comprehensive Seed Script: Realistic Pharmaceutical Data
+ * 
+ * Creates 10 major pharma tenants with realistic drug programs and complete questionnaires
+ * Run with: npx tsx server/scripts/seed-comprehensive.ts
+ */
+
+import { faker } from '@faker-js/faker';
+import bcrypt from 'bcrypt';
+import { nanoid } from 'nanoid';
+import { db } from '../src/db';
+import { 
+  users, 
+  tenants,
+} from '../src/db/schema/public';
+import { 
+  tenantUsers,
+} from '../src/db/schema/core';
+import {
+  brandConfigs,
+  drugPrograms,
+  screenerVersions,
+} from '../src/db/schema/programs';
+import {
+  partners,
+  partnerApiKeys,
+  partnerConfigs,
+} from '../src/db/schema/partners';
+import {
+  screeningSessions,
+  verificationCodes,
+} from '../src/db/schema/consumer';
+import { eq } from 'drizzle-orm';
+import type { ScreenerJSON } from '../../client/src/types/screener';
+
+// Helper to hash passwords
+async function hashPassword(password: string): Promise<string> {
+  const salt = await bcrypt.genSalt(10);
+  return bcrypt.hash(password, salt);
+}
+
+// Helper to create realistic full names
+function createFullName() {
+  return {
+    firstName: faker.person.firstName(),
+    lastName: faker.person.lastName(),
+  };
+}
+
+interface TenantData {
+  name: string;
+  domain: string;
+  adminEmail: string;
+  adminFirstName: string;
+  adminLastName: string;
+  drugProgram: {
+    name: string;
+    brandName: string;
+    slug: string;
+    screenerTitle: string;
+    screenerJson: ScreenerJSON;
+  };
+  brandConfig: {
+    name: string;
+    logoUrl: string;
+    primaryColor: string;
+  };
+}
+
+// 10 Major Pharmaceutical Tenants with Realistic Data
+const PHARMA_TENANTS: TenantData[] = [
+  {
+    name: 'Kenvue',
+    domain: 'kenvue.com',
+    adminEmail: 'benjamin.serbiak@kenvue.com',
+    adminFirstName: 'Benjamin',
+    adminLastName: 'Serbiak',
+    brandConfig: {
+      name: 'Tylenol Brand',
+      logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Tylenol_logo.svg/1200px-Tylenol_logo.svg.png',
+      primaryColor: '#E31837',
+    },
+    drugProgram: {
+      name: 'Tylenol Sleep Rx Transition',
+      brandName: 'Tylenol PM Plus',
+      slug: 'tylenol-sleep-rx',
+      screenerTitle: 'Tylenol Sleep Rx Screening',
+      screenerJson: {
+        title: 'Tylenol Sleep Rx Transition Screening',
+        description: 'This screening helps determine if Tylenol PM Plus (Acetaminophen + Low-Dose Doxepin OTC) is appropriate for you. Please answer honestly.',
+        questions: [
+          {
+            id: 'age_check',
+            type: 'yes_no',
+            text: 'Are you 18 years of age or older?',
+            required: true,
+          },
+          {
+            id: 'pregnancy_check',
+            type: 'yes_no',
+            text: 'Are you currently pregnant, planning to become pregnant, or breastfeeding?',
+            required: true,
+          },
+          {
+            id: 'maoi_check',
+            type: 'yes_no',
+            text: 'Have you taken a Monoamine Oxidase Inhibitor (MAOI) antidepressant (e.g., Phenelzine, Tranylcypromine) in the last 14 days? If unsure, select Yes.',
+            required: true,
+          },
+          {
+            id: 'glaucoma_check',
+            type: 'yes_no',
+            text: 'Do you have narrow-angle glaucoma or severe urinary retention?',
+            required: true,
+          },
+          {
+            id: 'other_sleep_meds',
+            type: 'yes_no',
+            text: 'Are you currently taking any other prescription or over-the-counter sleep medication?',
+            required: true,
+          },
+        ],
+        logic: {
+          rules: [
+            {
+              condition: 'age_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product is only for adults 18 years and older.',
+            },
+            {
+              condition: 'pregnancy_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'This product is not recommended during pregnancy or breastfeeding.',
+            },
+            {
+              condition: 'maoi_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'Do not use if you have taken an MAOI in the last 14 days. This can cause serious drug interactions.',
+            },
+            {
+              condition: 'glaucoma_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'This product is contraindicated for people with narrow-angle glaucoma or severe urinary retention.',
+            },
+            {
+              condition: 'other_sleep_meds == "yes"',
+              outcome: 'ask_a_doctor',
+              message: 'Please consult your doctor before combining sleep medications.',
+            },
+          ],
+          defaultOutcome: 'ok_to_use',
+        },
+        disclaimers: [
+          'This product contains acetaminophen and doxepin.',
+          'Do not exceed recommended dose.',
+          'Consult a doctor if sleeplessness persists for more than 2 weeks.',
+        ],
+      },
+    },
+  },
+  {
+    name: 'Haleon',
+    domain: 'haleon.com',
+    adminEmail: 'sarah.mitchell@haleon.com',
+    adminFirstName: 'Sarah',
+    adminLastName: 'Mitchell',
+    brandConfig: {
+      name: 'Advair Brand',
+      logoUrl: 'https://www.advair.com/content/dam/cf-consumer-healthcare/advair-com/en_us/logos/advair-logo.png',
+      primaryColor: '#0066CC',
+    },
+    drugProgram: {
+      name: 'Advair Diskus 100/50 OTC Pilot',
+      brandName: 'Advair OTC',
+      slug: 'advair-otc-pilot',
+      screenerTitle: 'Advair Diskus OTC Screening',
+      screenerJson: {
+        title: 'Advair Diskus 100/50 OTC Screening',
+        description: 'This screening helps determine if Advair Diskus (Fluticasone/Salmeterol) OTC is appropriate for you. This medication is for long-term asthma or COPD control, NOT for rescue use.',
+        questions: [
+          {
+            id: 'age_check',
+            type: 'yes_no',
+            text: 'Are you 18 years of age or older?',
+            required: true,
+          },
+          {
+            id: 'diagnosis_check',
+            type: 'yes_no',
+            text: 'Has a doctor diagnosed you with Asthma or COPD (Chronic Obstructive Pulmonary Disease)?',
+            required: true,
+          },
+          {
+            id: 'rescue_inhaler_freq',
+            type: 'multiple_choice',
+            text: 'How often do you typically use your rescue inhaler (e.g., Albuterol) for sudden symptoms?',
+            required: true,
+            options: ['Less than twice a week', '2-3 times a week', 'Most days', 'Multiple times a day'],
+          },
+          {
+            id: 'acute_attack',
+            type: 'yes_no',
+            text: 'Are you currently experiencing a severe asthma attack or sudden worsening of breathing? This medication is NOT for rescue use.',
+            required: true,
+          },
+          {
+            id: 'heart_conditions',
+            type: 'yes_no',
+            text: 'Do you have any heart conditions (like high blood pressure or irregular heartbeat)?',
+            required: true,
+          },
+        ],
+        logic: {
+          rules: [
+            {
+              condition: 'age_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product is only for adults 18 years and older.',
+            },
+            {
+              condition: 'diagnosis_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product requires a confirmed diagnosis of Asthma or COPD from a doctor.',
+            },
+            {
+              condition: 'rescue_inhaler_freq == "Multiple times a day"',
+              outcome: 'ask_a_doctor',
+              message: 'Your symptoms may require stronger prescription management. Please consult your doctor.',
+            },
+            {
+              condition: 'acute_attack == "yes"',
+              outcome: 'do_not_use',
+              message: 'Use your rescue inhaler immediately. This medication is for long-term control, not acute attacks. Seek medical attention if needed.',
+            },
+            {
+              condition: 'heart_conditions == "yes"',
+              outcome: 'ask_a_doctor',
+              message: 'Please consult your doctor before using this product if you have heart conditions.',
+            },
+          ],
+          defaultOutcome: 'ok_to_use',
+        },
+        disclaimers: [
+          'This is a long-term controller medication, not a rescue inhaler.',
+          'Always keep your rescue inhaler with you.',
+          'Rinse mouth after each use to prevent oral thrush.',
+        ],
+      },
+    },
+  },
+  {
+    name: 'Pfizer',
+    domain: 'pfizer.com',
+    adminEmail: 'michael.thompson@pfizer.com',
+    adminFirstName: 'Michael',
+    adminLastName: 'Thompson',
+    brandConfig: {
+      name: 'Viagra Connect Brand',
+      logoUrl: 'https://www.viagra.com/themes/custom/viagra/logo.svg',
+      primaryColor: '#0069B4',
+    },
+    drugProgram: {
+      name: 'Viagra Connect USA',
+      brandName: 'Viagra Connect',
+      slug: 'viagra-connect-usa',
+      screenerTitle: 'Viagra Connect Screening',
+      screenerJson: {
+        title: 'Viagra Connect USA Screening',
+        description: 'This screening helps determine if Viagra Connect (Sildenafil 50mg OTC) is safe and appropriate for you.',
+        questions: [
+          {
+            id: 'age_check',
+            type: 'yes_no',
+            text: 'Are you male and 18 years of age or older?',
+            required: true,
+          },
+          {
+            id: 'indication_check',
+            type: 'yes_no',
+            text: 'Are you seeking this medication to treat symptoms of erectile dysfunction (difficulty getting or keeping an erection)?',
+            required: true,
+          },
+          {
+            id: 'nitrates_check',
+            type: 'yes_no',
+            text: 'Are you currently taking ANY form of nitrate medication (e.g., nitroglycerin for chest pain, amyl nitrite)? Taking Viagra with nitrates can cause a dangerous drop in blood pressure.',
+            required: true,
+          },
+          {
+            id: 'heart_health_check',
+            type: 'yes_no',
+            text: 'Has a doctor advised you that sexual activity is inadvisable due to heart problems? Or have you experienced chest pain during sex in the last 6 months?',
+            required: true,
+          },
+          {
+            id: 'severe_conditions',
+            type: 'yes_no',
+            text: 'Do you have severe liver or kidney problems, low blood pressure, or have you had a recent heart attack or stroke (within 6 months)?',
+            required: true,
+          },
+          {
+            id: 'other_ed_meds',
+            type: 'yes_no',
+            text: 'Are you taking any other medications for erectile dysfunction (prescription or otherwise)?',
+            required: true,
+          },
+        ],
+        logic: {
+          rules: [
+            {
+              condition: 'age_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product is only for adult males 18 years and older.',
+            },
+            {
+              condition: 'indication_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product is specifically for treating erectile dysfunction.',
+            },
+            {
+              condition: 'nitrates_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'CRITICAL: Do not use Viagra with nitrates. This can cause a dangerous drop in blood pressure.',
+            },
+            {
+              condition: 'heart_health_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'Do not use this product if sexual activity is inadvisable or if you have experienced chest pain during sex.',
+            },
+            {
+              condition: 'severe_conditions == "yes"',
+              outcome: 'do_not_use',
+              message: 'This product is not safe for people with severe liver/kidney problems, low blood pressure, or recent heart attack/stroke.',
+            },
+            {
+              condition: 'other_ed_meds == "yes"',
+              outcome: 'ask_a_doctor',
+              message: 'Do not combine erectile dysfunction medications without consulting your doctor.',
+            },
+          ],
+          defaultOutcome: 'ok_to_use',
+        },
+        disclaimers: [
+          'If you experience chest pain during sex, stop and seek medical help immediately.',
+          'Erection lasting more than 4 hours requires immediate medical attention.',
+          'Common side effects include headache, flushing, and indigestion.',
+        ],
+      },
+    },
+  },
+  {
+    name: 'Sanofi',
+    domain: 'sanofi.com',
+    adminEmail: 'jennifer.rodriguez@sanofi.com',
+    adminFirstName: 'Jennifer',
+    adminLastName: 'Rodriguez',
+    brandConfig: {
+      name: 'Cialis Brand',
+      logoUrl: 'https://www.cialis.com/assets/images/logo.svg',
+      primaryColor: '#F79420',
+    },
+    drugProgram: {
+      name: 'Cialis Daily OTC Access',
+      brandName: 'Cialis Daily',
+      slug: 'cialis-daily-otc',
+      screenerTitle: 'Cialis Daily Screening',
+      screenerJson: {
+        title: 'Cialis Daily OTC Access Screening',
+        description: 'This screening helps determine if Cialis Daily (Tadalafil 5mg OTC) is safe and appropriate for you.',
+        questions: [
+          {
+            id: 'age_check',
+            type: 'yes_no',
+            text: 'Are you male and 18 years of age or older?',
+            required: true,
+          },
+          {
+            id: 'indication_check',
+            type: 'yes_no',
+            text: 'Are you seeking this medication for erectile dysfunction (ED) or benign prostatic hyperplasia (BPH) symptoms?',
+            required: true,
+          },
+          {
+            id: 'nitrates_check',
+            type: 'yes_no',
+            text: 'Are you currently taking ANY form of nitrate medication (e.g., nitroglycerin for chest pain)? Taking Cialis with nitrates can cause a dangerous drop in blood pressure.',
+            required: true,
+          },
+          {
+            id: 'heart_health_check',
+            type: 'yes_no',
+            text: 'Has a doctor advised you that sexual activity is inadvisable due to heart problems? Or have you had a recent heart attack or stroke (within 6 months)?',
+            required: true,
+          },
+          {
+            id: 'severe_conditions',
+            type: 'yes_no',
+            text: 'Do you have severe liver or kidney problems, or low blood pressure?',
+            required: true,
+          },
+          {
+            id: 'alpha_blocker_check',
+            type: 'yes_no',
+            text: 'Are you taking alpha-blockers (e.g., for BPH or high blood pressure)?',
+            required: true,
+          },
+          {
+            id: 'other_ed_meds',
+            type: 'yes_no',
+            text: 'Are you taking any other medications for erectile dysfunction?',
+            required: true,
+          },
+        ],
+        logic: {
+          rules: [
+            {
+              condition: 'age_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product is only for adult males 18 years and older.',
+            },
+            {
+              condition: 'indication_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product is specifically for treating ED or BPH symptoms.',
+            },
+            {
+              condition: 'nitrates_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'CRITICAL: Do not use Cialis with nitrates. This can cause a dangerous drop in blood pressure.',
+            },
+            {
+              condition: 'heart_health_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'Do not use this product if sexual activity is inadvisable or if you have had a recent heart attack/stroke.',
+            },
+            {
+              condition: 'severe_conditions == "yes"',
+              outcome: 'do_not_use',
+              message: 'This product is not safe for people with severe liver/kidney problems or low blood pressure.',
+            },
+            {
+              condition: 'alpha_blocker_check == "yes"',
+              outcome: 'ask_a_doctor',
+              message: 'Cialis can interact with alpha-blockers. Please consult your doctor before using.',
+            },
+            {
+              condition: 'other_ed_meds == "yes"',
+              outcome: 'ask_a_doctor',
+              message: 'Do not combine erectile dysfunction medications without consulting your doctor.',
+            },
+          ],
+          defaultOutcome: 'ok_to_use',
+        },
+        disclaimers: [
+          'If you experience chest pain during sex, stop and seek medical help immediately.',
+          'Erection lasting more than 4 hours requires immediate medical attention.',
+          'Do not take more than one dose per day.',
+        ],
+      },
+    },
+  },
+  {
+    name: 'AstraZeneca',
+    domain: 'astrazeneca.com',
+    adminEmail: 'david.chen@astrazeneca.com',
+    adminFirstName: 'David',
+    adminLastName: 'Chen',
+    brandConfig: {
+      name: 'Crestor Brand',
+      logoUrl: 'https://www.crestor.com/content/dam/brand/crestor-logo.png',
+      primaryColor: '#8B1E3F',
+    },
+    drugProgram: {
+      name: 'Crestor Direct Access',
+      brandName: 'Crestor OTC',
+      slug: 'crestor-direct-access',
+      screenerTitle: 'Crestor Direct Access Screening',
+      screenerJson: {
+        title: 'Crestor Direct Access Screening',
+        description: 'This screening helps determine if Crestor (Rosuvastatin 5mg OTC) is appropriate for you based on the TACTiC trial criteria.',
+        questions: [
+          {
+            id: 'age_check',
+            type: 'yes_no',
+            text: 'Are you 18 years of age or older?',
+            required: true,
+          },
+          {
+            id: 'pregnancy_check',
+            type: 'yes_no',
+            text: 'Are you currently pregnant, planning to become pregnant, or breastfeeding?',
+            required: true,
+          },
+          {
+            id: 'liver_disease',
+            type: 'yes_no',
+            text: 'Do you have active liver disease or unexplained persistent elevated liver enzymes?',
+            required: true,
+          },
+          {
+            id: 'current_statin',
+            type: 'yes_no',
+            text: 'Are you currently taking another statin or cholesterol-lowering prescription medication?',
+            required: true,
+          },
+          {
+            id: 'ldl_check',
+            type: 'numeric',
+            text: 'What is your most recent LDL ("bad") cholesterol level in mg/dL? (Enter 0 if you do not know)',
+            required: true,
+            validation: {
+              min: 0,
+              max: 300,
+            },
+          },
+          {
+            id: 'risk_factors',
+            type: 'multiple_choice',
+            text: 'Do you have any of the following cardiovascular risk factors?',
+            required: true,
+            options: ['None', 'High blood pressure', 'Diabetes', 'Current smoker', 'Family history of early heart disease'],
+          },
+        ],
+        logic: {
+          rules: [
+            {
+              condition: 'age_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product is only for adults 18 years and older.',
+            },
+            {
+              condition: 'pregnancy_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'Do not use during pregnancy or breastfeeding. Statins can harm an unborn baby.',
+            },
+            {
+              condition: 'liver_disease == "yes"',
+              outcome: 'do_not_use',
+              message: 'This product is contraindicated for people with active liver disease.',
+            },
+            {
+              condition: 'current_statin == "yes"',
+              outcome: 'do_not_use',
+              message: 'Do not take multiple statin medications. Please consult your doctor.',
+            },
+            {
+              condition: 'ldl_check == 0',
+              outcome: 'ask_a_doctor',
+              message: 'You need to know your LDL cholesterol level before using this product. Please get tested.',
+            },
+            {
+              condition: 'ldl_check < 130',
+              outcome: 'ask_a_doctor',
+              message: 'Your LDL cholesterol may not require statin therapy. Please consult your doctor.',
+            },
+            {
+              condition: 'ldl_check > 190',
+              outcome: 'ask_a_doctor',
+              message: 'Your LDL cholesterol is very high. You may need prescription-strength medication. Please consult your doctor.',
+            },
+            {
+              condition: 'ldl_check >= 130 && ldl_check <= 159 && risk_factors == "None"',
+              outcome: 'ask_a_doctor',
+              message: 'With your LDL level and no risk factors, please consult your doctor about whether statin therapy is appropriate.',
+            },
+          ],
+          defaultOutcome: 'ok_to_use',
+        },
+        disclaimers: [
+          'Take at the same time each day with or without food.',
+          'Continue following a cholesterol-lowering diet.',
+          'Report any unexplained muscle pain or weakness to your doctor immediately.',
+        ],
+      },
+    },
+  },
+  {
+    name: 'Merck',
+    domain: 'merck.com',
+    adminEmail: 'emily.johnson@merck.com',
+    adminFirstName: 'Emily',
+    adminLastName: 'Johnson',
+    brandConfig: {
+      name: 'Januvia Brand',
+      logoUrl: 'https://www.januvia.com/assets/images/januvia-logo.svg',
+      primaryColor: '#005EB8',
+    },
+    drugProgram: {
+      name: 'Januvia Pre-Care',
+      brandName: 'Januvia OTC',
+      slug: 'januvia-pre-care',
+      screenerTitle: 'Januvia Pre-Care Screening',
+      screenerJson: {
+        title: 'Januvia Pre-Care Screening',
+        description: 'This screening helps determine if Januvia (Sitagliptin 25mg OTC) is appropriate for you. This medication is for Type 2 Diabetes or Pre-diabetes management.',
+        questions: [
+          {
+            id: 'age_check',
+            type: 'yes_no',
+            text: 'Are you 18 years of age or older?',
+            required: true,
+          },
+          {
+            id: 'diagnosis_check',
+            type: 'yes_no',
+            text: 'Has a doctor diagnosed you with Type 2 Diabetes or Pre-diabetes based on an A1c test?',
+            required: true,
+          },
+          {
+            id: 'kidney_check',
+            type: 'multiple_choice',
+            text: 'Do you have kidney disease? If unsure, select "I do not know".',
+            required: true,
+            options: ['No kidney disease', 'Mild kidney disease', 'Moderate to severe kidney disease', 'I do not know'],
+          },
+          {
+            id: 'pancreatitis_check',
+            type: 'yes_no',
+            text: 'Have you ever had pancreatitis (inflammation of the pancreas)?',
+            required: true,
+          },
+          {
+            id: 'current_diabetes_meds',
+            type: 'yes_no',
+            text: 'Are you currently taking insulin or any other prescription medication for diabetes?',
+            required: true,
+          },
+        ],
+        logic: {
+          rules: [
+            {
+              condition: 'age_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product is only for adults 18 years and older.',
+            },
+            {
+              condition: 'diagnosis_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product requires a confirmed diagnosis of Type 2 Diabetes or Pre-diabetes from a doctor.',
+            },
+            {
+              condition: 'kidney_check == "Moderate to severe kidney disease"',
+              outcome: 'do_not_use',
+              message: 'This product is not recommended for people with moderate to severe kidney disease.',
+            },
+            {
+              condition: 'kidney_check == "I do not know"',
+              outcome: 'do_not_use',
+              message: 'Please have your kidney function tested before using this product.',
+            },
+            {
+              condition: 'pancreatitis_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'This product is not recommended for people with a history of pancreatitis.',
+            },
+            {
+              condition: 'current_diabetes_meds == "yes"',
+              outcome: 'do_not_use',
+              message: 'Do not combine diabetes medications without consulting your doctor first.',
+            },
+          ],
+          defaultOutcome: 'ok_to_use',
+        },
+        disclaimers: [
+          'Continue following your diabetes diet and exercise plan.',
+          'Monitor your blood sugar regularly.',
+          'Report any severe stomach pain to your doctor immediately.',
+        ],
+      },
+    },
+  },
+  {
+    name: 'Eli Lilly',
+    domain: 'lilly.com',
+    adminEmail: 'robert.williams@lilly.com',
+    adminFirstName: 'Robert',
+    adminLastName: 'Williams',
+    brandConfig: {
+      name: 'Weight Journey Brand',
+      logoUrl: 'https://www.lilly.com/themes/custom/lilly_base/logo.svg',
+      primaryColor: '#E4002B',
+    },
+    drugProgram: {
+      name: 'Weight Journey Start',
+      brandName: 'Weight Journey',
+      slug: 'weight-journey-start',
+      screenerTitle: 'Weight Journey Start Screening',
+      screenerJson: {
+        title: 'Weight Journey Start Screening',
+        description: 'This screening helps determine if Weight Journey (Tirzepatide Low-Dose Pen OTC) is appropriate for you. This medication is for weight management in adults with elevated BMI.',
+        questions: [
+          {
+            id: 'age_check',
+            type: 'yes_no',
+            text: 'Are you 18 years of age or older?',
+            required: true,
+          },
+          {
+            id: 'height_input',
+            type: 'numeric',
+            text: 'What is your height in inches? (Example: 5 feet 6 inches = 66 inches)',
+            required: true,
+            validation: {
+              min: 48,
+              max: 96,
+            },
+          },
+          {
+            id: 'weight_input',
+            type: 'numeric',
+            text: 'What is your weight in pounds?',
+            required: true,
+            validation: {
+              min: 80,
+              max: 600,
+            },
+          },
+          {
+            id: 'thyroid_cancer_check',
+            type: 'yes_no',
+            text: 'Do you or any family members have a history of Medullary Thyroid Carcinoma (MTC) or Multiple Endocrine Neoplasia syndrome type 2 (MEN 2)? If unsure, select Yes.',
+            required: true,
+          },
+          {
+            id: 'pancreatitis_check',
+            type: 'yes_no',
+            text: 'Have you ever had pancreatitis (inflammation of the pancreas)?',
+            required: true,
+          },
+          {
+            id: 'kidney_check',
+            type: 'yes_no',
+            text: 'Do you have severe kidney problems or are you on dialysis?',
+            required: true,
+          },
+          {
+            id: 'pregnancy_check',
+            type: 'yes_no',
+            text: 'Are you currently pregnant, planning to become pregnant, or breastfeeding?',
+            required: true,
+          },
+          {
+            id: 'other_glp1_check',
+            type: 'yes_no',
+            text: 'Are you currently using other GLP-1 agonists (e.g., Ozempic, Wegovy, Mounjaro) or insulin?',
+            required: true,
+          },
+        ],
+        logic: {
+          rules: [
+            {
+              condition: 'age_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product is only for adults 18 years and older.',
+            },
+            {
+              condition: 'thyroid_cancer_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'Do not use if you or family members have a history of MTC or MEN 2. Risk of thyroid tumors.',
+            },
+            {
+              condition: 'pancreatitis_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'This product is not recommended for people with a history of pancreatitis.',
+            },
+            {
+              condition: 'kidney_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'This product is not recommended for people with severe kidney problems or on dialysis.',
+            },
+            {
+              condition: 'pregnancy_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'Do not use during pregnancy or breastfeeding. Stop 2 months before planned pregnancy.',
+            },
+            {
+              condition: 'other_glp1_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'Do not combine GLP-1 medications or use with insulin without consulting your doctor.',
+            },
+          ],
+          defaultOutcome: 'ok_to_use',
+        },
+        disclaimers: [
+          'Common side effects include nausea, vomiting, and diarrhea.',
+          'Inject once weekly on the same day each week.',
+          'Maintain a reduced-calorie diet and increase physical activity.',
+          'Report severe stomach pain immediately - may indicate pancreatitis.',
+        ],
+      },
+    },
+  },
+  {
+    name: 'Bayer',
+    domain: 'bayer.com',
+    adminEmail: 'catherine.anderson@bayer.com',
+    adminFirstName: 'Catherine',
+    adminLastName: 'Anderson',
+    brandConfig: {
+      name: 'Stivarga Brand',
+      logoUrl: 'https://www.stivarga.com/assets/images/stivarga-logo.svg',
+      primaryColor: '#00A3E0',
+    },
+    drugProgram: {
+      name: 'Stivarga Prevent',
+      brandName: 'Stivarga Prevent',
+      slug: 'stivarga-prevent',
+      screenerTitle: 'Stivarga Prevent Screening',
+      screenerJson: {
+        title: 'Stivarga Prevent Screening',
+        description: 'This screening helps determine if Stivarga Prevent (Regorafenib Low Dose) is appropriate for you. This medication is for cancer recurrence prevention in specific patients.',
+        questions: [
+          {
+            id: 'age_check',
+            type: 'yes_no',
+            text: 'Are you 18 years of age or older?',
+            required: true,
+          },
+          {
+            id: 'cancer_type_check',
+            type: 'yes_no',
+            text: 'Have you been previously diagnosed and successfully treated (currently in remission) for Colorectal Cancer Stage III?',
+            required: true,
+          },
+          {
+            id: 'treatment_history_check',
+            type: 'yes_no',
+            text: 'Did you complete your primary treatment (surgery plus adjuvant chemotherapy) between 6 and 18 months ago?',
+            required: true,
+          },
+          {
+            id: 'liver_function_check',
+            type: 'yes_no',
+            text: 'Have your recent liver function tests (AST/ALT) been within the normal range? If unsure, select No.',
+            required: true,
+          },
+          {
+            id: 'contraindications_check',
+            type: 'yes_no',
+            text: 'Do you have any of the following: severe bleeding disorders, uncontrolled high blood pressure, or recent surgery (within 4 weeks)?',
+            required: true,
+          },
+        ],
+        logic: {
+          rules: [
+            {
+              condition: 'age_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product is only for adults 18 years and older.',
+            },
+            {
+              condition: 'cancer_type_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product is only for patients with a confirmed history of Stage III Colorectal Cancer.',
+            },
+            {
+              condition: 'treatment_history_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product is only appropriate for patients who completed treatment 6-18 months ago.',
+            },
+            {
+              condition: 'liver_function_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product requires normal liver function. Please have your liver function tested.',
+            },
+            {
+              condition: 'contraindications_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'This product is contraindicated for people with bleeding disorders, uncontrolled high blood pressure, or recent surgery.',
+            },
+          ],
+          defaultOutcome: 'ok_to_use',
+        },
+        disclaimers: [
+          'This is a specialized medication for cancer recurrence prevention.',
+          'Regular monitoring by your oncologist is required.',
+          'Report any unusual bleeding, severe abdominal pain, or jaundice immediately.',
+        ],
+      },
+    },
+  },
+  {
+    name: 'AbbVie',
+    domain: 'abbvie.com',
+    adminEmail: 'thomas.martin@abbvie.com',
+    adminFirstName: 'Thomas',
+    adminLastName: 'Martin',
+    brandConfig: {
+      name: 'Botox Cosmetic Brand',
+      logoUrl: 'https://www.botoxcosmetic.com/content/dam/brand/botoxcosmetic-logo.png',
+      primaryColor: '#6C2C91',
+    },
+    drugProgram: {
+      name: 'Botox Cosmetic Touch-Up',
+      brandName: 'Botox Touch-Up',
+      slug: 'botox-cosmetic-touchup',
+      screenerTitle: 'Botox Cosmetic Touch-Up Screening',
+      screenerJson: {
+        title: 'Botox Cosmetic Touch-Up Screening',
+        description: 'This screening helps determine if Botox Cosmetic Touch-Up (OnabotulinumtoxinA Micro-dose Pen OTC) is appropriate for you. This product is for cosmetic use only.',
+        questions: [
+          {
+            id: 'age_check',
+            type: 'yes_no',
+            text: 'Are you between 25 and 65 years old?',
+            required: true,
+          },
+          {
+            id: 'indication_check',
+            type: 'yes_no',
+            text: 'Are you seeking this product ONLY to temporarily improve the appearance of moderate to severe crow\'s feet lines?',
+            required: true,
+          },
+          {
+            id: 'neuro_disorder_check',
+            type: 'yes_no',
+            text: 'Do you have any neuromuscular disorder (e.g., ALS, myasthenia gravis, Lambert-Eaton syndrome)?',
+            required: true,
+          },
+          {
+            id: 'skin_infection_check',
+            type: 'yes_no',
+            text: 'Do you have a skin infection at the planned injection site?',
+            required: true,
+          },
+          {
+            id: 'allergy_check',
+            type: 'yes_no',
+            text: 'Are you allergic to botulinum toxin products or any ingredients in this product?',
+            required: true,
+          },
+          {
+            id: 'pregnancy_check',
+            type: 'yes_no',
+            text: 'Are you currently pregnant, planning to become pregnant, or breastfeeding?',
+            required: true,
+          },
+        ],
+        logic: {
+          rules: [
+            {
+              condition: 'age_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product is only for adults between 25 and 65 years old.',
+            },
+            {
+              condition: 'indication_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product is specifically for crow\'s feet lines only.',
+            },
+            {
+              condition: 'neuro_disorder_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'This product is contraindicated for people with neuromuscular disorders.',
+            },
+            {
+              condition: 'skin_infection_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'Do not inject into infected skin. Wait until the infection clears.',
+            },
+            {
+              condition: 'allergy_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'Do not use if you are allergic to botulinum toxin or product ingredients.',
+            },
+            {
+              condition: 'pregnancy_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'Not recommended during pregnancy or breastfeeding.',
+            },
+          ],
+          defaultOutcome: 'ok_to_use',
+        },
+        disclaimers: [
+          'Watch mandatory training video on proper injection technique before use.',
+          'Results typically appear in 3-7 days and last 3-4 months.',
+          'Do not exceed recommended dosage or frequency.',
+        ],
+      },
+    },
+  },
+  {
+    name: 'Procter & Gamble Health',
+    domain: 'pghealth.com',
+    adminEmail: 'maria.garcia@pghealth.com',
+    adminFirstName: 'Maria',
+    adminLastName: 'Garcia',
+    brandConfig: {
+      name: 'Metamucil Cardio Brand',
+      logoUrl: 'https://www.metamucil.com/content/dam/brands/metamucil/logo.svg',
+      primaryColor: '#FF6F00',
+    },
+    drugProgram: {
+      name: 'Metamucil Cardio Plus',
+      brandName: 'Metamucil Cardio+',
+      slug: 'metamucil-cardio-plus',
+      screenerTitle: 'Metamucil Cardio+ Screening',
+      screenerJson: {
+        title: 'Metamucil Cardio+ Screening',
+        description: 'This screening helps determine if Metamucil Cardio+ (Psyllium + Plant Sterols + Low-Dose Statin) is appropriate for you.',
+        questions: [
+          {
+            id: 'age_check',
+            type: 'yes_no',
+            text: 'Are you 18 years of age or older?',
+            required: true,
+          },
+          {
+            id: 'pregnancy_check',
+            type: 'yes_no',
+            text: 'Are you currently pregnant, planning to become pregnant, or breastfeeding?',
+            required: true,
+          },
+          {
+            id: 'liver_disease',
+            type: 'yes_no',
+            text: 'Do you have active liver disease or unexplained persistent elevated liver enzymes?',
+            required: true,
+          },
+          {
+            id: 'current_statin',
+            type: 'yes_no',
+            text: 'Are you currently taking another statin or cholesterol-lowering prescription medication?',
+            required: true,
+          },
+          {
+            id: 'swallowing_difficulty',
+            type: 'yes_no',
+            text: 'Do you have difficulty swallowing or any intestinal blockage?',
+            required: true,
+          },
+          {
+            id: 'ldl_check',
+            type: 'numeric',
+            text: 'What is your most recent LDL ("bad") cholesterol level in mg/dL? (Enter 0 if you do not know)',
+            required: true,
+            validation: {
+              min: 0,
+              max: 300,
+            },
+          },
+        ],
+        logic: {
+          rules: [
+            {
+              condition: 'age_check == "no"',
+              outcome: 'do_not_use',
+              message: 'This product is only for adults 18 years and older.',
+            },
+            {
+              condition: 'pregnancy_check == "yes"',
+              outcome: 'do_not_use',
+              message: 'Do not use during pregnancy or breastfeeding.',
+            },
+            {
+              condition: 'liver_disease == "yes"',
+              outcome: 'do_not_use',
+              message: 'This product is contraindicated for people with active liver disease.',
+            },
+            {
+              condition: 'current_statin == "yes"',
+              outcome: 'do_not_use',
+              message: 'Do not take multiple statin medications. Please consult your doctor.',
+            },
+            {
+              condition: 'swallowing_difficulty == "yes"',
+              outcome: 'do_not_use',
+              message: 'This product contains fiber and is not safe for people with swallowing difficulties or intestinal blockage.',
+            },
+            {
+              condition: 'ldl_check == 0',
+              outcome: 'ask_a_doctor',
+              message: 'You need to know your LDL cholesterol level before using this product. Please get tested.',
+            },
+            {
+              condition: 'ldl_check < 130',
+              outcome: 'ask_a_doctor',
+              message: 'Your LDL cholesterol may not require statin therapy. Please consult your doctor.',
+            },
+            {
+              condition: 'ldl_check > 190',
+              outcome: 'ask_a_doctor',
+              message: 'Your LDL cholesterol is very high. You may need prescription-strength medication. Please consult your doctor.',
+            },
+          ],
+          defaultOutcome: 'ok_to_use',
+        },
+        disclaimers: [
+          'Mix with at least 8 ounces of water and drink immediately.',
+          'Take at least 2 hours before or after other medications.',
+          'Continue following a cholesterol-lowering diet.',
+          'Drink plenty of fluids throughout the day.',
+        ],
+      },
+    },
+  },
+];
+
+const DEFAULT_PASSWORD = 'pharma123';
+
+async function clearExistingData() {
+  console.log('🧹 Clearing existing data...\n');
+  
+  // Delete in reverse dependency order
+  await db.delete(verificationCodes);
+  await db.delete(screeningSessions);
+  await db.delete(partnerConfigs);
+  await db.delete(partnerApiKeys);
+  await db.delete(partners);
+  await db.delete(screenerVersions);
+  await db.delete(drugPrograms);
+  await db.delete(brandConfigs);
+  await db.delete(tenantUsers);
+  
+  // Keep super admin, delete other users
+  const superAdminUser = await db.query.users.findFirst({
+    where: eq(users.email, 'admin@aegis.com'),
+  });
+  
+  if (superAdminUser) {
+    await db.delete(users).where(eq(users.email, 'admin@aegis.com') === false as any);
+    await db.delete(tenants);
+  }
+  
+  console.log('✅ Data cleared\n');
+}
+
+async function seedComprehensiveData() {
+  try {
+    console.log('🌱 Starting comprehensive seed data generation...\n');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+    // Optional: Clear existing data
+    // await clearExistingData();
+
+    const hashedPassword = await hashPassword(DEFAULT_PASSWORD);
+
+    // Track created entities
+    const createdData: any = {
+      tenants: [],
+      users: [],
+      programs: [],
+      sessions: [],
+      codes: [],
+    };
+
+    // Process each pharmaceutical tenant
+    for (const pharmaData of PHARMA_TENANTS) {
+      console.log(`\n📦 Processing ${pharmaData.name}...`);
+      
+      // Step 1 & 2: Create admin user and tenant
+      console.log(`   👤 Creating admin user: ${pharmaData.adminFirstName} ${pharmaData.adminLastName}`);
+      
+      let adminUser;
+      const existingUser = await db.query.users.findFirst({
+        where: eq(users.email, pharmaData.adminEmail),
+      });
+
+      if (existingUser) {
+        console.log(`   ⚠️  User already exists, skipping...`);
+        adminUser = existingUser;
+      } else {
+        [adminUser] = await db.insert(users).values({
+          email: pharmaData.adminEmail,
+          passwordHash: hashedPassword,
+          firstName: pharmaData.adminFirstName,
+          lastName: pharmaData.adminLastName,
+        }).returning();
+        console.log(`   ✅ Admin user created`);
+      }
+
+      // Create tenant
+      console.log(`   🏢 Creating tenant: ${pharmaData.name}`);
+      let tenant;
+      const existingTenant = await db.query.tenants.findFirst({
+        where: eq(tenants.name, pharmaData.name),
+      });
+
+      if (existingTenant) {
+        console.log(`   ⚠️  Tenant already exists, skipping...`);
+        tenant = existingTenant;
+      } else {
+        [tenant] = await db.insert(tenants).values({
+          name: pharmaData.name,
+          status: 'active',
+          metadata: {
+            domain: pharmaData.domain,
+            maxDrugPrograms: 10,
+            maxUsers: 50,
+          },
+        }).returning();
+        console.log(`   ✅ Tenant created`);
+      }
+
+      createdData.tenants.push(tenant);
+
+      // Step 3: Create tenant user relationship
+      const existingTenantUser = await db.query.tenantUsers.findFirst({
+        where: (tu, { and, eq }) => and(
+          eq(tu.tenantId, tenant.id),
+          eq(tu.userId, adminUser.id)
+        ),
+      });
+
+      if (!existingTenantUser) {
+        await db.insert(tenantUsers).values({
+          tenantId: tenant.id,
+          userId: adminUser.id,
+          role: 'admin',
+          createdBy: adminUser.id,
+          updatedBy: adminUser.id,
+        });
+        console.log(`   ✅ Admin assigned to tenant`);
+      }
+
+      // Create additional team members with full names
+      console.log(`   👥 Creating team members...`);
+      const teamRoles: Array<'editor' | 'viewer' | 'clinician' | 'auditor'> = ['editor', 'viewer', 'clinician', 'auditor'];
+      
+      for (const role of teamRoles) {
+        const name = createFullName();
+        const email = `${name.firstName.toLowerCase()}.${name.lastName.toLowerCase()}@${pharmaData.domain}`;
+        
+        const existingTeamUser = await db.query.users.findFirst({
+          where: eq(users.email, email),
+        });
+
+        let teamUser;
+        if (existingTeamUser) {
+          teamUser = existingTeamUser;
+        } else {
+          [teamUser] = await db.insert(users).values({
+            email,
+            passwordHash: hashedPassword,
+            firstName: name.firstName,
+            lastName: name.lastName,
+          }).returning();
+        }
+
+        const existingTeamTenantUser = await db.query.tenantUsers.findFirst({
+          where: (tu, { and, eq }) => and(
+            eq(tu.tenantId, tenant.id),
+            eq(tu.userId, teamUser.id)
+          ),
+        });
+
+        if (!existingTeamTenantUser) {
+          await db.insert(tenantUsers).values({
+            tenantId: tenant.id,
+            userId: teamUser.id,
+            role,
+            createdBy: adminUser.id,
+            updatedBy: adminUser.id,
+          });
+        }
+
+        createdData.users.push({ user: teamUser, role });
+      }
+      console.log(`   ✅ Team members created`);
+
+      // Step 4: Create brand configuration
+      console.log(`   🎨 Creating brand configuration...`);
+      const [brandConfig] = await db.insert(brandConfigs).values({
+        tenantId: tenant.id,
+        name: pharmaData.brandConfig.name,
+        config: {
+          logoUrl: pharmaData.brandConfig.logoUrl,
+          primaryColor: pharmaData.brandConfig.primaryColor,
+        },
+        createdBy: adminUser.id,
+        updatedBy: adminUser.id,
+      }).returning();
+      console.log(`   ✅ Brand config created`);
+
+      // Step 5: Create drug program
+      console.log(`   💊 Creating drug program: ${pharmaData.drugProgram.name}...`);
+      const [program] = await db.insert(drugPrograms).values({
+        tenantId: tenant.id,
+        brandConfigId: brandConfig.id,
+        name: pharmaData.drugProgram.name,
+        brandName: pharmaData.drugProgram.brandName,
+        slug: pharmaData.drugProgram.slug,
+        status: 'active',
+        createdBy: adminUser.id,
+        updatedBy: adminUser.id,
+      }).returning();
+      console.log(`   ✅ Drug program created`);
+
+      createdData.programs.push(program);
+
+      // Step 6: Create screener version
+      console.log(`   📝 Creating screener version...`);
+      const [screenerVersion] = await db.insert(screenerVersions).values({
+        tenantId: tenant.id,
+        drugProgramId: program.id,
+        version: 1,
+        screenerJson: pharmaData.drugProgram.screenerJson,
+        notes: 'Initial version - comprehensive ACNU screening',
+        createdBy: adminUser.id,
+        updatedBy: adminUser.id,
+      }).returning();
+      console.log(`   ✅ Screener version created`);
+
+      // Update program to link active screener version
+      await db.update(drugPrograms)
+        .set({ activeScreenerVersionId: screenerVersion.id })
+        .where(eq(drugPrograms.id, program.id));
+      console.log(`   ✅ Active screener version linked`);
+
+      // Step 7: Create partners
+      console.log(`   🤝 Creating partners...`);
+      const partnerNames = ['CVS Pharmacy Point of Sale', 'Walgreens E-commerce Platform'];
+      
+      for (const partnerName of partnerNames) {
+        const [partner] = await db.insert(partners).values({
+          tenantId: tenant.id,
+          name: partnerName,
+          type: partnerName.includes('POS') ? 'pos' : 'ecommerce',
+          status: 'active',
+          createdBy: adminUser.id,
+          updatedBy: adminUser.id,
+        }).returning();
+
+        // Create API key for partner
+        const keyPrefix = nanoid(8);
+        const keySecret = `test_${nanoid(32)}`;
+        const keyHash = await hashPassword(keySecret);
+
+        await db.insert(partnerApiKeys).values({
+          partnerId: partner.id,
+          keyPrefix,
+          keyHash,
+          status: 'active',
+          createdBy: adminUser.id,
+        });
+
+        await db.insert(partnerConfigs).values({
+          partnerId: partner.id,
+          config: {
+            webhookUrl: `https://${partnerName.toLowerCase().replace(/\s+/g, '-')}.example.com/webhook`,
+            allowedOrigins: ['https://example.com'],
+          },
+          createdBy: adminUser.id,
+          updatedBy: adminUser.id,
+        });
+      }
+      console.log(`   ✅ Partners created`);
+
+      // Step 8: Simulate screening sessions
+      console.log(`   🧪 Simulating screening sessions...`);
+      const sessionCount = faker.number.int({ min: 10, max: 20 });
+      
+      for (let i = 0; i < sessionCount; i++) {
+        // Generate realistic answers based on screener questions
+        const answersJson: Record<string, any> = {};
+        const questions = pharmaData.drugProgram.screenerJson.questions;
+        
+        for (const question of questions) {
+          if (question.type === 'yes_no') {
+            // 70% say no (safe answers), 30% say yes
+            answersJson[question.id] = faker.datatype.boolean({ probability: 0.3 }) ? 'yes' : 'no';
+          } else if (question.type === 'numeric') {
+            if (question.id.includes('ldl')) {
+              // LDL cholesterol: 100-200 mg/dL range
+              answersJson[question.id] = faker.number.int({ min: 100, max: 200 });
+            } else if (question.id.includes('height')) {
+              // Height in inches: 60-76
+              answersJson[question.id] = faker.number.int({ min: 60, max: 76 });
+            } else if (question.id.includes('weight')) {
+              // Weight in pounds: 120-300
+              answersJson[question.id] = faker.number.int({ min: 120, max: 300 });
+            } else {
+              answersJson[question.id] = faker.number.int({ min: 0, max: 200 });
+            }
+          } else if (question.type === 'multiple_choice' && question.options) {
+            answersJson[question.id] = faker.helpers.arrayElement(question.options);
+          }
+        }
+
+        // Determine outcome based on simple logic (simplified)
+        let outcome: 'ok_to_use' | 'ask_a_doctor' | 'do_not_use';
+        const hasDoNotUseAnswer = Object.entries(answersJson).some(([key, value]) => {
+          if (key.includes('age') && value === 'no') return true;
+          if (key.includes('pregnancy') && value === 'yes') return true;
+          if (key.includes('maoi') && value === 'yes') return true;
+          if (key.includes('nitrate') && value === 'yes') return true;
+          return false;
+        });
+
+        if (hasDoNotUseAnswer) {
+          outcome = 'do_not_use';
+        } else {
+          // 70% ok_to_use, 20% ask_a_doctor, 10% do_not_use
+          const rand = faker.number.float({ min: 0, max: 1 });
+          if (rand < 0.7) outcome = 'ok_to_use';
+          else if (rand < 0.9) outcome = 'ask_a_doctor';
+          else outcome = 'do_not_use';
+        }
+
+        const [session] = await db.insert(screeningSessions).values({
+          drugProgramId: program.id,
+          screenerVersionId: screenerVersion.id,
+          path: faker.helpers.arrayElement(['mobile_qr', 'web_link', 'partner_api']),
+          answersJson,
+          outcome,
+          completedAt: faker.date.recent({ days: 30 }),
+        }).returning();
+
+        createdData.sessions.push(session);
+
+        // Step 9: Generate verification code for ok_to_use sessions
+        if (outcome === 'ok_to_use') {
+          const code = nanoid(12).toUpperCase();
+          const expiresAt = new Date();
+          expiresAt.setHours(expiresAt.getHours() + 48); // 48 hour expiry
+
+          const [verificationCode] = await db.insert(verificationCodes).values({
+            screeningSessionId: session.id,
+            code,
+            type: 'pos_barcode',
+            expiresAt,
+            status: faker.helpers.arrayElement(['unused', 'used', 'expired']),
+          }).returning();
+
+          createdData.codes.push(verificationCode);
+        }
+      }
+      console.log(`   ✅ ${sessionCount} screening sessions created`);
+      
+      console.log(`✅ ${pharmaData.name} complete!\n`);
+    }
+
+    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('✨ Comprehensive Seed Data Complete!\n');
+    console.log(`📊 Summary:`);
+    console.log(`   • Tenants:            ${createdData.tenants.length}`);
+    console.log(`   • Drug Programs:      ${createdData.programs.length}`);
+    console.log(`   • Screening Sessions: ${createdData.sessions.length}`);
+    console.log(`   • Verification Codes: ${createdData.codes.length}`);
+    console.log('\n🔐 Default Password: pharma123');
+    console.log('⚠️  SECURITY: Change all passwords after first login!\n');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Error seeding data:', error);
+    process.exit(1);
+  }
+}
+
+// Run the seed function
+seedComprehensiveData();
