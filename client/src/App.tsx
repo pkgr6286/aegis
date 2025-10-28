@@ -38,6 +38,10 @@ import DrugProgramDetail from "@/pages/admin/DrugProgramDetail";
 import ScreenerBuilder from "@/pages/admin/ScreenerBuilder";
 import { PharmaAdminLayout } from "@/components/admin/PharmaAdminLayout";
 
+// Clinician Pages
+import ReviewQueue from "@/pages/clinician/ReviewQueue";
+import SessionReview from "@/pages/clinician/SessionReview";
+
 import NotFound from "@/pages/not-found";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -196,6 +200,14 @@ function Router() {
       </Route>
       <Route path="/admin/audit-logs">
         <PharmaAdminRoute component={AuditLogsPage} />
+      </Route>
+
+      {/* Clinician Routes */}
+      <Route path="/clinician/review-queue">
+        <PharmaAdminRoute component={ReviewQueue} />
+      </Route>
+      <Route path="/clinician/sessions/:id">
+        <PharmaAdminRoute component={SessionReview} />
       </Route>
 
       {/* 404 Fallback */}

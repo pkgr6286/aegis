@@ -23,6 +23,11 @@ export function getDefaultRoute(user: User | null): string {
     case 'superadmin':
       return '/superadmin/dashboard';
     case 'pharma-admin':
+      // Route clinicians to their review queue
+      if (user?.tenantRole === 'clinician') {
+        return '/clinician/review-queue';
+      }
+      // All other tenant users go to admin dashboard
       return '/admin/dashboard';
     default:
       return '/login';

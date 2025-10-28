@@ -1,4 +1,5 @@
 import { useLocation, Link } from 'wouter';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Sidebar,
   SidebarContent,
@@ -12,9 +13,23 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, Pill, Users, Building2, FileText, Palette } from 'lucide-react';
+import { LayoutDashboard, Pill, Users, Building2, FileText, Palette, ClipboardList } from 'lucide-react';
 
-const navigationGroups = [
+interface NavigationItem {
+  title: string;
+  icon: any;
+  url: string;
+  roles?: Array<'admin' | 'editor' | 'viewer' | 'clinician' | 'auditor'>;
+}
+
+interface NavigationGroup {
+  label: string;
+  items: NavigationItem[];
+  roles?: Array<'admin' | 'editor' | 'viewer' | 'clinician' | 'auditor'>;
+}
+
+// Admin/Editor/Viewer Navigation
+const adminNavigationGroups: NavigationGroup[] = [
   {
     label: 'OVERVIEW',
     items: [
@@ -52,6 +67,7 @@ const navigationGroups = [
         title: 'Partner Management',
         icon: Building2,
         url: '/admin/partners',
+        roles: ['admin', 'editor'], // Hide from viewers and auditors
       },
     ],
   },
@@ -62,6 +78,21 @@ const navigationGroups = [
         title: 'Brand Management',
         icon: Palette,
         url: '/admin/brands',
+        roles: ['admin', 'editor'], // Hide from viewers and auditors
+      },
+    ],
+  },
+];
+
+// Clinician Navigation
+const clinicianNavigationGroups: NavigationGroup[] = [
+  {
+    label: 'WORKFLOW',
+    items: [
+      {
+        title: 'Review Queue',
+        icon: ClipboardList,
+        url: '/clinician/review-queue',
       },
     ],
   },
@@ -69,6 +100,28 @@ const navigationGroups = [
 
 export function PharmaAdminSidebar() {
   const [location] = useLocation();
+  const { user } = useAuth();
+  const userRole = user?.tenantRole;
+
+  // Determine which navigation to show based on role
+  const navigationGroups = userRole === 'clinician' 
+    ? clinicianNavigationGroups 
+    : adminNavigationGroups;
+
+  // Filter navigation items based on user role
+  const filteredNavigationGroups = navigationGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => {
+        // If item has role restrictions, check if user's role is included
+        if (item.roles && userRole) {
+          return item.roles.includes(userRole);
+        }
+        // If no role restrictions, show to all (except clinicians who have their own nav)
+        return true;
+      }),
+    }))
+    .filter((group) => group.items.length > 0); // Remove empty groups
 
   return (
     <Sidebar collapsible="icon">
@@ -79,13 +132,17 @@ export function PharmaAdminSidebar() {
           </div>
           <div className="flex flex-col">
             <span className="text-base font-semibold">Aegis Platform</span>
-            <span className="text-xs text-sidebar-foreground/70">Pharma Admin</span>
+            <span className="text-xs text-sidebar-foreground/70">
+              {userRole === 'clinician' ? 'Clinician' : 
+               userRole === 'auditor' ? 'Auditor' : 
+               'Pharma Admin'}
+            </span>
           </div>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
-        {navigationGroups.map((group) => (
+        {filteredNavigationGroups.map((group) => (
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/70 px-3 py-2">
               {group.label}
@@ -107,6 +164,9 @@ export function PharmaAdminSidebar() {
                         <Link href={item.url}>
                           <Icon className="w-4 h-4" />
                           <span>{item.title}</span>
+                          {userRole === 'auditor' && (
+                            <span className="ml-auto text-xs text-muted-foreground">(View Only)</span>
+                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

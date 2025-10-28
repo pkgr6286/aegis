@@ -22,7 +22,7 @@ export interface User {
   lastName: string | null;
   systemRole?: 'super_admin' | 'support_staff' | null;  // Singular (for display)
   systemRoles?: Array<'super_admin' | 'support_staff'>; // Plural (from JWT)
-  tenantRole: 'admin' | 'editor' | 'viewer' | null;
+  tenantRole: 'admin' | 'editor' | 'viewer' | 'clinician' | 'auditor' | null;
   lastLoginAt: string | null;
   createdAt: string;
 }
