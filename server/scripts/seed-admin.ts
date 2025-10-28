@@ -11,7 +11,7 @@ import { db } from '../src/db';
 import { userSystemRoles } from '../src/db/schema/public';
 
 const ADMIN_EMAIL = 'admin@aegis.com';
-const ADMIN_PASSWORD = 'admin123';  // Change this in production!
+const ADMIN_PASSWORD = 'password123';  // Change this in production!
 
 async function seedSuperAdmin() {
   try {

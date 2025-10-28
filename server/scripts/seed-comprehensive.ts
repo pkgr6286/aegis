@@ -1097,7 +1097,7 @@ const PHARMA_TENANTS: TenantData[] = [
   },
 ];
 
-const DEFAULT_PASSWORD = 'pharma123';
+const DEFAULT_PASSWORD = 'password123';
 
 async function clearExistingData() {
   console.log('🧹 Clearing existing data...\n');
@@ -1436,7 +1436,7 @@ async function seedComprehensiveData() {
     console.log(`   • Drug Programs:      ${createdData.programs.length}`);
     console.log(`   • Screening Sessions: ${createdData.sessions.length}`);
     console.log(`   • Verification Codes: ${createdData.codes.length}`);
-    console.log('\n🔐 Default Password: pharma123');
+    console.log('\n🔐 Default Password: password123');
     console.log('⚠️  SECURITY: Change all passwords after first login!\n');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 

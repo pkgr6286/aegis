@@ -68,7 +68,7 @@ The platform includes comprehensive seed scripts to populate the database with r
 
 **Super Admin** (run: `npx tsx server/scripts/seed-admin.ts`):
 - Email: `admin@aegis.com`
-- Password: `admin123`
+- Password: `password123`
 
 **Comprehensive Seed Data** (run: `npx tsx server/scripts/seed-comprehensive.ts`):
 This script creates 10 major pharmaceutical tenants with complete data:
@@ -79,7 +79,7 @@ This script creates 10 major pharmaceutical tenants with complete data:
 - **Screening Questionnaires**: Complete ACNU-style questionnaires with boolean, choice, and numeric questions
 - **Screening Sessions**: 10-20 simulated sessions per program with realistic answers and outcomes
 - **Partners**: 2 partners per tenant (retail POS and e-commerce integrations)
-- **Default Password**: `pharma123` for all pharma users
+- **Default Password**: `password123` for all users (both super admin and pharma users)
 
 ⚠️ **Security Note**: Change all passwords after first login in production environments.
 
