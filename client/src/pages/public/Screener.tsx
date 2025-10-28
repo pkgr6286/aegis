@@ -13,10 +13,14 @@ import { BooleanQuestion } from '@/components/consumer/questions/BooleanQuestion
 import { NumericQuestion } from '@/components/consumer/questions/NumericQuestion';
 import { ChoiceQuestion } from '@/components/consumer/questions/ChoiceQuestion';
 import { InfoTooltip } from '@/components/consumer/questions/InfoTooltip';
+import { EhrChoiceCard } from '@/components/consumer/EhrChoiceCard';
+import { EhrConfirmationDialog } from '@/components/consumer/EhrConfirmationDialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
+import { openEhrOAuthPopup, fetchEhrData, extractEhrValue } from '@/lib/ehrUtils';
+import { useToast } from '@/hooks/use-toast';
 import type { SubmitAnswersResponse } from '@/types/consumer';
 
 export default function Screener() {
@@ -39,6 +43,14 @@ export default function Screener() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [screenerEngine, setScreenerEngine] = useState<ScreenerEngine | null>(null);
+  const { toast } = useToast();
+
+  // EHR Fast Path state
+  const [showEhrChoice, setShowEhrChoice] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [showEhrConfirmation, setShowEhrConfirmation] = useState(false);
+  const [ehrFetchedValue, setEhrFetchedValue] = useState<any>(null);
+  const [ehrProviderName, setEhrProviderName] = useState<string>('your health provider');
 
   // Initialize screener engine once when screenerConfig is available
   useEffect(() => {
@@ -69,6 +81,17 @@ export default function Screener() {
       if (currentQuestion) {
         const answer = screenerState.answers[currentQuestion.id];
         setCurrentAnswer(answer !== undefined ? answer : null);
+        
+        // Check if this question has EHR mapping
+        if (currentQuestion.ehrMapping && !answer) {
+          // Show EHR choice screen for questions with EHR mapping and no existing answer
+          setShowEhrChoice(true);
+          setShowManualEntry(false);
+        } else {
+          // Show standard question for questions without EHR or with existing answer
+          setShowEhrChoice(false);
+          setShowManualEntry(true);
+        }
       }
     }
   }, [screenerEngine, screenerState.currentQuestionIndex, screenerState.answers]);
@@ -139,7 +162,97 @@ export default function Screener() {
     if (canGoBack) {
       goToPreviousQuestion();
       setError(null);
+      // Reset EHR state
+      setShowEhrConfirmation(false);
+      setEhrFetchedValue(null);
     }
+  };
+
+  // EHR Fast Path Handlers
+  const handleConnectEhr = async () => {
+    if (!sessionId || !sessionToken) {
+      toast({
+        variant: 'destructive',
+        title: 'Session error',
+        description: 'Please restart the screening process.',
+      });
+      return;
+    }
+
+    try {
+      // Open OAuth popup
+      const success = await openEhrOAuthPopup(sessionId, sessionToken);
+      
+      if (!success) {
+        // User closed popup or OAuth failed
+        toast({
+          title: 'Connection cancelled',
+          description: 'You can enter the information manually instead.',
+        });
+        setShowEhrChoice(false);
+        setShowManualEntry(true);
+        return;
+      }
+
+      // Fetch EHR data
+      const ehrData = await fetchEhrData(sessionId, sessionToken);
+      
+      if (!ehrData) {
+        toast({
+          variant: 'destructive',
+          title: 'No data found',
+          description: 'Could not retrieve health records. Please enter manually.',
+        });
+        setShowEhrChoice(false);
+        setShowManualEntry(true);
+        return;
+      }
+
+      // Extract value for current question
+      if (currentQuestion.ehrMapping) {
+        const value = extractEhrValue(ehrData, currentQuestion.ehrMapping.fhirPath);
+        
+        setEhrFetchedValue(value);
+        setEhrProviderName(ehrData.providerName || 'your health provider');
+        setShowEhrConfirmation(true);
+      }
+    } catch (error) {
+      console.error('EHR connection error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Connection failed',
+        description: 'Unable to connect to health records. Please enter manually.',
+      });
+      setShowEhrChoice(false);
+      setShowManualEntry(true);
+    }
+  };
+
+  const handleManualEntry = () => {
+    setShowEhrChoice(false);
+    setShowManualEntry(true);
+  };
+
+  const handleEhrConfirm = () => {
+    // User confirmed the EHR data
+    setCurrentAnswer(ehrFetchedValue);
+    updateAnswer(currentQuestion.id, ehrFetchedValue);
+    setShowEhrConfirmation(false);
+    setShowEhrChoice(false);
+    setShowManualEntry(true);
+    
+    toast({
+      title: 'Information saved',
+      description: 'We've used your health record data.',
+    });
+  };
+
+  const handleEhrReject = () => {
+    // User rejected the EHR data - show manual entry
+    setShowEhrConfirmation(false);
+    setShowEhrChoice(false);
+    setShowManualEntry(true);
+    setEhrFetchedValue(null);
   };
 
   const handleSubmit = async (finalAnswers: Record<string, any>) => {
@@ -217,57 +330,80 @@ export default function Screener() {
 
   return (
     <ConsumerLayout showProgress progress={progress}>
-      <Card className="border-2" data-testid="screener-question-card">
-        <CardHeader>
-          <div className="flex items-start justify-between gap-4">
-            <CardTitle className="text-2xl sm:text-3xl font-semibold leading-tight flex-1">
-              {currentQuestion.text}
-              {currentQuestion.helpText && (
-                <InfoTooltip content={currentQuestion.helpText} />
-              )}
-            </CardTitle>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Question {screenerState.currentQuestionIndex + 1} of {screenerEngine.getTotalQuestions()}
-          </p>
-        </CardHeader>
+      {/* EHR Choice Card - "The Fork" */}
+      {showEhrChoice && (
+        <EhrChoiceCard
+          questionText={currentQuestion.text}
+          onConnectEhr={handleConnectEhr}
+          onManualEntry={handleManualEntry}
+        />
+      )}
 
-        <CardContent className="py-8">
-          {renderQuestion()}
+      {/* Standard Question Card */}
+      {showManualEntry && (
+        <Card className="border-2" data-testid="screener-question-card">
+          <CardHeader>
+            <div className="flex items-start justify-between gap-4">
+              <CardTitle className="text-2xl sm:text-3xl font-semibold leading-tight flex-1">
+                {currentQuestion.text}
+                {currentQuestion.helpText && (
+                  <InfoTooltip content={currentQuestion.helpText} />
+                )}
+              </CardTitle>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Question {screenerState.currentQuestionIndex + 1} of {screenerEngine.getTotalQuestions()}
+            </p>
+          </CardHeader>
 
-          {error && (
-            <Alert variant="destructive" className="mt-6">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
+          <CardContent className="py-8">
+            {renderQuestion()}
 
-        <CardFooter className="flex justify-between gap-3 flex-wrap sm:flex-nowrap">
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handleBack}
-            disabled={!canGoBack || isSubmitting}
-            className="flex-1 sm:flex-initial"
-            data-testid="button-back"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
+            {error && (
+              <Alert variant="destructive" className="mt-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
 
-          <Button
-            size="lg"
-            onClick={handleNext}
-            disabled={isSubmitting}
-            className="flex-1 sm:flex-initial min-w-[140px]"
-            data-testid="button-next"
-          >
-            {isSubmitting ? 'Submitting...' : isLastQuestion ? 'Submit' : 'Next'}
-            {!isSubmitting && <ArrowRight className="h-4 w-4 ml-2" />}
-          </Button>
-        </CardFooter>
-      </Card>
+          <CardFooter className="flex justify-between gap-3 flex-wrap sm:flex-nowrap">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleBack}
+              disabled={!canGoBack || isSubmitting}
+              className="flex-1 sm:flex-initial"
+              data-testid="button-back"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+
+            <Button
+              size="lg"
+              onClick={handleNext}
+              disabled={isSubmitting}
+              className="flex-1 sm:flex-initial min-w-[140px]"
+              data-testid="button-next"
+            >
+              {isSubmitting ? 'Submitting...' : isLastQuestion ? 'Submit' : 'Next'}
+              {!isSubmitting && <ArrowRight className="h-4 w-4 ml-2" />}
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
+
+      {/* EHR Confirmation Dialog */}
+      <EhrConfirmationDialog
+        open={showEhrConfirmation}
+        questionText={currentQuestion.text}
+        questionType={currentQuestion.type}
+        fetchedValue={ehrFetchedValue}
+        providerName={ehrProviderName}
+        onConfirm={handleEhrConfirm}
+        onReject={handleEhrReject}
+      />
     </ConsumerLayout>
   );
 }
