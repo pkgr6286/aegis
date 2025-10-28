@@ -1,5 +1,6 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useRoute, useLocation } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
 import {
   ReactFlow,
   Background,
@@ -51,9 +52,38 @@ export default function ScreenerBuilder() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   const nodeIdCounter = useRef(1);
 
   const isNewVersion = versionId === 'new';
+
+  // Fetch all screener versions for this program
+  const { data: screenersData, isLoading } = useQuery<{success: boolean; data: any[]}>({
+    queryKey: [`/api/v1/admin/drug-programs/${programId}/screeners`],
+    enabled: !isNewVersion && !!programId && !!versionId,
+  });
+
+  // Load nodes and edges from screener data
+  useEffect(() => {
+    if (screenersData?.data && !isLoaded && !isNewVersion) {
+      // Find the screener version we're editing
+      const screenerVersion = screenersData.data.find((s: any) => s.id === versionId);
+      if (screenerVersion?.screenerJson?.flow) {
+        const flowData = screenerVersion.screenerJson.flow;
+        if (flowData.nodes && flowData.edges) {
+          setNodes(flowData.nodes);
+          setEdges(flowData.edges);
+          setIsLoaded(true);
+          
+          // Show success message
+          toast({
+            title: 'Screener loaded',
+            description: `Version ${screenerVersion.version} loaded successfully`,
+          });
+        }
+      }
+    }
+  }, [screenersData, isLoaded, isNewVersion, versionId, setNodes, setEdges, toast]);
 
   const handleBack = () => {
     setLocation(`/admin/programs/${programId}`);
