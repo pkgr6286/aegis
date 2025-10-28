@@ -1,0 +1,53 @@
+Okay, Project Manager hat on\! Creating realistic and comprehensive seed data is absolutely essential for testing, demos, and even initial user training. It needs to reflect the real-world usage patterns and relationships within the platform.
+
+Based on the complete Aegis platform design (schema, APIs, roles), here is a detailed, step-by-step plan for generating high-quality seed data using a **TypeScript script with Drizzle ORM and potentially `faker-js`**. This is the most robust and maintainable approach.
+
+**Goal:** Populate the Aegis database with realistic data representing multiple tenants, users, programs, consumer interactions, and partner integrations, enabling full end-to-end testing and demonstration.
+
+**Method:** We will create a `scripts/seed.ts` file that uses Drizzle ORM to programmatically insert data, respecting foreign key constraints and relationships. We'll use `bcrypt` for password hashing.
+
+-----
+
+### **Seed Data Generation Plan**
+
+| Step | Action                                    | Tables Involved                                                                 | Data Details & Logic                                                                                                                                                              | Outcome / Purpose                                                                                                                                                                                             |
+| :--- | :---------------------------------------- | :------------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **0** | **Clear Existing Data (Optional)** | *All Tables* (in reverse dependency order)                                      | Execute `DELETE` statements for all tables, starting with those with foreign keys pointing to others (e.g., `audit_logs`, `verification_codes` before `screening_sessions`).             | Provides a clean slate for seeding, ensuring idempotency during development. Use `TRUNCATE ... RESTART IDENTITY CASCADE` for a faster reset if needed.                                                    |
+| **1** | **Create Global Users** | `public.users`, `public.user_system_roles`                                      | • **Super Admin:** Create `admin@aegis.com`, hash password (`admin123`), assign `super_admin` role.<br>• **Tenant Base Users:** Create 2-3 base users (e.g., `ben.serbiak@kenvue.com`, `alice.jones@pfizer.com`). Hash passwords (`pharma123`). | Establishes the core platform administrator and the initial admin accounts for our pharma tenants.                                                                                                            |
+| **2** | **Create Tenants** | `public.tenants`                                                                | Create 2-3 distinct pharma tenants (e.g., "Kenvue", "Pfizer", "AstraZeneca"). Set realistic `status` (`active`, `trial`). Set basic `metadata` (e.g., license info like `maxDrugPrograms: 5`). | Creates the customer organizations that will own all subsequent data.                                                                                                                                            |
+| **3** | **Create Tenant Users & Roles** | `app.tenant_users`                                                              | Link the base users (from Step 1) to their respective tenants (from Step 2) with the `admin` role. Create additional users *within each tenant* using faker-js (email, name) and assign varied roles (`editor`, `viewer`, `clinician`, `auditor`). Use the Tenant Admin's ID for `createdBy`/`updatedBy`. | Populates each tenant with a realistic team structure, enabling role-based access control testing. Provides login credentials for each role.                                                              |
+| **4** | **Create Brand Configurations** | `app.brand_configs`                                                             | For each tenant, create 1-2 brand configs (e.g., "Kenvue Primary", "Tylenol Brand"). Add realistic `config` JSON (logo URL placeholder, primary hex color). Use a Tenant Admin's ID for audit fields. | Allows testing of the white-labeling feature for the consumer UI.                                                                                                                                              |
+| **5** | **Create Drug Programs** | `app.drug_programs`                                                             | For each tenant, create 1-3 drug programs (e.g., "Rosuvastatin 5mg OTC", "Loratadine 10mg OTC"). Assign a `brand_config_id` (from Step 4). Add a realistic `slug`. Set varied `status` (`active`, `draft`). Use a Tenant Admin's ID for audit fields. | Creates the core products that consumers will interact with.                                                                                                                                                  |
+| **6** | **Create Screener Versions** | `app.screener_versions`                                                         | For each **active** drug program, create at least 2 versions:<br>• **v1 (Published):** A simple, realistic `screener_json` (2-3 questions, basic logic). Use a Tenant Editor's ID for audit fields.<br>• **v2 (Draft):** A slightly modified `screener_json`.<br>**Crucially:** Update the corresponding `drug_programs` row to set `active_screener_version_id` to the ID of the published v1. | Defines the actual questionnaires and logic. Having multiple versions allows testing the publishing flow and ensures sessions link to the correct historical version.                                          |
+| **7** | **Create Partners & API Keys** | `app.partners`, `app.partner_api_keys`, `app.partner_configs`                   | For each tenant, create 1-2 partners (e.g., "CVS POS", "Walgreens E-commerce"). Generate a *mock* API key: create a `key_prefix`, hash a fake secret (`testkey123`), store both in `partner_api_keys`. Create basic `partner_configs` (e.g., whitelisted URL). Use a Tenant Admin's ID for audit fields. | Sets up the B2B integration points, allowing testing of the `/verify` API endpoint using the mock keys.                                                                                                 |
+| **8** | **Simulate Screening Sessions** | `app.screening_sessions`, `app.ehr_consents` (optional)                         | **Loop 10-20 times per active drug program:**<br>• Select the active `screener_version_id`.<br>• Generate random but plausible `answers_json` based on the screener questions.<br>• Simulate the `screenerEngineService` logic to determine an `outcome` (aim for \~70% `ok_to_use`, \~20% `ask_a_doctor`, \~10% `do_not_use`).<br>• Randomly assign `path` (`manual` or `ehr_assisted`).<br>• *If `ehr_assisted`*, create a corresponding `ehr_consents` record (`status: 'granted'`).<br>• Set `status` to `completed`.<br>• Add realistic `created_at` / `completed_at` timestamps. | **Generates critical RWE.** Populates the platform with realistic consumer interactions, outcomes, and paths, enabling testing of dashboards, analytics, and the Clinician queue.                             |
+| **9** | **Generate Verification Codes** | `app.verification_codes`                                                        | For each `screening_session` from Step 8 with `outcome: 'ok_to_use'`: <br>• Generate a unique `code` (nanoid).<br>• Set `type` (`pos_barcode`).<br>• Set `expires_at` (e.g., 48 hours after session `completed_at`).<br>• Randomly assign `status` (`unused`, `used`, `expired`).<br>• If `used`, set `used_at` timestamp. | Creates the codes needed for purchase verification, allowing testing of the `/verify` endpoint with valid, used, and expired codes.                                                                         |
+| **10** | **Seed Audit Logs** | `app.audit_logs`                                                                | Manually create 5-10 representative audit log entries *after* all other entities exist. Link them to specific users, tenants, and entity IDs created in previous steps (e.g., log a `screener.publish` action, a `user.invite`, a `verification.success`). | Provides historical data for testing the Audit Log viewer screens for both Super Admins and Pharma Admins. Ensures the audit trail functionality works.                                               |
+| **11** | **Seed Auth Tokens (Optional)** | `public.password_reset_tokens`, `public.invitation_tokens`                      | Create a few sample `active` and `expired` tokens linked to seeded users/emails.                                                                                                | Facilitates testing of the password reset and invitation acceptance flows without needing to trigger emails during development.                                                                              |
+
+-----
+
+### **Implementation (`scripts/seed.ts`)**
+
+The script should perform these steps sequentially using `async/await`. It should leverage Drizzle's transaction capabilities where appropriate (e.g., when creating a screener version and immediately updating the drug program's active version).
+
+**Key Code Snippets/Considerations:**
+
+  * **Hashing Passwords:**
+    ```typescript
+    import bcrypt from 'bcryptjs';
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('password123', salt);
+    // Store hashedPassword in public.users
+    ```
+  * **Generating Realistic Data:**
+    ```typescript
+    import { faker } from '@faker-js/faker';
+    const firstName = faker.person.firstName();
+    const lastName = faker.person.lastName();
+    const email = faker.internet.email({ firstName, lastName });
+    ```
+  * **Getting IDs:** Store the IDs returned by Drizzle's `.returning()` clause in variables to use in subsequent inserts (e.g., `const tenant1 = await db.insert(tenants)...`).
+  * **Screener JSON:** Define 1-2 template `screener_json` objects directly in the script for simplicity.
+
+By following this plan, you will have a rich, interconnected dataset that accurately reflects the Aegis platform's structure and intended use, enabling robust testing and compelling demonstrations.
