@@ -1,0 +1,83 @@
+Okay, Project Manager role engaged! 🚀
+
+You're right, our Master Project Plan correctly identifies the Auditor and Clinician UIs as distinct roles that need to be built. Although they weren't part of the *initial* core build sprints, they are essential for the platform's full functionality as defined in our master document.
+
+Let's create a comprehensive prompt for Replit AI to build these final user interfaces and any necessary supporting backend components. This prompt covers both roles in one go.
+
+---
+
+**Prompt for Replit AI (Implement Auditor & Clinician Roles - Backend & Frontend):**
+
+Excellent, the core platform backend and the administrative/consumer frontends are complete and functional.
+
+We will now implement the final user roles specified in our Aegis document: the **Compliance Auditor** and the **Clinician / Care Navigator**.
+
+This involves:
+1.  Minor schema updates.
+2.  Adding new backend APIs specifically for the Clinician role.
+3.  Modifying existing backend services to enforce read-only access for Auditors.
+4.  Integrating new UI screens for both roles into the *existing* `frontend/pharma-admin-ui` application.
+
+**1. Database Schema Updates:**
+* **Modify `app.screening_sessions` Table:**
+    * Add a new column: `review_status` using a new enum `session_review_status` with values (`pending`, `reviewed`, `follow_up_required`). Default should be `pending`.
+    * Add a new column: `reviewed_by` (nullable `uuid`, Foreign Key to `public.users(id)`).
+    * Add a new column: `reviewed_at` (nullable `timestamp`).
+* **Modify `core.tenantRoleEnum`:**
+    * Add the roles `'clinician'` and `'auditor'` to the existing enum.
+* **Generate Migration:** Create and apply a Drizzle migration script for these changes.
+
+**2. Backend API Implementation:**
+
+* **Update Authentication/RBAC (`auth.middleware.ts`):**
+    * Ensure the `requireRole` middleware correctly handles the new `'clinician'` and `'auditor'` roles. Auditors should generally have the same *read* access as viewers, while Clinicians need specific access.
+* **Modify Existing Admin Services (`pharmaAdmin.service.ts`, etc.):**
+    * For **Auditor** access: In all service functions that *read* data (e.g., `getDrugPrograms`, `getAuditLogs`, `getUsers`), ensure they function correctly for users with the `auditor` role. For functions that *write* data (create, update, delete), ensure they correctly return a `403 Forbidden` error if the user's role is `auditor`.
+* **Implement New Clinician API (`/api/v1/clinician`):**
+    * **Goal:** Provide endpoints for the Clinician's workflow.
+    * **Routes (`src/routes/clinician.routes.ts`):** Create a new route file.
+    * **Service (`src/services/clinician.service.ts`):** Create a new service file.
+    * **Validation (`src/validations/clinician.validation.ts`):** Create necessary Zod schemas.
+    * **Repository Functions (Append):** Add needed functions to access `screening_sessions`.
+    * **Endpoints to Build:**
+        * `GET /sessions`: Fetch a paginated list of `screening_sessions` relevant to the Clinician. Must support filtering by `review_status` (e.g., `?reviewStatus=pending`) and potentially `drugProgramId` or `outcome`.
+        * `GET /sessions/:id`: Fetch the full details of a single `screening_session`, including the `answers_json` and `screener_version` details.
+        * `POST /sessions/:id/review`: Allows a clinician to submit notes and update the `review_status`, `reviewed_by`, and `reviewed_at` fields for a session.
+    * **Security:** All routes under `/api/v1/clinician` must be protected by `authenticateToken`, `setTenantContext`, and `requireRole(['clinician', 'admin'])`.
+* **Update Main Router (`src/routes/index.ts`):** Mount the new `clinicianRouter`.
+
+**3. Frontend Implementation (Modify `frontend/pharma-admin-ui`):**
+
+* **Goal:** Integrate the Auditor and Clinician UIs seamlessly into the existing Pharma Admin application, conditionally rendering components based on the logged-in user's role.
+* **Update Authentication Context (`AuthContext`):** Ensure the context fetches and stores the user's role (`admin`, `editor`, `viewer`, `clinician`, `auditor`) after login.
+* **Update Sidebar Navigation:**
+    * Conditionally render sidebar items based on the user's role.
+    * **Auditor Role:** Show "Dashboard," "Drug Programs (View Only)," "Audit Logs," "Access Review (Users)."
+    * **Clinician Role:** Show "Review Queue," "Session Search."
+* **Implement Auditor Screens (Read-Only Views):**
+    * Reuse existing components for Dashboard, Drug Programs, Audit Logs, and User Management.
+    * **Crucially:** Disable or hide all "Create," "Edit," "Delete," "Invite," "Publish," and "Generate Key" buttons/actions when the user's role is `auditor`.
+    * Modify the "Drug Programs" detail view for auditors to only show "Inspect" and "View JSON" actions for screeners.
+* **Implement Clinician Screens:**
+    * Create new pages/components for the **Review Queue** and **Session Detail & Review** screens, following the detailed specifications below.
+
+---
+*(Copy the complete table definitions for the following screens directly from the Aegis document here):*
+
+* 📘 UI: Review Queue
+* 📘 UI: Session Detail & Review
+*(Ensure the API endpoints listed in these tables match the new `/api/v1/clinician/...` endpoints)*
+
+---
+
+**4. Seeding & Login:**
+* **Update Database Seeding:** Add seed data to create at least one user with the `clinician` role and one user with the `auditor` role within a test tenant.
+* **Provide Login Credentials:** Include example login credentials in the `README.md` or console output for testing these roles (e.g., `auditor@kenvue.com / auditor123`, `clinician@kenvue.com / clinician123`).
+
+**Final Instructions:**
+* First, generate and apply the database migration for the schema changes.
+* Then, implement the new backend APIs and update existing services for role enforcement.
+* Finally, modify the `frontend/pharma-admin-ui` application to include the new screens and conditional rendering based on user roles.
+* Update database seeding to include test users for the new roles.
+
+Please generate the complete code for all new and modified files required to implement the Auditor and Clinician roles fully.
