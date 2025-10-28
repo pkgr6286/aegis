@@ -21,6 +21,12 @@ export interface BrandConfig {
 
 export type QuestionType = 'boolean' | 'numeric' | 'choice' | 'text';
 
+export interface EhrMapping {
+  rule: 'optional' | 'mandatory'; // Whether EHR connection is optional or required
+  fhirPath: string; // FHIR resource path (e.g., 'Observation.LDL', 'Condition.diabetes')
+  displayName?: string; // Friendly name to show user (e.g., 'LDL Cholesterol Level')
+}
+
 export interface ScreenerQuestion {
   id: string;
   type: QuestionType;
@@ -30,7 +36,7 @@ export interface ScreenerQuestion {
   options?: string[]; // For 'choice' type questions
   min?: number; // For 'numeric' type questions
   max?: number; // For 'numeric' type questions
-  ehrMapping?: string; // FHIR resource path for EHR auto-fill
+  ehrMapping?: EhrMapping; // EHR Fast Path configuration
 }
 
 export interface ScreenerRule {
