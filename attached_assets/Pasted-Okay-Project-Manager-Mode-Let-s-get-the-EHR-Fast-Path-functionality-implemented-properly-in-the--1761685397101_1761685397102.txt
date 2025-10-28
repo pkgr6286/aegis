@@ -1,0 +1,57 @@
+Okay, Project Manager Mode: Let's get the EHR "Fast Path" functionality implemented properly in the Replit Consumer UI.
+
+You've correctly identified that the core user experience decision point – the "Fork" screen offering manual entry vs. EHR connection – needs to be built. The backend APIs are ready, so we just need to instruct Replit AI on how to build the frontend component and integrate it into the existing consumer flow.
+
+Here is the precise, detailed prompt to give Replit AI to implement this.
+
+---
+
+**Prompt for Replit AI (Implement EHR Choice "Fork" Screen in Consumer UI):**
+
+Excellent. The backend APIs for the EHR integration are complete.
+
+Now, we need to implement the user interface component within the `frontend/consumer-ui` application that allows the consumer to choose between connecting their EHR or entering data manually. This is the "Data Entry Choice Screen (The Fork)" as defined in our Aegis document.
+
+**Task:** Modify the existing `Screener.tsx` component (or the component responsible for rendering individual screener questions) to implement the following logic:
+
+**1. Conditional Rendering Logic:**
+* **Before** rendering the input controls (e.g., numeric keypad, radio buttons) for a specific question, check the question's configuration within the `screener_json` object.
+* **If** the current question has an `ehrMapping` object defined **AND** the `ehrMapping.rule` is set to `'optional'` (or potentially `'mandatory'`, although optional is the primary use case):
+    * **Do not** render the standard input controls immediately.
+    * **Instead, render the new "Data Entry Choice" UI** described below.
+* **Else** (if no `ehrMapping` exists or EHR is disabled for this question):
+    * Render the standard input controls as currently implemented.
+
+**2. Implement the "Data Entry Choice" UI Component:**
+* This component should display:
+    * The **Question Text** (e.g., "To continue, we need to know your latest LDL Cholesterol level.").
+    * A **"Connect My Patient Portal" button** (large, primary action style) with descriptive helper text (e.g., "Fastest & Most Accurate. Connect securely to auto-fill.").
+    * An **"Enter My Level Manually" button** (large, secondary action style) with helper text (e.g., "If you know your result.").
+
+**3. Implement Button Click Handlers:**
+
+* **"Enter My Level Manually" Button Click:**
+    * Simply hide the "Data Entry Choice" UI.
+    * Render the standard input controls for the current question (e.g., the numeric keypad for LDL).
+    * The user proceeds with manual entry as before.
+* **"Connect My Patient Portal" Button Click:**
+    * **Initiate EHR Flow:**
+        1.  Make an API call to `GET /api/v1/public/sessions/:id/ehr/connect` (using the current `sessionToken`).
+        2.  Receive the `connectUrl` from the backend.
+        3.  Open this `connectUrl` in a **new popup window**.
+        4.  Implement a **listener** (`window.addEventListener('message', ...)`) in the main window to wait for a `'ehr-auth-success'` message from the closing popup (as handled by the backend's `/ehr/callback` HTML response).
+    * **Handle EHR Success:**
+        1.  When the `'ehr-auth-success'` message is received, close the listener.
+        2.  Make an API call to `GET /api/v1/public/sessions/:id/ehr-data` (using the `sessionToken`).
+        3.  Receive the parsed data (e.g., `{ ldl: 110, medications: [...] }`).
+        4.  **Pre-populate & Confirm:** Display the fetched data clearly to the user (e.g., "We found your result from [Provider]: LDL Cholesterol: 110 mg/dL. Is it OK to use this?") with "Yes" / "No" buttons.
+        5.  If "Yes": Store the confirmed value as the answer to the current question and proceed to the *next* question in the screener flow (evaluating branching logic).
+        6.  If "No": Display the standard manual input controls for the current question, allowing the user to enter it themselves.
+    * **Handle EHR Failure/Popup Closed:** If the popup is closed without success or an error occurs during the API calls, gracefully fall back to displaying the standard manual input controls for the current question.
+
+**Final Instructions:**
+* Integrate this conditional rendering logic and the new "Data Entry Choice" component into the existing screener flow within `frontend/consumer-ui`.
+* Implement the popup handling, message listening, and API calls for the EHR connection path.
+* Ensure a robust fallback to manual entry in all scenarios (user choice, technical failure, provider not found).
+
+Please generate the necessary modifications to the React components to fully implement this EHR "Fast Path" choice for the consumer.
