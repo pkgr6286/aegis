@@ -1,7 +1,7 @@
 # Aegis Platform
 
 ## Overview
-Aegis is a multi-tenant SaaS platform for pharmaceutical patient assistance programs. It enables pharmaceutical companies to manage drug programs, patient screening, and partner integrations with strict data isolation, enterprise security, and HIPAA-ready compliance using PostgreSQL's Row-Level Security (RLS). The platform includes THREE complete frontend UIs: (1) Super Admin UI for platform management with comprehensive analytics dashboard, (2) Pharma Admin UI for tenant operations with visual Screener Builder, and (3) Consumer UI for patient screening. The system supports FIVE user roles with specific workflows: super_admin, pharma admin/editor/viewer, clinician (for clinical review workflows), and auditor (read-only compliance access). The platform includes comprehensive seed data with 10 major pharmaceutical companies and fully-formed screening questionnaires using standardized question types (boolean, choice, numeric).
+Aegis is a multi-tenant SaaS platform for pharmaceutical patient assistance programs. It enables pharmaceutical companies to manage drug programs, patient screening, and partner integrations with strict data isolation, enterprise security, and HIPAA-ready compliance using PostgreSQL's Row-Level Security (RLS). The platform includes THREE complete frontend UIs: (1) Super Admin UI for platform management with comprehensive analytics dashboard, (2) Pharma Admin UI for tenant operations with visual Screener Builder including preview functionality, and (3) Consumer UI for patient screening with EHR Fast Path integration. The system supports FIVE user roles with specific workflows: super_admin, pharma admin/editor/viewer, clinician (for clinical review workflows), and auditor (read-only compliance access). The platform includes comprehensive seed data with 10 major pharmaceutical companies and fully-formed screening questionnaires using standardized question types (boolean, choice, numeric).
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -38,7 +38,14 @@ The Pharma Admin UI includes comprehensive pages for:
 - **Audit Logs**: Comprehensive viewer with filtering by entity type, action, and date range.
 - **Drug Programs**: CRUD for programs, status badges, brand configuration, and public slug management.
 - **Drug Program Detail**: Tabbed interface for overview, screener versions, and settings.
-- **Screener Builder**: Visual flow-based editor supporting three question types (boolean for Yes/No, choice for multiple options, numeric for number inputs).
+- **Screener Builder**: Visual flow-based editor supporting three question types (boolean for Yes/No, choice for multiple options, numeric for number inputs) with interactive preview mode.
+
+The Consumer UI provides patient-facing screening experience:
+- **EHR Fast Path**: Optional EHR integration allowing patients to auto-fill health data from their patient portal via OAuth
+- **The Fork Screen**: Choice interface offering "Connect My Patient Portal" or "Enter Manually" options for questions with EHR mapping
+- **Data Confirmation**: User-friendly confirmation dialog showing fetched EHR data before use
+- **Graceful Fallback**: Automatic fallback to manual entry if EHR connection fails or data is not found
+- **Dynamic EHR Mapping**: Questions configured with `ehrMapping` automatically trigger the EHR choice screen
 
 The Clinician UI provides specialized workflow for clinical review:
 - **Review Queue**: Filter screening sessions by program, outcome, and review status (pending/reviewed).
@@ -91,6 +98,17 @@ The platform uses three standardized question types for screening questionnaires
 
 These types are consistent across the ScreenerJSON schema, consumer UI rendering, and screener builder visual editor.
 
+### EHR Integration
+Questions can be configured with optional EHR mapping to enable automatic data fetching from patient health records:
+- **ehrMapping.rule**: 'optional' (shows choice screen) or 'mandatory' (requires EHR connection)
+- **ehrMapping.fhirPath**: FHIR resource path (e.g., 'Observation.ldl', 'Condition.diabetes')
+- **ehrMapping.displayName**: User-friendly name for the data being requested
+
+Example questions with EHR mapping in seed data:
+- LDL Cholesterol levels (Crestor, P&G programs)
+- Asthma/COPD diagnosis (Advair program)
+- Type 2 Diabetes diagnosis (Januvia program)
+
 ### Key Implementation Files
 **Backend - Clinician API**:
 - `server/src/services/clinician.service.ts` - Session retrieval and review submission
@@ -101,6 +119,16 @@ These types are consistent across the ScreenerJSON schema, consumer UI rendering
 - `client/src/pages/clinician/ReviewQueue.tsx` - Session filtering and queue management
 - `client/src/pages/clinician/SessionReview.tsx` - Detailed review with clinical notes
 - `client/src/components/admin/PharmaAdminSidebar.tsx` - Role-based navigation
+
+**Frontend - Consumer UI & EHR Integration**:
+- `client/src/pages/public/Screener.tsx` - Main screening flow with EHR fork logic
+- `client/src/components/consumer/EhrChoiceCard.tsx` - "The Fork" screen for EHR vs manual entry
+- `client/src/components/consumer/EhrConfirmationDialog.tsx` - EHR data confirmation dialog
+- `client/src/lib/ehrUtils.ts` - EHR OAuth popup handling and data fetching utilities
+
+**Backend - EHR API**:
+- `server/src/services/ehr.service.ts` - EHR OAuth flow and FHIR data parsing
+- `server/src/routes/ehr.routes.ts` - EHR API endpoints (connect, callback, data fetching)
 
 **Database Schema**:
 - `server/src/db/schema/consumer.ts` - Screening sessions with review status columns

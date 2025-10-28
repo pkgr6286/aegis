@@ -277,6 +277,11 @@ const PHARMA_TENANTS: TenantData[] = [
             type: 'boolean',
             text: 'Has a doctor diagnosed you with Asthma or COPD (Chronic Obstructive Pulmonary Disease)?',
             required: true,
+            ehrMapping: {
+              rule: 'optional',
+              fhirPath: 'Condition.asthma_copd',
+              displayName: 'Asthma or COPD Diagnosis',
+            },
           },
           {
             id: 'rescue_inhaler_freq',
@@ -600,6 +605,11 @@ const PHARMA_TENANTS: TenantData[] = [
               min: 0,
               max: 300,
             },
+            ehrMapping: {
+              rule: 'optional',
+              fhirPath: 'Observation.ldl',
+              displayName: 'LDL Cholesterol Level',
+            },
           },
           {
             id: 'risk_factors',
@@ -693,6 +703,11 @@ const PHARMA_TENANTS: TenantData[] = [
             type: 'boolean',
             text: 'Has a doctor diagnosed you with Type 2 Diabetes or Pre-diabetes based on an A1c test?',
             required: true,
+            ehrMapping: {
+              rule: 'optional',
+              fhirPath: 'Condition.diabetes',
+              displayName: 'Type 2 Diabetes or Pre-diabetes Diagnosis',
+            },
           },
           {
             id: 'kidney_check',
@@ -1125,6 +1140,11 @@ const PHARMA_TENANTS: TenantData[] = [
             validation: {
               min: 0,
               max: 300,
+            },
+            ehrMapping: {
+              rule: 'optional',
+              fhirPath: 'Observation.ldl',
+              displayName: 'LDL Cholesterol Level',
             },
           },
         ],
