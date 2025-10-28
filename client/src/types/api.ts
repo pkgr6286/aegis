@@ -73,7 +73,25 @@ export interface DashboardStats {
   totalTenants: number;
   activeUsers: number;
   apiCalls24h: number;
+  totalScreenings: number;
+  totalPrograms: number;
   newTenantsThisMonth: Array<{
+    date: string;
+    count: number;
+  }>;
+  screeningActivity: Array<{
+    date: string;
+    count: number;
+  }>;
+  outcomeDistribution: Array<{
+    outcome: string;
+    count: number;
+  }>;
+  tenantStatusDistribution: Array<{
+    status: string;
+    count: number;
+  }>;
+  apiCallsData: Array<{
     date: string;
     count: number;
   }>;
