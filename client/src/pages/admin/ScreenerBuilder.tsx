@@ -15,16 +15,20 @@ import {
 import '@xyflow/react/dist/style.css';
 
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { ArrowLeft, Save, Eye, Rocket, Plus } from 'lucide-react';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ArrowLeft, Save, Eye, Rocket, Plus, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-import type { ScreenerNode, ScreenerEdge, QuestionType } from '@/types/screener';
+import type { ScreenerNode, ScreenerEdge, QuestionType, ScreenerJSON, QuestionNodeData } from '@/types/screener';
 import { StartNode } from '@/components/screener/nodes/StartNode';
 import { QuestionNode } from '@/components/screener/nodes/QuestionNode';
 import { OutcomeNode } from '@/components/screener/nodes/OutcomeNode';
 import { NodePalette } from '@/components/screener/NodePalette';
 import { PropertiesInspector } from '@/components/screener/PropertiesInspector';
+import { BooleanQuestion } from '@/components/consumer/questions/BooleanQuestion';
+import { NumericQuestion } from '@/components/consumer/questions/NumericQuestion';
+import { ChoiceQuestion } from '@/components/consumer/questions/ChoiceQuestion';
 
 const nodeTypes: NodeTypes = {
   start: StartNode,
@@ -53,6 +57,9 @@ export default function ScreenerBuilder() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewQuestionIndex, setPreviewQuestionIndex] = useState(0);
+  const [previewAnswers, setPreviewAnswers] = useState<Record<string, any>>({});
   const nodeIdCounter = useRef(1);
 
   const isNewVersion = versionId === 'new';
@@ -192,12 +199,39 @@ export default function ScreenerBuilder() {
   };
 
   const handlePreview = () => {
-    toast({
-      title: 'Preview mode',
-      description: 'Preview functionality coming soon.',
-    });
-    // TODO: Implement preview mode
+    // Convert nodes to screener questions
+    const questionNodes = nodes.filter(n => n.type === 'question');
+    if (questionNodes.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No questions found',
+        description: 'Add at least one question to preview the screener.',
+      });
+      return;
+    }
+    
+    setPreviewQuestionIndex(0);
+    setPreviewAnswers({});
+    setShowPreview(true);
   };
+
+  // Convert nodes to screener questions for preview
+  const previewQuestions = nodes
+    .filter(n => n.type === 'question')
+    .map(n => {
+      const data = n.data as QuestionNodeData;
+      return {
+        id: data.questionId,
+        type: data.questionType,
+        text: data.questionText,
+        required: data.required,
+        options: data.options,
+        validation: data.validation,
+      };
+    });
+
+  const currentPreviewQuestion = previewQuestions[previewQuestionIndex];
+  const currentPreviewAnswer = currentPreviewQuestion ? previewAnswers[currentPreviewQuestion.id] : null;
 
   const selectedNode = nodes.find((node) => node.id === selectedNodeId);
 
@@ -290,6 +324,114 @@ export default function ScreenerBuilder() {
           />
         </div>
       </div>
+
+      {/* Preview Dialog */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Preview Screener</DialogTitle>
+          </DialogHeader>
+
+          {currentPreviewQuestion ? (
+            <div className="space-y-6">
+              {/* Progress */}
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>Question {previewQuestionIndex + 1} of {previewQuestions.length}</span>
+                <span>{Math.round(((previewQuestionIndex + 1) / previewQuestions.length) * 100)}% Complete</span>
+              </div>
+
+              {/* Question Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    {currentPreviewQuestion.text}
+                    {currentPreviewQuestion.required && (
+                      <span className="text-destructive ml-1">*</span>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {/* Render appropriate question type */}
+                  {currentPreviewQuestion.type === 'boolean' && (
+                    <BooleanQuestion
+                      value={currentPreviewAnswer}
+                      onChange={(value) => setPreviewAnswers(prev => ({
+                        ...prev,
+                        [currentPreviewQuestion.id]: value
+                      }))}
+                    />
+                  )}
+
+                  {currentPreviewQuestion.type === 'choice' && currentPreviewQuestion.options && (
+                    <ChoiceQuestion
+                      options={currentPreviewQuestion.options}
+                      value={currentPreviewAnswer}
+                      onChange={(value) => setPreviewAnswers(prev => ({
+                        ...prev,
+                        [currentPreviewQuestion.id]: value
+                      }))}
+                    />
+                  )}
+
+                  {currentPreviewQuestion.type === 'numeric' && (
+                    <NumericQuestion
+                      value={currentPreviewAnswer || ''}
+                      onChange={(value) => setPreviewAnswers(prev => ({
+                        ...prev,
+                        [currentPreviewQuestion.id]: value
+                      }))}
+                      min={currentPreviewQuestion.validation?.min}
+                      max={currentPreviewQuestion.validation?.max}
+                    />
+                  )}
+                </CardContent>
+                <CardFooter className="flex justify-between gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setPreviewQuestionIndex(prev => Math.max(0, prev - 1))}
+                    disabled={previewQuestionIndex === 0}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Previous
+                  </Button>
+
+                  {previewQuestionIndex < previewQuestions.length - 1 ? (
+                    <Button
+                      onClick={() => setPreviewQuestionIndex(prev => prev + 1)}
+                      disabled={currentPreviewQuestion.required && currentPreviewAnswer == null}
+                    >
+                      Next
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => {
+                        toast({
+                          title: 'Preview complete!',
+                          description: 'This is how your screener will look to consumers.',
+                        });
+                        setShowPreview(false);
+                      }}
+                      disabled={currentPreviewQuestion.required && currentPreviewAnswer == null}
+                    >
+                      Finish Preview
+                    </Button>
+                  )}
+                </CardFooter>
+              </Card>
+
+              {/* Debug info */}
+              <div className="text-xs text-muted-foreground text-center">
+                Preview Mode - This is how consumers will see your screener
+              </div>
+            </div>
+          ) : (
+            <div className="py-8 text-center text-muted-foreground">
+              No questions to preview
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
