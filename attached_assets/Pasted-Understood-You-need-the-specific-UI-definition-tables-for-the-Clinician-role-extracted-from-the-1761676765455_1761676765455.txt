@@ -1,0 +1,39 @@
+Understood. You need the specific UI definition tables for the **Clinician** role extracted from the Aegis document to include in the Replit AI prompt.
+
+Here are the complete table definitions for those two screens, with the API endpoints updated to reflect the new `/api/v1/clinician/...` path:
+
+-----
+
+### **UI Screen Definitions (Clinician)**
+
+### 📘 UI: Review Queue
+
+|                     |                                                                                                                                                                                                                                                           |
+| :------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Purpose** | The clinician's primary workspace. It's a "to-do list" of consumer screening sessions that have been flagged for clinical review (typically those ending in "Ask a Doctor").                                                                                 |
+| **Sidebar Group** | **WORKFLOW** |
+| **UI Elements** | • **Tabs:** "Pending Review," "Completed."<br>• **Filters:** Dropdown for `Drug Program` and `Outcome`.<br>• **Table:** A paginated table of screening sessions.<br>• **Table Actions:** Each row has a "Review" button.                                         |
+| **Fields/Columns** | • **Table Columns:** `Session ID`, `Timestamp`, `Drug Program`, `Outcome` (chip), `Review Status`.                                                                                                                                                            |
+| **User Actions** | • **Triage:** Use filters and tabs to manage the worklist.<br>• **Initiate Review:** Click "Review" on a session to navigate to its detailed view.                                                                                                            |
+| **Triggered Flows** | User clicks `Review` button → `Maps('/sessions/:id')`.                                                                                                                                                                                                |
+| **APIs Used** | • `GET /api/v1/clinician/sessions?reviewStatus=pending` → To fetch the list of sessions needing review.<br>• `GET /api/v1/admin/programs` → To populate the `Drug Program` filter dropdown (Clinicians need read access to program names).                      |
+| **Special Notes** | Requires the backend to support filtering sessions by `review_status` and potentially other fields. The `review_status` column needs to be added to the `screening_sessions` table. |
+
+-----
+
+### 📘 UI: Session Detail & Review
+
+|                     |                                                                                                                                                                                                                                                                                                                                                                                               |
+| :------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Purpose** | To provide the clinician with a complete view of a single consumer's screening, allowing them to understand the context, add clinical notes, and formally mark the session's review status.                                                                                                                                                                                                   |
+| **Sidebar Group** | N/A (Accessed from Review Queue)                                                                                                                                                                                                                                                                                                                                                              |
+| **UI Elements** | • **Two-Column Layout:**<br>    - **Left Column (Context):** A summary card with `Session ID`, `Timestamp`, `Program`, and final `Outcome`. Below this is a read-only, formatted view of the full Q\&A from the screener (`answers_json`).<br>    - **Right Column (Action):** An "Add a Note" text area, a history of previous notes/reviews for this session, and a primary action button ("Submit Review"). |
+| **Fields/Columns** | • **Q\&A View:** `Question Text`, `Consumer's Answer`.<br>• **Action Panel:** `Clinical Notes` (textarea), `Review Status` (dropdown: "Reviewed - No Follow-up", "Reviewed - Follow-up Required", potentially others).                                                                                                                                                                         |
+| **User Actions** | • **Review:** Read through the consumer's answers.<br>• **Add Note:** Type a clinical note into the text area.<br>• **Set Status:** Select the appropriate review status from the dropdown.<br>• **Complete Review:** Click "Submit Review".                                                                                                                                                   |
+| **Triggered Flows** | User types note, selects status → Clicks "Submit Review" → `POST /api/v1/clinician/sessions/:id/review` API call is made with the note and new status → On success, show success toast, and `Maps` back to the Review Queue.                                                                                                                                                              |
+| **APIs Used** | • `GET /api/v1/clinician/sessions/:id` → To fetch all details for the session, including the `answers_json`.<br>• `POST /api/v1/clinician/sessions/:id/review` → To submit the review note and update the session's `review_status`, `reviewed_by`, and `reviewed_at`.                                                                                                                           |
+| **Special Notes** | The Q\&A view must be clear and easy to scan, highlighting any answers that may have led to the "Ask a Doctor" outcome. The backend needs to associate the review with the logged-in clinician's user ID.                                                                                                                                                                                       |
+
+-----
+
+You can now copy and paste these tables directly into the appropriate section of your prompt for Replit AI when you instruct it to build the Auditor and Clinician roles.
