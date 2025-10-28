@@ -9,7 +9,7 @@
 
 import { Router } from 'express';
 import { pharmaAdminService } from '../services/pharmaAdmin.service';
-import { authenticateToken, setTenantContextMiddleware, requireTenantRole } from '../middleware/auth.middleware';
+import { authenticateToken, setTenantContextMiddleware, requireTenantRole, enforceReadOnlyForAuditor } from '../middleware/auth.middleware';
 import { 
   inviteUserSchema, 
   createPartnerSchema, 
@@ -23,6 +23,8 @@ const router = Router();
 // All routes require authentication and tenant context
 router.use(authenticateToken);
 router.use(setTenantContextMiddleware);
+// Enforce read-only access for auditor role
+router.use(enforceReadOnlyForAuditor);
 
 /**
  * GET /api/v1/admin/me

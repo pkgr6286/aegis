@@ -208,3 +208,29 @@ export const setTenantContextMiddleware = async (
     return res.status(500).json({ error: 'Failed to set tenant context' });
   }
 };
+
+/**
+ * Middleware to enforce read-only access for auditor role
+ * Auditors can perform GET, HEAD, OPTIONS requests but not write operations
+ * This middleware should be used AFTER authenticateToken
+ */
+export const enforceReadOnlyForAuditor = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  // Check if user is an auditor
+  if (req.user?.tenantRole === 'auditor') {
+    // Allow read operations (GET, HEAD, OPTIONS)
+    const readOnlyMethods = ['GET', 'HEAD', 'OPTIONS'];
+    
+    if (!readOnlyMethods.includes(req.method)) {
+      return res.status(403).json({ 
+        error: 'Auditors have read-only access',
+        message: 'You do not have permission to perform write operations'
+      });
+    }
+  }
+  
+  next();
+};
