@@ -26,7 +26,7 @@ declare global {
         id: string;
         email: string;
         systemRoles?: string[]; // For super_admin, support_staff
-        tenantRole?: 'admin' | 'editor' | 'viewer';
+        tenantRole?: 'admin' | 'editor' | 'viewer' | 'clinician' | 'auditor';
       };
       tenantId?: string;
     }
@@ -34,7 +34,7 @@ declare global {
 }
 
 type SystemRole = 'super_admin' | 'support_staff';
-type TenantRole = 'admin' | 'editor' | 'viewer';
+type TenantRole = 'admin' | 'editor' | 'viewer' | 'clinician' | 'auditor';
 
 export const authenticateToken = (
   req: Request,
@@ -66,7 +66,7 @@ export const authenticateToken = (
       userId: string;
       email: string;
       systemRoles?: string[];
-      tenantRole?: 'admin' | 'editor' | 'viewer';
+      tenantRole?: 'admin' | 'editor' | 'viewer' | 'clinician' | 'auditor';
       tenantId?: string;
     };
     
