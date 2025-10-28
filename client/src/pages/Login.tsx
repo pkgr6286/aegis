@@ -6,7 +6,51 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, CheckCircle2, FileCheck, Lock } from 'lucide-react';
+import { Shield, CheckCircle2, FileCheck, Lock, UserCog, Users, Stethoscope, ClipboardCheck } from 'lucide-react';
+
+interface DemoAccount {
+  role: string;
+  description: string;
+  email: string;
+  password: string;
+  icon: any;
+  color: string;
+}
+
+const DEMO_ACCOUNTS: DemoAccount[] = [
+  {
+    role: 'Platform Admin',
+    description: 'Full system access',
+    email: 'admin@aegis.com',
+    password: 'admin123',
+    icon: Shield,
+    color: 'text-purple-500',
+  },
+  {
+    role: 'Pharma Admin',
+    description: 'Tenant management',
+    email: 'pharma-admin@test.com',
+    password: 'pharma123',
+    icon: UserCog,
+    color: 'text-blue-500',
+  },
+  {
+    role: 'Clinician',
+    description: 'Clinical review',
+    email: 'clinician@test.com',
+    password: 'clinician123',
+    icon: Stethoscope,
+    color: 'text-green-500',
+  },
+  {
+    role: 'Auditor',
+    description: 'Read-only compliance',
+    email: 'auditor@test.com',
+    password: 'auditor123',
+    icon: ClipboardCheck,
+    color: 'text-orange-500',
+  },
+];
 
 export default function Login() {
   const { login, isAuthenticated } = useAuth();
@@ -43,6 +87,15 @@ export default function Login() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDemoLogin = (account: DemoAccount) => {
+    setEmail(account.email);
+    setPassword(account.password);
+    toast({
+      title: 'Demo credentials loaded',
+      description: `Click "Sign In" to login as ${account.role}`,
+    });
   };
 
   return (
@@ -122,12 +175,12 @@ export default function Login() {
       </div>
 
       {/* Right Column - Login Form */}
-      <div className="w-full lg:w-[40%] bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-6 lg:p-12 relative">
+      <div className="w-full lg:w-[40%] bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-6 lg:p-12 relative overflow-y-auto">
         {/* Decorative blur circles */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-sidebar/5 rounded-full blur-3xl" />
         
-        <div className="w-full max-w-md relative z-10">
+        <div className="w-full max-w-md relative z-10 py-8">
           {/* Logo above card */}
           <div className="mb-8 text-center">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-sidebar shadow-lg mb-4">
@@ -187,6 +240,51 @@ export default function Login() {
                   {isLoading ? 'Signing in...' : 'Sign In'}
                 </Button>
               </form>
+
+              {/* Demo Accounts Section */}
+              <div className="mt-8 pt-6 border-t">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Demo Accounts
+                  </span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  {DEMO_ACCOUNTS.map((account) => {
+                    const Icon = account.icon;
+                    return (
+                      <button
+                        key={account.email}
+                        type="button"
+                        onClick={() => handleDemoLogin(account)}
+                        disabled={isLoading}
+                        data-testid={`button-demo-${account.role.toLowerCase().replace(/\s+/g, '-')}`}
+                        className="group relative overflow-hidden rounded-lg border bg-card p-3 text-left transition-all hover-elevate active-elevate-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <div className="flex items-start gap-2">
+                          <div className={`flex-shrink-0 w-8 h-8 rounded-md bg-muted/50 flex items-center justify-center ${account.color}`}>
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-semibold mb-0.5 truncate">
+                              {account.role}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground leading-tight">
+                              {account.description}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <p className="text-[11px] text-muted-foreground text-center mt-4 leading-relaxed">
+                  Click any role above to auto-fill credentials for demo purposes
+                </p>
+              </div>
 
               <div className="mt-6 pt-6 border-t text-center">
                 <p className="text-sm text-muted-foreground">
