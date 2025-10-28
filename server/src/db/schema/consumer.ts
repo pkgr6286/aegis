@@ -10,7 +10,7 @@ import {
   text,
 } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
-import { tenants } from './public';
+import { tenants, users } from './public';
 import { drugPrograms, screenerVersions } from './programs';
 
 /**
@@ -26,6 +26,7 @@ const appTable = pgTableCreator((name) => `${name}`);
 export const sessionStatusEnum = pgEnum('session_status', ['started', 'completed']);
 export const sessionOutcomeEnum = pgEnum('session_outcome', ['ok_to_use', 'ask_a_doctor', 'do_not_use']);
 export const sessionPathEnum = pgEnum('session_path', ['manual', 'ehr_assisted', 'ehr_mandatory']);
+export const sessionReviewStatusEnum = pgEnum('session_review_status', ['pending', 'reviewed', 'follow_up_required']);
 export const consentStatusEnum = pgEnum('consent_status', ['granted', 'revoked', 'failed']);
 export const codeStatusEnum = pgEnum('code_status', ['unused', 'used', 'expired']);
 export const codeTypeEnum = pgEnum('code_type', ['pos_barcode', 'ecommerce_jwt']);
@@ -58,6 +59,13 @@ export const screeningSessions = appTable('screening_sessions', {
    */
   answersJson: jsonb('answers_json').notNull().default('{}'),
 
+  /**
+   * Clinical review tracking for "Ask a Doctor" outcomes
+   */
+  reviewStatus: sessionReviewStatusEnum('review_status').default('pending'),
+  reviewedBy: uuid('reviewed_by').references(() => users.id, { onDelete: 'set null' }),
+  reviewedAt: timestamp('reviewed_at'),
+
   createdAt: timestamp('created_at').notNull().defaultNow(),
   completedAt: timestamp('completed_at'),
 }, (table) => ({
@@ -65,6 +73,8 @@ export const screeningSessions = appTable('screening_sessions', {
   programOutcomeIdx: index('ss_program_outcome_idx').on(table.tenantId, table.drugProgramId, table.outcome),
   // Index for RWE analytics over time
   programTimeIdx: index('ss_program_time_idx').on(table.tenantId, table.drugProgramId, table.createdAt),
+  // Index for clinician review queue (filter by review status)
+  reviewStatusIdx: index('ss_review_status_idx').on(table.tenantId, table.reviewStatus, table.createdAt),
 }));
 
 /**
@@ -148,6 +158,10 @@ export const screeningSessionsRelations = relations(screeningSessions, ({ one })
   screenerVersion: one(screenerVersions, {
     fields: [screeningSessions.screenerVersionId],
     references: [screenerVersions.id],
+  }),
+  reviewedByUser: one(users, {
+    fields: [screeningSessions.reviewedBy],
+    references: [users.id],
   }),
   // One-to-one relation
   verificationCode: one(verificationCodes, {

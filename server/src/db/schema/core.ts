@@ -78,7 +78,7 @@ const appTable = pgTableCreator((name) => `${name}`);
 /**
  * Tenant-level roles. These are distinct from System-level roles.
  */
-export const tenantRoleEnum = pgEnum('tenant_role', ['admin', 'editor', 'viewer']);
+export const tenantRoleEnum = pgEnum('tenant_role', ['admin', 'editor', 'viewer', 'clinician', 'auditor']);
 
 /**
  * A reusable Drizzle object for full audit trails on all app tables.
