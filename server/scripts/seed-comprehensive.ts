@@ -1113,15 +1113,8 @@ async function clearExistingData() {
   await db.delete(brandConfigs);
   await db.delete(tenantUsers);
   
-  // Keep super admin, delete other users
-  const superAdminUser = await db.query.users.findFirst({
-    where: eq(users.email, 'admin@aegis.com'),
-  });
-  
-  if (superAdminUser) {
-    await db.delete(users).where(eq(users.email, 'admin@aegis.com') === false as any);
-    await db.delete(tenants);
-  }
+  // Keep super admin, delete other data
+  await db.delete(tenants);
   
   console.log('✅ Data cleared\n');
 }
@@ -1153,45 +1146,40 @@ async function seedComprehensiveData() {
       console.log(`   👤 Creating admin user: ${pharmaData.adminFirstName} ${pharmaData.adminLastName}`);
       
       let adminUser;
-      const existingUser = await db.query.users.findFirst({
-        where: eq(users.email, pharmaData.adminEmail),
-      });
-
-      if (existingUser) {
-        console.log(`   ⚠️  User already exists, skipping...`);
-        adminUser = existingUser;
-      } else {
+      try {
         [adminUser] = await db.insert(users).values({
           email: pharmaData.adminEmail,
-          passwordHash: hashedPassword,
+          hashedPassword: hashedPassword,
           firstName: pharmaData.adminFirstName,
           lastName: pharmaData.adminLastName,
         }).returning();
         console.log(`   ✅ Admin user created`);
+      } catch (error: any) {
+        if (error.code === '23505') {
+          const existingUser = await db.query.users.findFirst({
+            where: eq(users.email, pharmaData.adminEmail),
+          });
+          if (!existingUser) throw error;
+          adminUser = existingUser;
+          console.log(`   ⚠️  User already exists, using existing...`);
+        } else {
+          throw error;
+        }
       }
 
       // Create tenant
       console.log(`   🏢 Creating tenant: ${pharmaData.name}`);
-      let tenant;
-      const existingTenant = await db.query.tenants.findFirst({
-        where: eq(tenants.name, pharmaData.name),
-      });
+      const [tenant] = await db.insert(tenants).values({
+        name: pharmaData.name,
+        status: 'active',
+        metadata: {
+          domain: pharmaData.domain,
+          maxDrugPrograms: 10,
+          maxUsers: 50,
+        },
+      }).returning();
+      console.log(`   ✅ Tenant created`);
 
-      if (existingTenant) {
-        console.log(`   ⚠️  Tenant already exists, skipping...`);
-        tenant = existingTenant;
-      } else {
-        [tenant] = await db.insert(tenants).values({
-          name: pharmaData.name,
-          status: 'active',
-          metadata: {
-            domain: pharmaData.domain,
-            maxDrugPrograms: 10,
-            maxUsers: 50,
-          },
-        }).returning();
-        console.log(`   ✅ Tenant created`);
-      }
 
       createdData.tenants.push(tenant);
 
@@ -1222,20 +1210,24 @@ async function seedComprehensiveData() {
         const name = createFullName();
         const email = `${name.firstName.toLowerCase()}.${name.lastName.toLowerCase()}@${pharmaData.domain}`;
         
-        const existingTeamUser = await db.query.users.findFirst({
-          where: eq(users.email, email),
-        });
-
         let teamUser;
-        if (existingTeamUser) {
-          teamUser = existingTeamUser;
-        } else {
+        try {
           [teamUser] = await db.insert(users).values({
             email,
-            passwordHash: hashedPassword,
+            hashedPassword: hashedPassword,
             firstName: name.firstName,
             lastName: name.lastName,
           }).returning();
+        } catch (error: any) {
+          if (error.code === '23505') {
+            const existingTeamUser = await db.query.users.findFirst({
+              where: eq(users.email, email),
+            });
+            if (!existingTeamUser) throw error;
+            teamUser = existingTeamUser;
+          } else {
+            throw error;
+          }
         }
 
         const existingTeamTenantUser = await db.query.tenantUsers.findFirst({
@@ -1316,7 +1308,7 @@ async function seedComprehensiveData() {
         const [partner] = await db.insert(partners).values({
           tenantId: tenant.id,
           name: partnerName,
-          type: partnerName.includes('POS') ? 'pos' : 'ecommerce',
+          type: partnerName.includes('POS') || partnerName.includes('Point of Sale') ? 'retail_pos' : 'ecommerce',
           status: 'active',
           createdBy: adminUser.id,
           updatedBy: adminUser.id,
@@ -1325,22 +1317,25 @@ async function seedComprehensiveData() {
         // Create API key for partner
         const keyPrefix = nanoid(8);
         const keySecret = `test_${nanoid(32)}`;
-        const keyHash = await hashPassword(keySecret);
+        const hashedKey = await hashPassword(keySecret);
 
         await db.insert(partnerApiKeys).values({
+          tenantId: tenant.id,
           partnerId: partner.id,
           keyPrefix,
-          keyHash,
+          hashedKey,
           status: 'active',
           createdBy: adminUser.id,
+          updatedBy: adminUser.id,
         });
 
         await db.insert(partnerConfigs).values({
+          tenantId: tenant.id,
           partnerId: partner.id,
-          config: {
+          metadata: {
             webhookUrl: `https://${partnerName.toLowerCase().replace(/\s+/g, '-')}.example.com/webhook`,
-            allowedOrigins: ['https://example.com'],
           },
+          whitelistedRedirectUrls: ['https://example.com'],
           createdBy: adminUser.id,
           updatedBy: adminUser.id,
         });
@@ -1399,11 +1394,13 @@ async function seedComprehensiveData() {
         }
 
         const [session] = await db.insert(screeningSessions).values({
+          tenantId: tenant.id,
           drugProgramId: program.id,
           screenerVersionId: screenerVersion.id,
-          path: faker.helpers.arrayElement(['mobile_qr', 'web_link', 'partner_api']),
+          path: faker.helpers.arrayElement(['manual', 'ehr_assisted', 'ehr_mandatory']),
           answersJson,
           outcome,
+          status: 'completed',
           completedAt: faker.date.recent({ days: 30 }),
         }).returning();
 
@@ -1416,6 +1413,7 @@ async function seedComprehensiveData() {
           expiresAt.setHours(expiresAt.getHours() + 48); // 48 hour expiry
 
           const [verificationCode] = await db.insert(verificationCodes).values({
+            tenantId: tenant.id,
             screeningSessionId: session.id,
             code,
             type: 'pos_barcode',
