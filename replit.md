@@ -1,7 +1,7 @@
 # Aegis Platform
 
 ## Overview
-Aegis is a multi-tenant SaaS platform for pharmaceutical patient assistance programs. It enables pharmaceutical companies to manage drug programs, patient screening, and partner integrations with strict data isolation, enterprise security, and HIPAA-ready compliance using PostgreSQL's Row-Level Security (RLS). The platform includes THREE complete frontend UIs: (1) Super Admin UI for platform management, (2) Pharma Admin UI for tenant operations with visual Screener Builder, and (3) Consumer UI for patient screening. The system supports FIVE user roles with specific workflows: super_admin, pharma admin/editor/viewer, clinician (for clinical review workflows), and auditor (read-only compliance access). The platform aims to streamline patient assistance, enhance data accuracy, and ensure regulatory adherence in the pharmaceutical industry.
+Aegis is a multi-tenant SaaS platform for pharmaceutical patient assistance programs. It enables pharmaceutical companies to manage drug programs, patient screening, and partner integrations with strict data isolation, enterprise security, and HIPAA-ready compliance using PostgreSQL's Row-Level Security (RLS). The platform includes THREE complete frontend UIs: (1) Super Admin UI for platform management with comprehensive analytics dashboard, (2) Pharma Admin UI for tenant operations with visual Screener Builder, and (3) Consumer UI for patient screening. The system supports FIVE user roles with specific workflows: super_admin, pharma admin/editor/viewer, clinician (for clinical review workflows), and auditor (read-only compliance access). The platform includes comprehensive seed data with 10 major pharmaceutical companies and fully-formed screening questionnaires using standardized question types (boolean, choice, numeric).
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -24,8 +24,13 @@ The frontend is built with shadcn/ui (Radix UI primitives) and Tailwind CSS, adh
 - **Authentication**: JWT for secure, token-based authentication.
 - **Validation**: Zod for runtime type validation, integrated with Drizzle and React Hook Form.
 - **State Management**: TanStack Query for server state management.
+- **Question Types**: Standardized to boolean, choice, and numeric for consistent rendering across consumer UI and screener builder.
 
 ### Feature Specifications
+The Super Admin UI includes:
+- **Dashboard**: Six analytics cards (Total Tenants, Active Users, API Calls 24h, Total Screenings, Drug Programs, New Tenants) with six graphs (Screening Activity, API Traffic, New Tenants Growth, Screening Outcomes pie chart, additional visualizations).
+- **Tenant Management**: Full CRUD operations with company name display (Kenvue, Haleon, Pfizer, Sanofi, AstraZeneca, Merck, Eli Lilly, Bayer, AbbVie, P&G Health).
+
 The Pharma Admin UI includes comprehensive pages for:
 - **Brand Management**: CRUD operations, color picker integration, logo URL management.
 - **User Management**: Invite users with role selection (admin, editor, viewer, clinician, auditor), user listing, and pagination.
@@ -33,6 +38,7 @@ The Pharma Admin UI includes comprehensive pages for:
 - **Audit Logs**: Comprehensive viewer with filtering by entity type, action, and date range.
 - **Drug Programs**: CRUD for programs, status badges, brand configuration, and public slug management.
 - **Drug Program Detail**: Tabbed interface for overview, screener versions, and settings.
+- **Screener Builder**: Visual flow-based editor supporting three question types (boolean for Yes/No, choice for multiple options, numeric for number inputs).
 
 The Clinician UI provides specialized workflow for clinical review:
 - **Review Queue**: Filter screening sessions by program, outcome, and review status (pending/reviewed).
@@ -57,28 +63,33 @@ The Auditor UI provides read-only access to all admin pages with compliance moni
 - **Utilities**: Class Variance Authority (CVA), clsx, tailwind-merge, nanoid.
 
 ## Development & Testing
-### Seed Users
-The platform includes seed scripts to create test users for all roles:
+### Seed Data
+The platform includes comprehensive seed scripts to populate the database with realistic data:
 
 **Super Admin** (run: `npx tsx server/scripts/seed-admin.ts`):
 - Email: `admin@aegis.com`
 - Password: `admin123`
 
-**Pharma Admin, Clinician, and Auditor** (run: `npx tsx server/scripts/seed-roles.ts`):
-- **Pharma Admin**: 
-  - Email: `pharma-admin@test.com`
-  - Password: `pharma123`
-  - Tenant: Test Pharma Corp
-- **Clinician** (Clinical Reviewer):
-  - Email: `clinician@test.com`
-  - Password: `clinician123`
-  - Tenant: Test Pharma Corp
-- **Auditor** (Compliance Auditor):
-  - Email: `auditor@test.com`
-  - Password: `auditor123`
-  - Tenant: Test Pharma Corp
+**Comprehensive Seed Data** (run: `npx tsx server/scripts/seed-comprehensive.ts`):
+This script creates 10 major pharmaceutical tenants with complete data:
+- **Tenants**: Kenvue, Haleon, Pfizer, Sanofi, AstraZeneca, Merck, Eli Lilly, Bayer, AbbVie, Procter & Gamble Health
+- **Admin Users**: One admin per tenant (e.g., benjamin.serbiak@kenvue.com)
+- **Team Members**: 5-7 users per tenant with varied roles (admin, editor, viewer, clinician, auditor)
+- **Drug Programs**: One realistic program per tenant (Tylenol Sleep Rx, Advair Diskus, Viagra Connect, Cialis Daily, Crestor, Januvia, Tirzepatide, Stivarga, Botox, Metamucil)
+- **Screening Questionnaires**: Complete ACNU-style questionnaires with boolean, choice, and numeric questions
+- **Screening Sessions**: 10-20 simulated sessions per program with realistic answers and outcomes
+- **Partners**: 2 partners per tenant (retail POS and e-commerce integrations)
+- **Default Password**: `pharma123` for all pharma users
 
 ⚠️ **Security Note**: Change all passwords after first login in production environments.
+
+### Question Types
+The platform uses three standardized question types for screening questionnaires:
+- **boolean**: Yes/No questions (rendered as toggle buttons in consumer UI)
+- **choice**: Multiple choice questions with predefined options
+- **numeric**: Number input questions with optional min/max validation
+
+These types are consistent across the ScreenerJSON schema, consumer UI rendering, and screener builder visual editor.
 
 ### Key Implementation Files
 **Backend - Clinician API**:
