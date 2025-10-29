@@ -7,8 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Trash2, Plus, X } from 'lucide-react';
-import type { ScreenerNode, QuestionNodeData, OutcomeNodeData } from '@/types/screener';
+import { Trash2, Plus, X, Link2 } from 'lucide-react';
+import type { ScreenerNode, QuestionNodeData, OutcomeNodeData, EhrMapping } from '@/types/screener';
 
 interface PropertiesInspectorProps {
   selectedNode: ScreenerNode | undefined;
@@ -90,6 +90,12 @@ function QuestionProperties({
   const [options, setOptions] = useState<string[]>(data.options || []);
   const [minValue, setMinValue] = useState(data.validation?.min?.toString() || '');
   const [maxValue, setMaxValue] = useState(data.validation?.max?.toString() || '');
+  
+  // EHR Mapping state
+  const [ehrEnabled, setEhrEnabled] = useState(!!data.ehrMapping);
+  const [ehrFhirPath, setEhrFhirPath] = useState(data.ehrMapping?.fhirPath || '');
+  const [ehrDisplayName, setEhrDisplayName] = useState(data.ehrMapping?.displayName || '');
+  const [ehrRule, setEhrRule] = useState<'optional' | 'mandatory'>(data.ehrMapping?.rule || 'optional');
 
   useEffect(() => {
     setQuestionText(data.questionText);
@@ -97,6 +103,10 @@ function QuestionProperties({
     setOptions(data.options || []);
     setMinValue(data.validation?.min?.toString() || '');
     setMaxValue(data.validation?.max?.toString() || '');
+    setEhrEnabled(!!data.ehrMapping);
+    setEhrFhirPath(data.ehrMapping?.fhirPath || '');
+    setEhrDisplayName(data.ehrMapping?.displayName || '');
+    setEhrRule(data.ehrMapping?.rule || 'optional');
   }, [data]);
 
   const handleUpdate = () => {
@@ -114,6 +124,17 @@ function QuestionProperties({
         min: minValue ? parseFloat(minValue) : undefined,
         max: maxValue ? parseFloat(maxValue) : undefined,
       };
+    }
+
+    // EHR Mapping
+    if (ehrEnabled && ehrFhirPath && ehrDisplayName) {
+      updates.ehrMapping = {
+        rule: ehrRule,
+        fhirPath: ehrFhirPath,
+        displayName: ehrDisplayName,
+      };
+    } else {
+      updates.ehrMapping = undefined;
     }
 
     onUpdate(node.id, updates);
@@ -179,6 +200,84 @@ function QuestionProperties({
             data-testid="switch-required"
           />
         </div>
+
+        <Separator />
+
+        {/* EHR Integration Section */}
+        <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Link2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <CardTitle className="text-xs">EHR Integration</CardTitle>
+              </div>
+              <Switch
+                checked={ehrEnabled}
+                onCheckedChange={(checked) => {
+                  setEhrEnabled(checked);
+                  setTimeout(handleUpdate, 0);
+                }}
+                data-testid="switch-ehr-enabled"
+              />
+            </div>
+            <CardDescription className="text-xs">
+              Auto-fill from patient health records
+            </CardDescription>
+          </CardHeader>
+          {ehrEnabled && (
+            <CardContent className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="ehr-fhir-path" className="text-xs">FHIR Path *</Label>
+                <Input
+                  id="ehr-fhir-path"
+                  value={ehrFhirPath}
+                  onChange={(e) => setEhrFhirPath(e.target.value)}
+                  onBlur={handleUpdate}
+                  placeholder="e.g., Condition.diabetes"
+                  className="text-xs font-mono"
+                  data-testid="input-ehr-fhir-path"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Examples: Observation.ldl, Condition.diabetes
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="ehr-display-name" className="text-xs">Display Name *</Label>
+                <Input
+                  id="ehr-display-name"
+                  value={ehrDisplayName}
+                  onChange={(e) => setEhrDisplayName(e.target.value)}
+                  onBlur={handleUpdate}
+                  placeholder="e.g., Type 2 Diabetes Diagnosis"
+                  className="text-xs"
+                  data-testid="input-ehr-display-name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="ehr-rule" className="text-xs">Integration Rule</Label>
+                <Select
+                  value={ehrRule}
+                  onValueChange={(value) => {
+                    setEhrRule(value as 'optional' | 'mandatory');
+                    setTimeout(handleUpdate, 0);
+                  }}
+                >
+                  <SelectTrigger id="ehr-rule" className="text-xs" data-testid="select-ehr-rule">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="optional">Optional (Patient can skip)</SelectItem>
+                    <SelectItem value="mandatory">Mandatory (Required)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          )}
+        </Card>
+
+        <Separator />
 
         {data.questionType === 'choice' && (
           <div className="space-y-2">

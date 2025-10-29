@@ -117,6 +117,7 @@ export interface QuestionNodeData extends BaseNodeData {
   required: boolean;
   options?: string[];
   validation?: QuestionValidation;
+  ehrMapping?: EhrMapping; // Optional EHR integration configuration
 }
 
 /**

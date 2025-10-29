@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { HelpCircle, List, Hash, Target, Plus } from 'lucide-react';
+import { HelpCircle, List, Hash, Target, Plus, Link2, Sparkles } from 'lucide-react';
 import type { QuestionType } from '@/types/screener';
 
 interface NodePaletteProps {
@@ -17,6 +17,56 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
           Click to add nodes to your screening flow
         </p>
       </div>
+
+      {/* EHR Integration Info Card */}
+      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-full bg-blue-600 dark:bg-blue-500">
+              <Link2 className="w-3.5 h-3.5 text-white" />
+            </div>
+            <CardTitle className="text-sm flex items-center gap-1.5">
+              Connect EHR
+              <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            </CardTitle>
+          </div>
+          <CardDescription className="text-xs leading-relaxed">
+            Enable questions to auto-fill from patient health records (EHR)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="text-xs space-y-2">
+            <p className="text-muted-foreground">
+              <strong className="text-foreground">How it works:</strong>
+            </p>
+            <ul className="space-y-1 text-xs text-muted-foreground ml-3">
+              <li className="flex items-start gap-1.5">
+                <span className="text-blue-600 dark:text-blue-400 font-bold">1.</span>
+                <span>Add a question to your flow</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <span className="text-blue-600 dark:text-blue-400 font-bold">2.</span>
+                <span>Toggle on EHR Integration</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <span className="text-blue-600 dark:text-blue-400 font-bold">3.</span>
+                <span>Enter FHIR path (e.g., Condition.diabetes)</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <span className="text-blue-600 dark:text-blue-400 font-bold">4.</span>
+                <span>Patients can connect their portal to auto-fill</span>
+              </li>
+            </ul>
+          </div>
+          <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
+            <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">
+              💡 Questions with EHR integration show a "Connect My Patient Portal" option
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Separator />
 
       <Card>
         <CardHeader className="pb-3">

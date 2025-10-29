@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
-import { HelpCircle, List, Hash } from 'lucide-react';
+import { HelpCircle, List, Hash, Link2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import type { QuestionNodeData } from '@/types/screener';
 
 const questionTypeIcons = {
@@ -18,6 +19,7 @@ const questionTypeLabels = {
 export const QuestionNode = memo(({ data, selected }: NodeProps) => {
   const nodeData = data as QuestionNodeData;
   const Icon = questionTypeIcons[nodeData.questionType];
+  const hasEhrMapping = !!(nodeData.ehrMapping?.fhirPath);
 
   return (
     <div
@@ -38,14 +40,26 @@ export const QuestionNode = memo(({ data, selected }: NodeProps) => {
             <Icon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-medium text-muted-foreground mb-1">
-              {questionTypeLabels[nodeData.questionType]}
+            <div className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-2">
+              <span>{questionTypeLabels[nodeData.questionType]}</span>
+              {hasEhrMapping && (
+                <Badge variant="secondary" className="text-xs px-1.5 py-0 h-4 gap-1">
+                  <Link2 className="w-3 h-3" />
+                  EHR
+                </Badge>
+              )}
             </div>
             <div className="text-sm font-semibold line-clamp-2">
               {nodeData.questionText}
             </div>
           </div>
         </div>
+
+        {hasEhrMapping && nodeData.ehrMapping && (
+          <div className="mb-2 px-2 py-1.5 bg-blue-50 dark:bg-blue-950/30 rounded text-xs text-blue-700 dark:text-blue-300 font-mono">
+            {nodeData.ehrMapping.fhirPath}
+          </div>
+        )}
 
         <div className="mt-3 pt-3 border-t text-xs text-muted-foreground flex items-center justify-between">
           <span className="font-mono">{nodeData.questionId}</span>
