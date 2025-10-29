@@ -121,14 +121,27 @@ Example questions with EHR mapping in seed data:
 - `client/src/components/admin/PharmaAdminSidebar.tsx` - Role-based navigation
 
 **Frontend - Consumer UI & EHR Integration**:
-- `client/src/pages/public/Screener.tsx` - Main screening flow with EHR fork logic
+- `client/src/pages/public/Screener.tsx` - Main screening flow with intelligent EHR auto-fill and smart completion
+- `client/src/pages/ehr/EhrLogin.tsx` - Mock EHR provider login page (patient portal simulation)
+- `client/src/pages/ehr/EhrConsent.tsx` - HIPAA-compliant consent screen showing data sharing permissions
+- `client/src/pages/ehr/EhrShareData.tsx` - AI processing visualization with real-time data extraction animation
 - `client/src/components/consumer/EhrChoiceCard.tsx` - "The Fork" screen for EHR vs manual entry
-- `client/src/components/consumer/EhrConfirmationDialog.tsx` - EHR data confirmation dialog
+- `client/src/components/consumer/EhrConfirmationDialog.tsx` - AI-verified EHR data confirmation dialog with contextual messaging
 - `client/src/lib/ehrUtils.ts` - EHR OAuth popup handling and data fetching utilities
 
 **Backend - EHR API**:
 - `server/src/services/ehr.service.ts` - EHR OAuth flow and FHIR data parsing
 - `server/src/routes/ehr.routes.ts` - EHR API endpoints (connect, callback, data fetching)
+
+**Smart EHR Workflow**:
+The EHR integration now features intelligent auto-completion:
+1. Patient clicks "Connect My Patient Portal" on EHR-enabled questions
+2. Mock EHR flow: Login → Consent → AI Processing (with animations)
+3. AI extracts comprehensive health data (diagnoses, labs, medications, demographics)
+4. System auto-fills ALL answerable questions from EHR data
+5. If all required questions answered: Skip directly to outcome/approval
+6. If incomplete data: Continue with remaining questions manually
+7. Result: Streamlined experience that minimizes patient burden
 
 **Database Schema**:
 - `server/src/db/schema/consumer.ts` - Screening sessions with review status columns

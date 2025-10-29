@@ -118,11 +118,35 @@ export default function EhrShareData() {
       
       // Complete and redirect
       { delay: 7500, action: () => {
-        // Send message to parent window with extracted data
+        // Send message to parent window with comprehensive extracted data
+        // This simulates a complete health record extraction with AI inference
         const extractedData = {
-          asthma_copd_diagnosis: true,
+          // Demographics
           age_verified: true,
+          
+          // Medical Conditions (for Asthma/COPD programs like Advair)
+          asthma_copd_diagnosis: true,
+          rescue_inhaler_usage: 'Less than twice a week', // AI inferred from medication records
+          no_acute_attack: true, // AI inferred - not currently in ER
+          no_heart_conditions: true, // AI inferred from medical history
+          
+          // Lab Values (for Cholesterol programs like Crestor)
+          ldl_cholesterol: 145, // mg/dL
+          no_pregnancy: true,
+          no_liver_disease: true,
+          no_current_statin: true,
+          
+          // Diabetes diagnosis (for Diabetes programs like Januvia)
+          diabetes_diagnosis: true,
+          no_kidney_disease: true,
+          no_pancreatitis: true,
+          no_current_diabetes_meds: true,
+          
+          // Recent checkup
           recent_checkup: true,
+          
+          // Provider info
+          provider: 'MyHealthPortal',
         };
         
         if (window.opener) {

@@ -197,6 +197,9 @@ export default function Screener() {
       // Data returned directly from popup (AI processed)
       const ehrData = result.data;
 
+      // Store full EHR data globally for later use
+      (window as any).__ehrData = ehrData;
+
       // Extract value for current question from EHR mapping
       if (currentQuestion.ehrMapping) {
         const fhirPath = currentQuestion.ehrMapping.fhirPath;
@@ -235,18 +238,107 @@ export default function Screener() {
     setShowManualEntry(true);
   };
 
-  const handleEhrConfirm = () => {
-    // User confirmed the EHR data
-    setCurrentAnswer(ehrFetchedValue);
-    updateAnswer(currentQuestion.id, ehrFetchedValue);
-    setShowEhrConfirmation(false);
-    setShowEhrChoice(false);
-    setShowManualEntry(true);
+  const handleEhrConfirm = async () => {
+    if (!screenerEngine || !screenerConfig) return;
+
+    // User confirmed the EHR data - try to auto-fill ALL questions from EHR
+    const ehrAnswers: Record<string, any> = { ...screenerState.answers };
     
-    toast({
-      title: 'Information saved',
-      description: "We've used your health record data.",
+    // Extract the full EHR data that was returned from the popup
+    // We stored it temporarily when fetching
+    const fullEhrData = (window as any).__ehrData || {};
+    
+    // Map ALL questions with EHR mappings to their answers
+    screenerConfig.questions.forEach((question) => {
+      if (question.ehrMapping) {
+        const fhirPath = question.ehrMapping.fhirPath;
+        let value = null;
+        
+        // Map FHIR paths to extracted data fields
+        if (fhirPath === 'Condition.asthma_copd') {
+          value = fullEhrData.asthma_copd_diagnosis === true ? 'yes' : 'no';
+        } else if (fhirPath === 'Observation.ldl') {
+          value = fullEhrData.ldl_cholesterol || null;
+        } else if (fhirPath === 'Condition.diabetes') {
+          value = fullEhrData.diabetes_diagnosis === true ? 'yes' : 'no';
+        } else {
+          value = extractEhrValue(fullEhrData, fhirPath);
+        }
+        
+        if (value !== null && value !== undefined) {
+          ehrAnswers[question.id] = value;
+        }
+      }
     });
+
+    // Auto-fill common questions from EHR data using AI-inferred values
+    // Age verification (common across all programs)
+    if (fullEhrData.age_verified === true) {
+      ehrAnswers['age_check'] = 'yes';
+    }
+
+    // Advair-specific questions
+    if (fullEhrData.rescue_inhaler_usage) {
+      ehrAnswers['rescue_inhaler_freq'] = fullEhrData.rescue_inhaler_usage;
+    }
+    if (fullEhrData.no_acute_attack === true) {
+      ehrAnswers['acute_attack'] = 'no';
+    }
+    if (fullEhrData.no_heart_conditions === true) {
+      ehrAnswers['heart_conditions'] = 'no';
+    }
+
+    // Cholesterol program questions
+    if (fullEhrData.no_pregnancy === true) {
+      ehrAnswers['pregnancy_check'] = 'no';
+    }
+    if (fullEhrData.no_liver_disease === true) {
+      ehrAnswers['liver_disease'] = 'no';
+    }
+    if (fullEhrData.no_current_statin === true) {
+      ehrAnswers['current_statin'] = 'no';
+    }
+
+    // Diabetes program questions
+    if (fullEhrData.no_kidney_disease === true) {
+      ehrAnswers['kidney_check'] = 'no';
+    }
+    if (fullEhrData.no_pancreatitis === true) {
+      ehrAnswers['pancreatitis_check'] = 'no';
+    }
+    if (fullEhrData.no_current_diabetes_meds === true) {
+      ehrAnswers['current_diabetes_meds'] = 'no';
+    }
+
+    // Check if we can complete the screening with EHR data alone
+    const allQuestionsAnswered = screenerConfig.questions.every(
+      (question) => !question.required || ehrAnswers[question.id] !== undefined
+    );
+
+    if (allQuestionsAnswered) {
+      // We have enough data! Submit directly
+      setShowEhrConfirmation(false);
+      
+      toast({
+        title: '✨ Processing your information',
+        description: "We have everything we need from your health records!",
+      });
+
+      // Submit the EHR-filled answers
+      await handleSubmit(ehrAnswers);
+    } else {
+      // Not enough data - continue with regular flow but pre-fill what we have
+      setCurrentAnswer(ehrFetchedValue);
+      updateAnswer(currentQuestion.id, ehrFetchedValue);
+      setShowEhrConfirmation(false);
+      setShowEhrChoice(false);
+      setShowManualEntry(true);
+      
+      toast({
+        title: 'Information saved',
+        description: "We'll ask a few more questions to complete your screening.",
+      });
+    }
   };
 
   const handleEhrReject = () => {
