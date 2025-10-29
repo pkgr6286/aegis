@@ -55,12 +55,21 @@ if (process.env.NODE_ENV !== 'production') {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
   
-  // Serve static files from dist/client
-  app.use(express.static(join(__dirname, '../client')));
+  // Serve static files from dist/public with correct MIME types
+  app.use(express.static(join(__dirname, 'public'), {
+    setHeaders: (res, filePath) => {
+      // Set correct MIME types for JavaScript modules
+      if (filePath.endsWith('.js') || filePath.endsWith('.mjs')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      } else if (filePath.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      }
+    }
+  }));
   
   // SPA fallback: serve index.html for all non-API routes
   app.get('*', (req, res) => {
-    res.sendFile(join(__dirname, '../client/index.html'));
+    res.sendFile(join(__dirname, 'public/index.html'));
   });
 }
 
