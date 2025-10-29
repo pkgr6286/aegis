@@ -299,9 +299,9 @@ export default function Screener() {
       ehrAnswers['current_statin'] = 'no';
     }
 
-    // Diabetes program questions
+    // Diabetes program questions (Januvia)
     if (fullEhrData.no_kidney_disease === true) {
-      ehrAnswers['kidney_check'] = 'no';
+      ehrAnswers['kidney_check'] = 'No kidney disease'; // Choice question - must match exact option text
     }
     if (fullEhrData.no_pancreatitis === true) {
       ehrAnswers['pancreatitis_check'] = 'no';
