@@ -20,6 +20,15 @@ export interface QuestionValidation {
 }
 
 /**
+ * EHR Mapping Configuration for Questions
+ */
+export interface EhrMapping {
+  rule: 'optional' | 'mandatory';
+  fhirPath: string; // e.g., 'Observation.ldl', 'Condition.diabetes'
+  displayName: string; // User-friendly name for the data being requested
+}
+
+/**
  * Screener Question
  */
 export interface ScreenerQuestion {
@@ -29,6 +38,7 @@ export interface ScreenerQuestion {
   required: boolean;
   options?: string[]; // For choice questions
   validation?: QuestionValidation;
+  ehrMapping?: EhrMapping; // Optional EHR integration configuration
 }
 
 /**

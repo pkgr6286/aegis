@@ -1,0 +1,31 @@
+Okay, Project Manager hat on! To make the Aegis platform demos truly impactful, especially when showing them to potential clients (including competitors), using realistic and recognizable data is key. We need well-known pharma companies and plausible, high-impact Rx-to-OTC switch candidates that highlight the power and necessity of the Aegis ACNU platform.
+
+Here are 10 major pharmaceutical players and potential drug candidates that would create a "wow" factor in your seed data and demos. The drug selections focus on areas where an ACNU pathway (requiring digital screening like Aegis provides) would be highly likely or necessary for an OTC switch.
+
+### **Seed Data Plan: Pharma Tenants & Potential ACNU Programs**
+
+| # | Pharma Tenant (Seed Data) | Potential ACNU Drug Program (Seed Data) | Rationale for Selection (Why it's "Wow") | Implied ACNU Need |
+|---|---|---|---|---|
+| 1 | **Kenvue** (J&J Consumer Spin-off) | **"Tylenol Sleep RX Transition"** (Hypothetical: Acetaminophen + Low-Dose Doxepin OTC) | Builds on a massive existing brand (Tylenol PM). Adding a low-dose Rx component like Doxepin for sleep would absolutely require screening for contraindications (e.g., MAOIs, glaucoma). | High (Screening for drug interactions, specific conditions) |
+| 2 | **Haleon** (GSK Consumer Spin-off) | **"Advair Diskus 100/50 OTC Pilot"** (Fluticasone/Salmeterol) | Major asthma/COPD controller medication. An OTC switch, even at a low dose, would be groundbreaking and require rigorous screening for appropriate use (confirming diagnosis, severity, age, not for acute attacks). | Very High (Ensuring correct diagnosis, severity, proper inhaler technique education) |
+| 3 | **Pfizer** | **"Viagra Connect USA"** (Sildenafil 50mg OTC) | Already OTC in the UK ("Viagra Connect"). Requires screening for cardiovascular risk factors and drug interactions (nitrates). A prime, globally recognized ACNU candidate. | High (Cardiovascular screening, interaction checks) |
+| 4 | **Sanofi** | **"Cialis Daily OTC Access"** (Tadalafil 5mg OTC) | Competitor to Sildenafil for ED, also used for BPH. Similar screening needs regarding cardiovascular health and interactions. High consumer interest. | High (Cardiovascular screening, interaction checks) |
+| 5 | **AstraZeneca** | **"Crestor Direct Access"** (Rosuvastatin 5mg OTC) | **Must Include.** Based directly on their real-world TACTiC trial. Perfect showcase for Aegis, requiring lipid level input/check and cardiovascular risk assessment via the app. | Very High (Proven need for lipid check & risk assessment via app) |
+| 6 | **Merck** | **"Januvia Pre-Care"** (Hypothetical: Sitagliptin 25mg OTC) | DPP-4 inhibitor for Type 2 Diabetes. An OTC version for pre-diabetes or early management would require screening for kidney function, history of pancreatitis, and confirmation of diagnosis/A1c levels. | Very High (Requires lab value checks, specific diagnosis confirmation) |
+| 7 | **Eli Lilly** | **"Weight Journey Start"** (Hypothetical: Tirzepatide Low-Dose Pen OTC) | Based on Mounjaro/Zepbound. Extremely high "wow" factor due to public interest in GLP-1s. Would require *extensive* screening (BMI calculation, thyroid/pancreatitis history, contraindications). | Extreme (BMI calculation, extensive medical history screening) |
+| 8 | **Bayer** | **"Stivarga Prevent"** (Hypothetical: Regorafenib Low Dose - Cancer Recurrence Adjunct) | Highly speculative but represents advanced therapy moving OTC. Regorafenib is a kinase inhibitor for cancer. A *very* low-dose adjunct for *specific* post-treatment scenarios *might* be considered years down the line, requiring extremely strict ACNU (confirming cancer type, stage, treatment history, liver function). Max "wow" for complexity. | Extreme (Very complex medical history, specific diagnosis/staging) |
+| 9 | **AbbVie** | **"Botox Cosmetic Touch-Up"** (Hypothetical: OnabotulinumtoxinA Micro-dose Pen OTC - Crows Feet Only) | Lifestyle/Aesthetic drug. An OTC micro-dose pen would require age verification, screening for neuromuscular disorders, and likely a mandatory video tutorial/comprehension check on safe injection technique via the app. | High (Age verification, medical screening, mandatory training module) |
+| 10 | **P&G Health** (Procter & Gamble) | **"Metamucil Cardio+"** (Hypothetical: Psyllium + Plant Sterols + Low-Dose Rx Statin) | Combines existing OTC fiber/sterols with a low-dose statin (like Lovastatin, which was considered for OTC). Requires screening similar to Crestor (lipid levels, risk factors) but leverages P&G's deep consumer marketing expertise. | High (Lipid check, risk assessment) |
+
+**How to Use This in Your Seed Script:**
+
+1.  **Tenants:** Create these 10 companies in the `public.tenants` table.
+2.  **Users:** Create realistic admin users for each (e.g., `john.doe@pfizer.com`).
+3.  **Drug Programs:** Create these specific drug programs in `app.drug_programs`, linking them to the appropriate tenant. Define realistic `slugs`.
+4.  **Screener Versions:** For each program, create a *plausible* `screener_json` reflecting the "Implied ACNU Need." For example:
+    * **Crestor:** Include questions about age, pregnancy, liver disease, *and* a numeric input for LDL cholesterol. Define rules based on the TACTiC trial parameters.
+    * **Viagra:** Include questions about age, cardiovascular conditions (chest pain, recent heart attack), and current nitrate medication use.
+    * **Tirzepatide:** Include questions for BMI calculation (height/weight), family history of thyroid cancer, history of pancreatitis.
+5.  **Sessions & Codes:** Generate `screening_sessions` with realistic `answers_json` that would trigger different `outcomes` based on the screener logic, then generate `verification_codes` for the `ok_to_use` sessions.
+
+This set of seed data will make your demos highly relevant, instantly understandable to industry insiders, and effectively showcase the critical role Aegis plays in enabling the future of self-care for complex medications.

@@ -1,0 +1,50 @@
+Okay, Project Manager hat back on! 🎩
+
+You're absolutely right to think ahead. The previous prompt successfully implemented the EHR "Fork" logic, but we need to ensure it's applied correctly across *all* potential questionnaires, not just the LDL example.
+
+The good news is that the way we designed the `screener_json` and the backend already supports this. The `ehrMapping` object within a question's definition is the trigger. The frontend logic just needs to be robust enough to handle this for *any* question that has that mapping, not just a hardcoded "LDL" question.
+
+Here is the refined prompt for Replit AI. This prompt focuses on making the EHR "Fork" logic **dynamic and universally applicable** within the consumer UI.
+
+---
+
+**Prompt for Replit AI (Generalize EHR Fork Logic in Consumer UI):**
+
+Excellent work implementing the EHR "Fast Path" choice screen ("The Fork") and its associated logic in the `frontend/consumer-ui`.
+
+Now, we need to ensure this functionality is **dynamic and works correctly for *any* question** configured to use EHR data, not just the specific LDL example we might have focused on initially.
+
+**Task:** Review and refine the `Screener.tsx` component (or the relevant component rendering questions) to ensure the EHR "Fork" logic is universally applied based on the `screener_json` configuration.
+
+**Specific Requirements:**
+
+1.  **Dynamic Trigger:**
+    * Confirm that the logic to display the "Data Entry Choice Screen (The Fork)" is triggered *solely* by the presence and configuration of the `ehrMapping` object within the *current* question's definition in the `screener_json`.
+    * It should **not** be hardcoded to only appear for a specific question ID (like "ldl_check").
+2.  **Generic Data Handling:**
+    * Ensure the process for fetching EHR data (`GET /api/v1/public/sessions/:id/ehr-data`) and displaying it for confirmation is generic.
+    * The confirmation prompt should dynamically use the `question.text` from the `screener_json` (e.g., "We found your [Question Text]: [Value]. Is it OK to use this?").
+    * When the user confirms "Yes," the fetched value should be stored correctly as the answer for the *current* question ID.
+3.  **Contextual Prompting:**
+    * The text on the "Data Entry Choice Screen (The Fork)" should ideally reflect the current question (e.g., "To continue, we need your [Question Text]").
+4.  **Support Diverse Data Types:**
+    * While the initial examples focused on numeric data (LDL), ensure the EHR data fetching and confirmation logic can gracefully handle other potential data types that might come from EHR (e.g., Yes/No for diagnoses, lists of medications). The backend's `ehrService` and `_parseFhirBundle` function were designed with this in mind (parsing LDL and medications); the frontend confirmation step should be adaptable. If the fetched data is complex (like a list), the confirmation might simply be "We found information about your [Medications/Conditions]. Is it OK to use this to help answer the next questions?" or similar, before proceeding.
+
+**Examples of Questions This Should Now Handle (Based on our defined questionnaires):**
+
+* `ldl_check` (Numeric - Rosuvastatin)
+* `diagnosis_check` (Yes/No - Sitagliptin)
+* `kidney_check` (Yes/No/Unsure - Sitagliptin)
+* `bmi_check` (Calculated Numeric - Tirzepatide)
+* `thyroid_cancer_check` (Yes/No/Unsure - Tirzepatide)
+* `cancer_type_check` (Yes/No - Regorafenib)
+* `treatment_history_check` (Yes/No - Regorafenib)
+* `liver_function_check` (Yes/No/Unsure - Regorafenib)
+* (And potentially medication checks for interaction screeners)
+
+**Final Instructions:**
+* Review the `frontend/consumer-ui` screener rendering logic.
+* Refactor if necessary to ensure the EHR "Fork" screen appears dynamically based *only* on the `ehrMapping` config in the `screener_json`.
+* Ensure the data fetching, confirmation, and answer-setting steps are generic and handle different potential data types gracefully.
+
+Please update the relevant React components to make the EHR integration universally applicable as designed.

@@ -1,0 +1,244 @@
+Okay, Project Manager hat back on\! To make the seed data truly compelling, we need realistic screening questionnaires for those 10 "wow factor" drug programs.
+
+Here are draft questionnaires for each, designed to be plausible for an ACNU scenario and easily translatable into the `screener_json` format used by the Aegis platform. They include question types, key logic, and outcome mapping.
+
+*(Assume standard introductory text like "This screening helps determine if [Product Name] OTC is appropriate for you. Please answer honestly." precedes each questionnaire.)*
+
+-----
+
+**1. Kenvue - "Tylenol Sleep RX Transition" (Acetaminophen + Low-Dose Doxepin OTC)**
+
+  * **Default Outcome:** `ask_a_doctor`
+
+<!-- end list -->
+
+1.  **Q1 (ID: age\_check)**
+      * **Text:** Are you 18 years of age or older?
+      * **Type:** Yes/No
+      * **Logic:** If NO -\> `do_not_use`. If YES -\> Q2.
+2.  **Q2 (ID: pregnancy\_check)**
+      * **Text:** Are you currently pregnant, planning to become pregnant, or breastfeeding?
+      * **Type:** Yes/No
+      * **Logic:** If YES -\> `do_not_use`. If NO -\> Q3.
+3.  **Q3 (ID: maoi\_check)**
+      * **Text:** Have you taken a Monoamine Oxidase Inhibitor (MAOI) antidepressant (e.g., Phenelzine, Tranylcypromine) in the last 14 days? (If unsure, select Yes)
+      * **Type:** Yes/No
+      * **Logic:** If YES -\> `do_not_use`. If NO -\> Q4.
+4.  **Q4 (ID: glaucoma\_check)**
+      * **Text:** Do you have narrow-angle glaucoma or severe urinary retention?
+      * **Type:** Yes/No
+      * **Logic:** If YES -\> `do_not_use`. If NO -\> Q5.
+5.  **Q5 (ID: other\_sleep\_meds)**
+      * **Text:** Are you currently taking any other prescription or OTC sleep medication?
+      * **Type:** Yes/No
+      * **Logic:** If YES -\> `ask_a_doctor`. If NO -\> `ok_to_use`.
+
+-----
+
+**2. Haleon - "Advair Diskus 100/50 OTC Pilot" (Fluticasone/Salmeterol)**
+
+  * **Default Outcome:** `ask_a_doctor`
+
+<!-- end list -->
+
+1.  **Q1 (ID: age\_check)**
+      * **Text:** Are you 18 years of age or older?
+      * **Type:** Yes/No
+      * **Logic:** If NO -\> `do_not_use`. If YES -\> Q2.
+2.  **Q2 (ID: diagnosis\_check)**
+      * **Text:** Has a doctor diagnosed you with Asthma or COPD?
+      * **Type:** Yes/No
+      * **Logic:** If NO -\> `do_not_use`. If YES -\> Q3.
+3.  **Q3 (ID: rescue\_inhaler\_freq)**
+      * **Text:** How often do you typically use your rescue inhaler (e.g., Albuterol) for sudden symptoms?
+      * **Type:** Multiple Choice (Less than twice a week, 2-3 times a week, Most days, Multiple times a day)
+      * **Logic:** If "Multiple times a day" -\> `ask_a_doctor`. Otherwise -\> Q4.
+4.  **Q4 (ID: acute\_attack)**
+      * **Text:** Are you currently experiencing a severe asthma attack or sudden worsening of breathing? (This medication is NOT for rescue use).
+      * **Type:** Yes/No
+      * **Logic:** If YES -\> `do_not_use` (with added text: "Use your rescue inhaler and seek medical attention if needed."). If NO -\> Q5.
+5.  **Q5 (ID: heart\_conditions)**
+      * **Text:** Do you have any heart conditions (like high blood pressure or irregular heartbeat)?
+      * **Type:** Yes/No
+      * **Logic:** If YES -\> `ask_a_doctor`. If NO -\> `ok_to_use`.
+        *(Note: A real version would likely include a mandatory video/comprehension check on inhaler technique)*
+
+-----
+
+**3. Pfizer - "Viagra Connect USA" (Sildenafil 50mg OTC)**
+
+  * **Default Outcome:** `ask_a_doctor`
+
+<!-- end list -->
+
+1.  **Q1 (ID: age\_check)**
+      * **Text:** Are you male and 18 years of age or older?
+      * **Type:** Yes/No
+      * **Logic:** If NO -\> `do_not_use`. If YES -\> Q2.
+2.  **Q2 (ID: indication\_check)**
+      * **Text:** Are you seeking this medication to treat symptoms of erectile dysfunction (difficulty getting or keeping an erection)?
+      * **Type:** Yes/No
+      * **Logic:** If NO -\> `do_not_use`. If YES -\> Q3.
+3.  **Q3 (ID: nitrates\_check)**
+      * **Text:** Are you currently taking ANY form of nitrate medication (e.g., nitroglycerin for chest pain, amyl nitrite "poppers")? (Taking Viagra with nitrates can cause a dangerous drop in blood pressure).
+      * **Type:** Yes/No
+      * **Logic:** If YES -\> `do_not_use`. If NO -\> Q4.
+4.  **Q4 (ID: heart\_health\_check)**
+      * **Text:** Has a doctor advised you that sexual activity is inadvisable due to heart problems? Or have you experienced chest pain during sex in the last 6 months?
+      * **Type:** Yes/No
+      * **Logic:** If YES -\> `do_not_use`. If NO -\> Q5.
+5.  **Q5 (ID: severe\_conditions)**
+      * **Text:** Do you have severe liver or kidney problems, low blood pressure, or have you had a recent heart attack or stroke (within 6 months)?
+      * **Type:** Yes/No
+      * **Logic:** If YES -\> `do_not_use`. If NO -\> Q6.
+6.  **Q6 (ID: other\_ed\_meds)**
+      * **Text:** Are you taking any other medications for erectile dysfunction (prescription or otherwise)?
+      * **Type:** Yes/No
+      * **Logic:** If YES -\> `ask_a_doctor`. If NO -\> `ok_to_use`.
+
+-----
+
+**4. Sanofi - "Cialis Daily OTC Access" (Tadalafil 5mg OTC)**
+
+  * **Default Outcome:** `ask_a_doctor`
+    *(This would be very similar to Viagra, focusing on nitrates and cardiovascular health)*
+
+<!-- end list -->
+
+1.  **Q1 (ID: age\_check)** - Male, 18+? (If NO -\> `do_not_use`) -\> Q2
+2.  **Q2 (ID: indication\_check)** - Seeking for ED or BPH symptoms? (If NO -\> `do_not_use`) -\> Q3
+3.  **Q3 (ID: nitrates\_check)** - Taking nitrates? (If YES -\> `do_not_use`) -\> Q4
+4.  **Q4 (ID: heart\_health\_check)** - Advised against sexual activity or recent chest pain? (If YES -\> `do_not_use`) -\> Q5
+5.  **Q5 (ID: severe\_conditions)** - Severe liver/kidney, low BP, recent heart attack/stroke? (If YES -\> `do_not_use`) -\> Q6
+6.  **Q6 (ID: alpha\_blocker\_check)** - Taking alpha-blockers (e.g., for BPH or high blood pressure)? (If YES -\> `ask_a_doctor`) -\> Q7
+7.  **Q7 (ID: other\_ed\_meds)** - Taking other ED meds? (If YES -\> `ask_a_doctor`) -\> `ok_to_use`.
+
+-----
+
+**5. AstraZeneca - "Crestor Direct Access" (Rosuvastatin 5mg OTC)**
+
+  * **Default Outcome:** `ask_a_doctor`
+    *(Based on TACTiC Trial logic)*
+
+<!-- end list -->
+
+1.  **Q1 (ID: age\_check)** - 18+? (If NO -\> `do_not_use`) -\> Q2
+2.  **Q2 (ID: pregnancy\_check)** - Pregnant, planning, breastfeeding? (If YES -\> `do_not_use`) -\> Q3
+3.  **Q3 (ID: liver\_disease)** - Active liver disease or unexplained persistent elevated liver enzymes? (If YES -\> `do_not_use`) -\> Q4
+4.  **Q4 (ID: current\_statin)** - Currently taking another statin or cholesterol-lowering prescription med? (If YES -\> `do_not_use`) -\> Q5
+5.  **Q5 (ID: ldl\_check) [EHR Optional]**
+      * **Text:** What is your most recent LDL ("bad") cholesterol level (mg/dL)? (If unsure, select "I don't know").
+      * **Type:** Numeric Input / Choice ("I don't know")
+      * **EHR:** Map to LOINC 2093-3, Rule: Optional
+      * **Logic:** If "I don't know" OR LDL \< 130 OR LDL \> 190 -\> `ask_a_doctor`. If 130 \<= LDL \<= 190 -\> Q6.
+6.  **Q6 (ID: risk\_factors)**
+      * **Text:** Do you have any of the following cardiovascular risk factors: High blood pressure, Diabetes, Smoker, Family history of early heart disease?
+      * **Type:** Multiple Select (Check all that apply) / None
+      * **Logic:** (Simplified logic based on TACTiC) If LDL is 130-159 AND at least 1 risk factor -\> `ok_to_use`. If LDL is 160-190 (regardless of risk factors) -\> `ok_to_use`. Otherwise -\> `ask_a_doctor`.
+
+-----
+
+**6. Merck - "Januvia Pre-Care" (Sitagliptin 25mg OTC)**
+
+  * **Default Outcome:** `do_not_use` (High caution needed)
+
+<!-- end list -->
+
+1.  **Q1 (ID: age\_check)** - 18+? (If NO -\> `do_not_use`) -\> Q2
+2.  **Q2 (ID: diagnosis\_check) [EHR Recommended]**
+      * **Text:** Has a doctor diagnosed you with Type 2 Diabetes or Pre-diabetes based on an A1c test?
+      * **Type:** Yes/No
+      * **Logic:** If NO -\> `do_not_use`. If YES -\> Q3.
+3.  **Q3 (ID: kidney\_check) [EHR Recommended]**
+      * **Text:** Do you have moderate to severe kidney disease? (e.g., eGFR \< 45)
+      * **Type:** Yes/No/Unsure
+      * **Logic:** If YES or Unsure -\> `do_not_use`. If NO -\> Q4.
+4.  **Q4 (ID: pancreatitis\_check)**
+      * **Text:** Have you ever had pancreatitis (inflammation of the pancreas)?
+      * **Type:** Yes/No
+      * **Logic:** If YES -\> `do_not_use`. If NO -\> Q5.
+5.  **Q5 (ID: current\_diabetes\_meds)**
+      * **Text:** Are you currently taking insulin or any other prescription medication for diabetes?
+      * **Type:** Yes/No
+      * **Logic:** If YES -\> `do_not_use`. If NO -\> `ok_to_use`.
+
+-----
+
+**7. Eli Lilly - "Weight Journey Start" (Tirzepatide Low-Dose Pen OTC)**
+
+  * **Default Outcome:** `do_not_use` (Very high caution)
+
+<!-- end list -->
+
+1.  **Q1 (ID: age\_check)** - 18+? (If NO -\> `do_not_use`) -\> Q2
+2.  **Q2 (ID: bmi\_check) [EHR Optional]**
+      * **Text:** Please enter your Height and Weight for BMI calculation.
+      * **Type:** Numeric Inputs (Height ft/in or cm, Weight lbs or kg)
+      * **Logic:** Calculate BMI. If BMI \< 27 -\> `do_not_use`. If BMI \>= 27 -\> Q3.
+3.  **Q3 (ID: thyroid\_cancer\_check)**
+      * **Text:** Do you or any family members have a history of Medullary Thyroid Carcinoma (MTC) or Multiple Endocrine Neoplasia syndrome type 2 (MEN 2)?
+      * **Type:** Yes/No/Unsure
+      * **Logic:** If YES or Unsure -\> `do_not_use`. If NO -\> Q4.
+4.  **Q4 (ID: pancreatitis\_check)** - History of pancreatitis? (If YES -\> `do_not_use`) -\> Q5
+5.  **Q5 (ID: kidney\_check)** - Severe kidney problems or on dialysis? (If YES -\> `do_not_use`) -\> Q6
+6.  **Q6 (ID: pregnancy\_check)** - Pregnant, planning, breastfeeding? (If YES -\> `do_not_use`) -\> Q7
+7.  **Q7 (ID: other\_glp1\_check)** - Currently using other GLP-1 agonists (e.g., Ozempic, Wegovy, Mounjaro, insulin)? (If YES -\> `do_not_use`) -\> `ok_to_use`.
+    *(Note: Would need mandatory training/comprehension on injection technique)*
+
+-----
+
+**8. Bayer - "Stivarga Prevent" (Regorafenib Low Dose - Cancer Recurrence Adjunct)**
+
+  * **Default Outcome:** `do_not_use` (Extremely high caution - Highly specialized use case)
+
+<!-- end list -->
+
+1.  **Q1 (ID: age\_check)** - 18+? (If NO -\> `do_not_use`) -\> Q2
+2.  **Q2 (ID: cancer\_type\_check) [EHR Mandatory Recommended]**
+      * **Text:** Have you been previously diagnosed and successfully treated (currently in remission) for [Specific Cancer Type, e.g., Colorectal Cancer Stage III]?
+      * **Type:** Yes/No
+      * **Logic:** If NO -\> `do_not_use`. If YES -\> Q3.
+3.  **Q3 (ID: treatment\_history\_check) [EHR Mandatory Recommended]**
+      * **Text:** Did you complete your primary treatment [e.g., surgery + adjuvant chemo] between X and Y months ago?
+      * **Type:** Yes/No
+      * **Logic:** If NO -\> `do_not_use`. If YES -\> Q4.
+4.  **Q4 (ID: liver\_function\_check) [EHR Mandatory Recommended]**
+      * **Text:** Have your recent liver function tests (AST/ALT) been within the normal range?
+      * **Type:** Yes/No/Unsure
+      * **Logic:** If NO or Unsure -\> `do_not_use`. If YES -\> Q5.
+5.  **Q5 (ID: contraindications\_check)** - Severe bleeding disorders, high blood pressure, recent surgery? (If YES -\> `do_not_use`) -\> `ok_to_use`.
+
+-----
+
+**9. AbbVie - "Botox Cosmetic Touch-Up" (OnabotulinumtoxinA Micro-dose Pen OTC)**
+
+  * **Default Outcome:** `ask_a_doctor`
+
+<!-- end list -->
+
+1.  **Q1 (ID: age\_check)** - Are you between 25 and 65 years old? (If NO -\> `do_not_use`) -\> Q2
+2.  **Q2 (ID: indication\_check)** - Are you seeking this product *only* to temporarily improve the appearance of moderate to severe crow's feet lines? (If NO -\> `do_not_use`) -\> Q3
+3.  **Q3 (ID: neuro\_disorder\_check)** - Do you have any neuromuscular disorder (e.g., ALS, myasthenia gravis, Lambert-Eaton syndrome)? (If YES -\> `do_not_use`) -\> Q4
+4.  **Q4 (ID: skin\_infection\_check)** - Do you have a skin infection at the planned injection site? (If YES -\> `do_not_use`) -\> Q5
+5.  **Q5 (ID: allergy\_check)** - Are you allergic to botulinum toxin products or any ingredients in this product? (If YES -\> `do_not_use`) -\> Q6
+6.  **Q6 (ID: pregnancy\_check)** - Pregnant, planning, breastfeeding? (If YES -\> `do_not_use`) -\> *Mandatory Training Module*.
+7.  **Training Module (ID: injection\_training)** - Requires watching a video on safe injection technique and passing a comprehension check. (If FAIL -\> `ask_a_doctor`). If PASS -\> `ok_to_use`.
+
+-----
+
+**10. P\&G Health - "Metamucil Cardio+" (Psyllium + Sterols + Low-Dose Rx Statin)**
+\* **Default Outcome:** `ask_a_doctor`
+*(Logic similar to Crestor, focusing on LDL and risk factors)*
+
+```
+1.  **Q1 (ID: age_check)** - 18+? (If NO -> `do_not_use`) -> Q2
+2.  **Q2 (ID: pregnancy_check)** - Pregnant, planning, breastfeeding? (If YES -> `do_not_use`) -> Q3
+3.  **Q3 (ID: liver_disease)** - Active liver disease? (If YES -> `do_not_use`) -> Q4
+4.  **Q4 (ID: current_statin)** - Currently taking another statin? (If YES -> `do_not_use`) -> Q5
+5.  **Q5 (ID: ldl_check) [EHR Optional]** - LDL level between 130-190 mg/dL? (If NO or Unsure -> `ask_a_doctor`) -> Q6
+6.  **Q6 (ID: risk_factors)** - Cardiovascular risk factors (High BP, Diabetes, Smoker, Family Hx)? (Logic: If LDL 130-159 AND >=1 risk factor -> `ok_to_use`. If LDL 160-190 -> `ok_to_use`. Else -> `ask_a_doctor`).
+```
+
+-----
+
+These questionnaires provide a realistic starting point for your seed data and demos, showcasing how Aegis handles different levels of complexity and safety requirements. Remember, these are simplified and hypothetical; real-world versions would be developed with extensive clinical and regulatory input.
