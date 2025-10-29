@@ -3,7 +3,7 @@ import { Node, Edge } from '@xyflow/react';
 /**
  * Screener Question Types
  */
-export type QuestionType = 'boolean' | 'choice' | 'numeric';
+export type QuestionType = 'boolean' | 'choice' | 'numeric' | 'diagnostic_test';
 
 /**
  * Screener Outcome Types

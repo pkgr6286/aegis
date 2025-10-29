@@ -146,6 +146,16 @@ export const choiceAnswerSchema = z.string({
   required_error: 'Please select an option',
 }).min(1, 'Please select an option');
 
+export const diagnosticTestAnswerSchema = z.object({
+  hasTest: z.boolean({
+    required_error: 'Please confirm if you have diagnostic test results',
+  }),
+  testName: z.string().optional(),
+  testDate: z.string().optional(),
+  result: z.string().optional(),
+  uploadUrl: z.string().url().optional().or(z.literal('')),
+});
+
 /**
  * Dynamic answer schema creator based on question type
  */
@@ -166,6 +176,8 @@ export function createAnswerSchema(questionType: string, min?: number, max?: num
       return textAnswerSchema;
     case 'choice':
       return choiceAnswerSchema;
+    case 'diagnostic_test':
+      return diagnosticTestAnswerSchema;
     default:
       return z.any();
   }
@@ -175,3 +187,4 @@ export type BooleanAnswer = z.infer<typeof booleanAnswerSchema>;
 export type NumericAnswer = z.infer<typeof numericAnswerSchema>;
 export type TextAnswer = z.infer<typeof textAnswerSchema>;
 export type ChoiceAnswer = z.infer<typeof choiceAnswerSchema>;
+export type DiagnosticTestAnswer = z.infer<typeof diagnosticTestAnswerSchema>;
