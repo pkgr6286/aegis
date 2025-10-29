@@ -39,6 +39,7 @@ export interface ScreenerQuestion {
   options?: string[]; // For choice questions
   validation?: QuestionValidation;
   ehrMapping?: EhrMapping; // Optional EHR integration configuration
+  testType?: string; // For diagnostic_test questions - type of test required
 }
 
 /**
@@ -118,6 +119,7 @@ export interface QuestionNodeData extends BaseNodeData {
   options?: string[];
   validation?: QuestionValidation;
   ehrMapping?: EhrMapping; // Optional EHR integration configuration
+  testType?: string; // For diagnostic_test questions - type of test required
 }
 
 /**

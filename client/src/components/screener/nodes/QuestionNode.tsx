@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
-import { HelpCircle, List, Hash, Link2 } from 'lucide-react';
+import { HelpCircle, List, Hash, Link2, FlaskConical } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { QuestionNodeData } from '@/types/screener';
 
@@ -8,12 +8,14 @@ const questionTypeIcons = {
   boolean: HelpCircle,
   choice: List,
   numeric: Hash,
+  diagnostic_test: FlaskConical,
 };
 
 const questionTypeLabels = {
   boolean: 'Yes/No',
   choice: 'Multiple Choice',
   numeric: 'Numeric',
+  diagnostic_test: 'Diagnostic Test',
 };
 
 export const QuestionNode = memo(({ data, selected }: NodeProps) => {

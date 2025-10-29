@@ -90,6 +90,7 @@ function QuestionProperties({
   const [options, setOptions] = useState<string[]>(data.options || []);
   const [minValue, setMinValue] = useState(data.validation?.min?.toString() || '');
   const [maxValue, setMaxValue] = useState(data.validation?.max?.toString() || '');
+  const [testType, setTestType] = useState(data.testType || '');
   
   // EHR Mapping state
   const [ehrEnabled, setEhrEnabled] = useState(!!data.ehrMapping);
@@ -103,6 +104,7 @@ function QuestionProperties({
     setOptions(data.options || []);
     setMinValue(data.validation?.min?.toString() || '');
     setMaxValue(data.validation?.max?.toString() || '');
+    setTestType(data.testType || '');
     setEhrEnabled(!!data.ehrMapping);
     setEhrFhirPath(data.ehrMapping?.fhirPath || '');
     setEhrDisplayName(data.ehrMapping?.displayName || '');
@@ -124,6 +126,10 @@ function QuestionProperties({
         min: minValue ? parseFloat(minValue) : undefined,
         max: maxValue ? parseFloat(maxValue) : undefined,
       };
+    }
+
+    if (data.questionType === 'diagnostic_test') {
+      updates.testType = testType;
     }
 
     // EHR Mapping
@@ -354,6 +360,24 @@ function QuestionProperties({
                 />
               </div>
             </div>
+          </div>
+        )}
+
+        {data.questionType === 'diagnostic_test' && (
+          <div className="space-y-2">
+            <Label htmlFor="test-type" className="text-xs">Test Type</Label>
+            <Input
+              id="test-type"
+              value={testType}
+              onChange={(e) => setTestType(e.target.value)}
+              onBlur={handleUpdate}
+              placeholder="e.g., Blood test for cholesterol, Pregnancy test"
+              className="text-sm"
+              data-testid="input-test-type"
+            />
+            <p className="text-xs text-muted-foreground">
+              Specify the type of diagnostic test required for ACNU compliance
+            </p>
           </div>
         )}
       </div>

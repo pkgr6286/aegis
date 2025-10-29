@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { HelpCircle, List, Hash, Target, Plus, Link2, Sparkles } from 'lucide-react';
+import { HelpCircle, List, Hash, Target, Plus, Link2, Sparkles, FlaskConical } from 'lucide-react';
 import type { QuestionType } from '@/types/screener';
 
 interface NodePaletteProps {
@@ -109,6 +109,18 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
           >
             <Hash className="w-4 h-4" />
             <span className="flex-1 text-left">Numeric</span>
+            <Plus className="w-3 h-3 opacity-50" />
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-start gap-2"
+            onClick={() => onAddNode('question', 'diagnostic_test')}
+            data-testid="button-add-diagnostic-test"
+          >
+            <FlaskConical className="w-4 h-4" />
+            <span className="flex-1 text-left">Diagnostic Test</span>
             <Plus className="w-3 h-3 opacity-50" />
           </Button>
         </CardContent>
