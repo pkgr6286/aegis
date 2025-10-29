@@ -10,6 +10,19 @@ deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
 run = ["npm", "run", "start"]
 
+[[deployment.responseHeaders]]
+path = "/**.js"
+name = "Content-Type"
+value = "application/javascript"
+[[deployment.responseHeaders]]
+path = "/**.mjs"
+name = "Content-Type"
+value = "application/javascript"
+[[deployment.responseHeaders]]
+path = "/**.css"
+name = "Content-Type"
+value = "text/css"
+
 [[ports]]
 localPort = 5000
 externalPort = 80
