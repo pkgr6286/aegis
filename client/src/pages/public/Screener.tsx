@@ -180,10 +180,10 @@ export default function Screener() {
     }
 
     try {
-      // Open OAuth popup
-      const success = await openEhrOAuthPopup(sessionId, sessionToken);
+      // Open OAuth popup and get data
+      const result = await openEhrOAuthPopup(sessionId, sessionToken);
       
-      if (!success) {
+      if (!result.success || !result.data) {
         // User closed popup or OAuth failed
         toast({
           title: 'Connection cancelled',
@@ -194,26 +194,28 @@ export default function Screener() {
         return;
       }
 
-      // Fetch EHR data
-      const ehrData = await fetchEhrData(sessionId, sessionToken);
-      
-      if (!ehrData) {
-        toast({
-          variant: 'destructive',
-          title: 'No data found',
-          description: 'Could not retrieve health records. Please enter manually.',
-        });
-        setShowEhrChoice(false);
-        setShowManualEntry(true);
-        return;
-      }
+      // Data returned directly from popup (AI processed)
+      const ehrData = result.data;
 
-      // Extract value for current question
+      // Extract value for current question from EHR mapping
       if (currentQuestion.ehrMapping) {
-        const value = extractEhrValue(ehrData, currentQuestion.ehrMapping.fhirPath);
+        const fhirPath = currentQuestion.ehrMapping.fhirPath;
+        
+        // Map FHIR paths to extracted data fields
+        let value = null;
+        if (fhirPath === 'Condition.asthma_copd') {
+          value = ehrData.asthma_copd_diagnosis === true ? 'yes' : 'no';
+        } else if (fhirPath === 'Observation.ldl') {
+          value = ehrData.ldl_cholesterol || null;
+        } else if (fhirPath === 'Condition.diabetes') {
+          value = ehrData.diabetes_diagnosis === true ? 'yes' : 'no';
+        } else {
+          // Fallback to generic extraction
+          value = extractEhrValue(ehrData, fhirPath);
+        }
         
         setEhrFetchedValue(value);
-        setEhrProviderName(ehrData.providerName || 'your health provider');
+        setEhrProviderName(ehrData.provider || 'MyHealthPortal');
         setShowEhrConfirmation(true);
       }
     } catch (error) {

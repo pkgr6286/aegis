@@ -21,6 +21,11 @@ import Screener from "@/pages/public/Screener";
 import Outcome from "@/pages/public/Outcome";
 import VerificationCode from "@/pages/public/VerificationCode";
 
+// EHR Integration Pages (Public)
+import EhrLogin from "@/pages/ehr/EhrLogin";
+import EhrConsent from "@/pages/ehr/EhrConsent";
+import EhrShareData from "@/pages/ehr/EhrShareData";
+
 // Super Admin Pages
 import SuperAdminDashboard from "@/pages/Dashboard";
 import TenantManagement from "@/pages/TenantManagement";
@@ -158,6 +163,11 @@ function Router() {
       <Route path="/screen/:slug/questions" component={Screener} />
       <Route path="/screen/:slug/outcome" component={Outcome} />
       <Route path="/screen/:slug/code" component={VerificationCode} />
+
+      {/* EHR Integration Flow (Public) */}
+      <Route path="/ehr/login" component={EhrLogin} />
+      <Route path="/ehr/consent" component={EhrConsent} />
+      <Route path="/ehr/share-data" component={EhrShareData} />
       
       {/* Account Profile (Protected) */}
       <Route path="/account/profile" component={AccountProfile} />

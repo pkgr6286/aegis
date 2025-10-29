@@ -7,50 +7,44 @@ import type { GetEhrConnectResponse, GetEhrDataResponse } from '@/types/consumer
 
 /**
  * Open EHR OAuth popup and wait for authorization
- * Returns true if successful, false if user closed popup or error occurred
+ * Returns { success: boolean, data?: any } with extracted EHR data if successful
  */
 export async function openEhrOAuthPopup(
   sessionId: string,
   sessionToken: string
-): Promise<boolean> {
+): Promise<{ success: boolean; data?: any }> {
   try {
-    // Get the EHR connect URL from backend
-    const response = await fetch(`/api/v1/public/sessions/${sessionId}/ehr/connect`, {
-      headers: {
-        'Authorization': `Bearer ${sessionToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to get EHR connect URL');
-    }
-
-    const data: GetEhrConnectResponse = await response.json();
-    const { connectUrl } = data;
+    // Build EHR login URL with session context
+    const ehrProvider = 'MyHealthPortal'; // Could be configurable
+    const redirectUri = window.location.origin;
+    const loginUrl = `/ehr/login?session_id=${sessionId}&redirect_uri=${encodeURIComponent(redirectUri)}&provider=${ehrProvider}`;
 
     // Open OAuth popup window
     const popup = window.open(
-      connectUrl,
+      loginUrl,
       'ehr-oauth',
-      'width=600,height=700,left=100,top=100'
+      'width=600,height=800,left=100,top=50'
     );
 
     if (!popup) {
       throw new Error('Popup blocked - please allow popups for this site');
     }
 
-    // Wait for OAuth success message or popup close
-    return new Promise<boolean>((resolve) => {
+    // Wait for OAuth success message with data or popup close
+    return new Promise<{ success: boolean; data?: any }>((resolve) => {
       let resolved = false;
 
       // Listen for success message from popup
       const messageHandler = (event: MessageEvent) => {
-        if (event.data === 'ehr-auth-success') {
+        // Ensure message is from the same origin
+        if (event.origin !== window.location.origin) return;
+
+        if (event.data?.type === 'EHR_AUTH_SUCCESS') {
           if (!resolved) {
             resolved = true;
             window.removeEventListener('message', messageHandler);
             clearInterval(popupChecker);
-            resolve(true);
+            resolve({ success: true, data: event.data.data });
           }
         }
       };
@@ -63,7 +57,7 @@ export async function openEhrOAuthPopup(
           resolved = true;
           window.removeEventListener('message', messageHandler);
           clearInterval(popupChecker);
-          resolve(false);
+          resolve({ success: false });
         }
       }, 500);
 
@@ -76,13 +70,13 @@ export async function openEhrOAuthPopup(
           if (!popup.closed) {
             popup.close();
           }
-          resolve(false);
+          resolve({ success: false });
         }
       }, 5 * 60 * 1000);
     });
   } catch (error) {
     console.error('EHR OAuth popup error:', error);
-    return false;
+    return { success: false };
   }
 }
 
