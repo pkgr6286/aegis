@@ -24,7 +24,7 @@ The frontend is built with shadcn/ui (Radix UI primitives) and Tailwind CSS, adh
 - **Authentication**: JWT for secure, token-based authentication.
 - **Validation**: Zod for runtime type validation, integrated with Drizzle and React Hook Form.
 - **State Management**: TanStack Query for server state management.
-- **Question Types**: Standardized to boolean, choice, and numeric for consistent rendering across consumer UI and screener builder.
+- **Question Types**: Standardized to boolean, choice, numeric, and diagnostic_test for consistent rendering across consumer UI and screener builder. Diagnostic tests are used for ACNU compliance when OTC-switched drugs require lab results or medical test documentation.
 
 ### Feature Specifications
 The Super Admin UI includes:
@@ -38,7 +38,7 @@ The Pharma Admin UI includes comprehensive pages for:
 - **Audit Logs**: Comprehensive viewer with filtering by entity type, action, and date range.
 - **Drug Programs**: CRUD for programs, status badges, brand configuration, and public slug management.
 - **Drug Program Detail**: Tabbed interface for overview, screener versions, and settings.
-- **Screener Builder**: Visual flow-based editor supporting three question types (boolean for Yes/No, choice for multiple options, numeric for number inputs) with interactive preview mode.
+- **Screener Builder**: Visual flow-based editor supporting four question types (boolean for Yes/No, choice for multiple options, numeric for number inputs, diagnostic_test for lab/medical test requirements) with interactive preview mode and EHR configuration.
 
 The Consumer UI provides patient-facing screening experience:
 - **EHR Fast Path**: Optional EHR integration allowing patients to auto-fill health data from their patient portal via OAuth
@@ -91,12 +91,13 @@ This script creates 10 major pharmaceutical tenants with complete data:
 ⚠️ **Security Note**: Change all passwords after first login in production environments.
 
 ### Question Types
-The platform uses three standardized question types for screening questionnaires:
+The platform uses four standardized question types for screening questionnaires:
 - **boolean**: Yes/No questions (rendered as toggle buttons in consumer UI)
 - **choice**: Multiple choice questions with predefined options
 - **numeric**: Number input questions with optional min/max validation
+- **diagnostic_test**: Lab test or medical diagnostic requirements for ACNU compliance (captures test name, date, result, and optional document upload)
 
-These types are consistent across the ScreenerJSON schema, consumer UI rendering, and screener builder visual editor.
+These types are consistent across the ScreenerJSON schema, consumer UI rendering, and screener builder visual editor. Diagnostic test questions support collecting structured information about required medical tests (e.g., pregnancy tests, cholesterol panels) for OTC-switched medications.
 
 ### EHR Integration
 Questions can be configured with optional EHR mapping to enable automatic data fetching from patient health records:

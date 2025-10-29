@@ -19,7 +19,7 @@ export interface BrandConfig {
 // SCREENER CONFIGURATION
 // ------------------------------------------------------------------
 
-export type QuestionType = 'boolean' | 'numeric' | 'choice' | 'text';
+export type QuestionType = 'boolean' | 'numeric' | 'choice' | 'text' | 'diagnostic_test';
 
 export interface EhrMapping {
   rule: 'optional' | 'mandatory'; // Whether EHR connection is optional or required
@@ -37,6 +37,7 @@ export interface ScreenerQuestion {
   min?: number; // For 'numeric' type questions
   max?: number; // For 'numeric' type questions
   ehrMapping?: EhrMapping; // EHR Fast Path configuration
+  testType?: string; // For 'diagnostic_test' type questions - type of test required
 }
 
 export interface ScreenerRule {

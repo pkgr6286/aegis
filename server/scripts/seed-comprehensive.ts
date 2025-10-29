@@ -612,6 +612,13 @@ const PHARMA_TENANTS: TenantData[] = [
             },
           },
           {
+            id: 'cholesterol_test',
+            type: 'diagnostic_test',
+            text: 'Do you have recent cholesterol test results from within the last 12 months?',
+            required: true,
+            testType: 'Lipid panel / Cholesterol blood test',
+          },
+          {
             id: 'risk_factors',
             type: 'choice',
             text: 'Do you have any of the following cardiovascular risk factors?',
@@ -640,6 +647,11 @@ const PHARMA_TENANTS: TenantData[] = [
               condition: 'current_statin == "yes"',
               outcome: 'do_not_use',
               message: 'Do not take multiple statin medications. Please consult your doctor.',
+            },
+            {
+              condition: 'cholesterol_test.hasTest == false',
+              outcome: 'ask_a_doctor',
+              message: 'You need recent cholesterol test results (within 12 months) to use this product. Please consult your doctor for testing.',
             },
             {
               condition: 'ldl_check == 0',
