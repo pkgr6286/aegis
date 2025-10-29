@@ -12,6 +12,7 @@ import { ConsumerLayout } from '@/components/consumer/ConsumerLayout';
 import { BooleanQuestion } from '@/components/consumer/questions/BooleanQuestion';
 import { NumericQuestion } from '@/components/consumer/questions/NumericQuestion';
 import { ChoiceQuestion } from '@/components/consumer/questions/ChoiceQuestion';
+import { DiagnosticTestQuestion } from '@/components/consumer/questions/DiagnosticTestQuestion';
 import { InfoTooltip } from '@/components/consumer/questions/InfoTooltip';
 import { EhrChoiceCard } from '@/components/consumer/EhrChoiceCard';
 import { EhrConfirmationDialog } from '@/components/consumer/EhrConfirmationDialog';
@@ -413,6 +414,16 @@ export default function Screener() {
             options={currentQuestion.options || []}
             value={currentAnswer}
             onChange={handleAnswerChange}
+            disabled={isSubmitting}
+          />
+        );
+
+      case 'diagnostic_test':
+        return (
+          <DiagnosticTestQuestion
+            value={currentAnswer}
+            onChange={handleAnswerChange}
+            testType={currentQuestion.testType}
             disabled={isSubmitting}
           />
         );
