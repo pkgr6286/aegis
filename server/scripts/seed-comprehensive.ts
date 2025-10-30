@@ -338,6 +338,103 @@ const PHARMA_TENANTS: TenantData[] = [
           'Always keep your rescue inhaler with you.',
           'Rinse mouth after each use to prevent oral thrush.',
         ],
+        educationModule: {
+          required: true,
+          content: [
+            {
+              type: 'text',
+              markdown: `### Important Safety Information
+
+Advair Diskus is a **long-term controller medication** for asthma and COPD, containing two active ingredients:
+
+- **Fluticasone** (a corticosteroid) - reduces inflammation in the airways
+- **Salmeterol** (a long-acting beta-agonist) - helps relax and open airways for 12 hours
+
+#### Critical Points to Remember:
+
+1. **NOT for Rescue Use**: This medication does NOT work quickly. It's designed for daily use to prevent symptoms, not to treat sudden breathing problems.
+
+2. **Keep Your Rescue Inhaler**: Always have your fast-acting rescue inhaler (like albuterol) available for sudden symptoms.
+
+3. **Use Exactly as Prescribed**: Take 1 inhalation twice daily (morning and evening), approximately 12 hours apart.
+
+4. **Rinse Your Mouth**: After each use, rinse your mouth with water and spit it out to prevent oral thrush (yeast infection).
+
+5. **Do Not Stop Suddenly**: Even if you feel better, continue using unless your doctor tells you to stop.
+
+#### Warning Signs - Seek Medical Help Immediately:
+
+- Breathing problems get worse after using Advair
+- Severe allergic reaction (rash, swelling, difficulty breathing)
+- Fast or irregular heartbeat
+- Chest pain
+- Increased wheezing immediately after dosing`,
+            },
+          ],
+        },
+        comprehensionCheck: {
+          required: true,
+          passingScore: 80,
+          questions: [
+            {
+              id: 'cq1',
+              text: 'What should you do if you experience sudden breathing difficulty or an asthma attack?',
+              options: [
+                'Use my Advair Diskus immediately',
+                'Use my rescue inhaler (like albuterol)',
+                'Take an extra dose of Advair',
+                'Wait 12 hours for the next scheduled dose',
+              ],
+              correctAnswer: 'Use my rescue inhaler (like albuterol)',
+            },
+            {
+              id: 'cq2',
+              text: 'How often should you use Advair Diskus for long-term control?',
+              options: [
+                'Only when I have breathing problems',
+                'Once daily in the morning',
+                'Twice daily (morning and evening)',
+                'As needed for rescue',
+              ],
+              correctAnswer: 'Twice daily (morning and evening)',
+            },
+            {
+              id: 'cq3',
+              text: 'Why is it important to rinse your mouth after using Advair Diskus?',
+              options: [
+                'To prevent oral thrush (yeast infection)',
+                'To make it taste better',
+                'To help it work faster',
+                'To prevent tooth decay',
+              ],
+              correctAnswer: 'To prevent oral thrush (yeast infection)',
+            },
+            {
+              id: 'cq4',
+              text: 'What type of medication is Advair Diskus?',
+              options: [
+                'A rescue inhaler for sudden breathing problems',
+                'An antibiotic for lung infections',
+                'A long-term controller for daily use',
+                'A pain reliever',
+              ],
+              correctAnswer: 'A long-term controller for daily use',
+            },
+            {
+              id: 'cq5',
+              text: 'Which of the following would require immediate medical attention while using Advair?',
+              options: [
+                'Mild throat irritation',
+                'Chest pain or irregular heartbeat',
+                'Slight cough',
+                'Dry mouth',
+              ],
+              correctAnswer: 'Chest pain or irregular heartbeat',
+            },
+          ],
+          failOutcome: 'ask_a_doctor',
+          allowRetry: true,
+        },
       },
     },
   },
