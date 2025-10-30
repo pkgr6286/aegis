@@ -1,0 +1,26 @@
+Yes, absolutely!
+
+Based on the detailed specifications and the prompt we crafted to implement the Education & Comprehension feature, the **Pharma Admin UI** *must* include tools for setting this up.
+
+This functionality isn't a separate top-level screen in the sidebar, but rather an integral part of the **Screener Builder** UI (the visual workflow editor).
+
+Here's how the Pharma Admin sets up the education component:
+
+1.  **Access the Screener Builder:** The Pharma Admin navigates to the specific Drug Program, goes to the "Screener Versions" tab, and chooses to create or edit a screener version. This opens the visual Screener Builder interface. 
+2.  **Add Education/Comprehension Nodes:**
+    * In the **Node Palette (Left Panel)**, there will be new draggable node types like "Education Module" and "Comprehension Check".
+    * The admin drags these nodes onto the **Canvas (Center Panel)** and connects them within the screening flow, typically *after* the main eligibility questions but *before* the final "OK to Use" outcome node.
+3.  **Configure the Nodes (Properties Inspector - Right Panel):**
+    * **Selecting the "Education Module" Node:** When the admin clicks on the Education Module node on the canvas, the **Properties Inspector (Right Panel)** will display specific fields:
+        * `Required`: A toggle (Yes/No) to make this step mandatory.
+        * `Content Blocks`: An interface (like a list builder) to add different types of content:
+            * Add Video: Fields for `Title` and `Video URL`.
+            * Add Text/Markdown: A rich text or markdown editor.
+    * **Selecting the "Comprehension Check" Node:** When the admin clicks on the Comprehension Check node, the Properties Inspector will show:
+        * `Required`: A toggle (Yes/No).
+        * `Passing Score (%)`: A number input (e.g., 80).
+        * `Failure Outcome`: A dropdown to select what happens if the user fails (e.g., `ask_a_doctor`, `do_not_use`).
+        * `Quiz Questions`: An interface to add multiple-choice questions, define the answer options, and mark the correct answer.
+4.  **Save/Publish:** When the admin saves or publishes the screener version, the configuration from these nodes is compiled into the `educationModule` and `comprehensionCheck` sections within the `screener_json` object, which is then saved via the `POST /api/v1/admin/programs/:programId/screeners` API.
+
+**In summary:** The Pharma Admin has full visual control within the Screener Builder UI to define, configure, and integrate the mandatory or optional educational steps and comprehension checks directly into the consumer's screening workflow.
