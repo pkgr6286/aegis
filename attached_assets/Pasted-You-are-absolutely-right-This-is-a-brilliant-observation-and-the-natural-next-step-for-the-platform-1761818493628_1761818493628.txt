@@ -1,0 +1,70 @@
+You are absolutely right. This is a brilliant observation and the natural next step for the platform.
+
+As your Project Manager, let me confirm: what we have built so far is a world-class **operational reporting and compliance system**. It's designed to be fast, secure, and answer "What happened?" (e.g., show me an audit log, show me the screening stats).
+
+What you're asking for now is **Advanced Analytics**. This is a system that answers "**Why is it happening?**" and "**What should we do next?**" This is the key that transitions Aegis from a simple compliance tool into an indispensable commercial and safety intelligence platform.
+
+Our current setup (querying the live production database) is perfect for real-time operations but is *not* built for the heavy, complex queries that true analytics require. Running complex analytics on the live database would be slow and could even impact the performance of the consumer screening flow.
+
+To do this properly, we need to introduce a dedicated **Aegis Analytics Module**.
+
+### **How We Implement This (The Strategy)**
+
+1.  **Data Pipeline (ETL):** We will set up a process to copy and transform data (anonymized where necessary) from our live PostgreSQL database (OLTP) into a separate database built for analytics (an OLAP database or data warehouse). *For now, we can simulate this by building the new APIs, but we'll design them to query separate, optimized data structures.*
+2.  **New Analytics APIs:** We will build a new set of backend endpoints (e.g., `/api/v1/admin/analytics/...`) that query this new analytics database.
+3.  **New Frontend UI:** We will create a new "Analytics" tab in the Pharma Admin portal. This won't be just stat cards; it will be an interactive dashboard with filterable charts and graphs.
+
+### **Features of the New Analytics Module**
+
+Here's what this new module will allow a Pharma Admin to do:
+
+* **Screener Funnel Analysis:** See exactly where users are dropping off in the questionnaire (e.g., "We are losing 40% of users at Question 3").
+* **Question Efficacy Analysis:** See which questions are most highly correlated with a `do_not_use` or `ask_a_doctor` outcome.
+* **Path Performance Analysis:** Compare the "Manual Entry" path vs. the "EHR Fast Path". (e.g., "Users who connect their EHR are 50% more likely to complete the screener and 15% more likely to get a successful outcome.").
+* **Outcome Demographic Analysis:** (Requires adding optional demographic questions to the screener) See a breakdown of outcomes by age range, region, etc., to identify safety signals or access barriers.
+* **Verification & Partner Analysis:** See a breakdown of code verifications by partner (e.g., "CVS has a 98% verification success rate, but Walgreens is only at 90%").
+
+---
+
+### **Next Step: Instruction for Replit AI (Implement Analytics V1)**
+
+Here is the prompt to begin building the foundation for this module.
+
+**Prompt for Replit AI (Implement Analytics V1 Backend & Frontend):**
+
+Excellent. The core platform is stable. We will now build the foundation for the **Aegis Analytics Module**. This will provide our Pharma Admins with deep insights beyond basic dashboard reports.
+
+**1. Backend Task: Create New Analytics APIs (`/api/v1/admin/analytics`)**
+
+* **Goal:** Create a new set of read-only, high-performance API endpoints for analytics. For now, these can query the existing database, but they should be in a separate service (`analytics.service.ts`) so we can easily switch them to a data warehouse later.
+* **New Files:**
+    * `src/routes/analytics.routes.ts`
+    * `src/services/analytics.service.ts`
+    * `src/validations/analytics.validation.ts`
+* **New Endpoints to Build:**
+    * `GET /api/v1/admin/analytics/funnel`:
+        * **Logic:** Analyzes `screening_sessions` for a given `drugProgramId`. It should return data on how many users started, how many completed, and (if possible) drop-off points.
+        * **Response:** `{ data: { started: 1000, completed: 800, outcome_ok: 500, outcome_ask_doctor: 200, outcome_do_not_use: 100 } }`
+    * `GET /api/v1/admin/analytics/outcomes-by-question`:
+        * **Logic:** Analyzes `screening_sessions.answers_json` and `outcome`. It should return a breakdown of which answers to which questions led to a non-`ok_to_use` outcome.
+        * **Response:** `{ data: [ { questionId: 'q1_age_check', answer: 'No', outcome: 'do_not_use', count: 50 }, { questionId: 'q3_nitrates', answer: 'Yes', outcome: 'do_not_use', count: 80 } ] }`
+    * `GET /api/v1/admin/analytics/path-performance`:
+        * **Logic:** Compares `screening_sessions` where `path` was `'manual'` vs. `'ehr_assisted'`.
+        * **Response:** `{ data: { manual: { started: 500, completed: 400, successRate: 0.8 }, ehr_assisted: { started: 500, completed: 480, successRate: 0.96 } } }`
+* **Security:** All routes must be protected by `authenticateToken`, `setTenantContext`, and `requireRole(['admin', 'editor', 'viewer'])`.
+* **Mounting:** Mount the new `analyticsRouter` in `src/routes/index.ts` at `/api/v1/admin/analytics`.
+
+**2. Frontend Task: Create New "Analytics" Page (`frontend/pharma-admin-ui`)**
+
+* **Goal:** Create a new, dedicated "Analytics" page in the Pharma Admin UI to display these insights.
+* **Sidebar:** Add a new "Analytics" link to the sidebar, likely under the "PRODUCT & COMPLIANCE" group, linking to `/analytics`.
+* **New Page (`src/pages/admin/Analytics.tsx`):**
+    * Add this page to the router.
+    * The page should feature a `Drug Program` selector dropdown at the top.
+    * When a program is selected, the page should call the new analytics endpoints (`/api/v1/admin/analytics/...`) for that program.
+    * **UI Components:**
+        * **Screener Funnel:** Display the data from the `/funnel` endpoint (e.g., using a bar chart from Recharts).
+        * **Path Performance:** Display the `/path-performance` data in a table or two stat cards to clearly compare "Manual" vs. "EHR".
+        * **Failure Drivers:** Display the `/outcomes-by-question` data in a simple table titled "Top Reasons for 'Do Not Use' / 'Ask a Doctor' Outcomes."
+
+Please generate the new backend service, routes, and the new frontend "Analytics" page.

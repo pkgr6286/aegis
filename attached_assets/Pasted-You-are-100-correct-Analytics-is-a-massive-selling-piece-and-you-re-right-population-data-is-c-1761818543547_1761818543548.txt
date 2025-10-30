@@ -1,0 +1,85 @@
+You are 100% correct. "Analytics" is a massive selling piece, and you're right, population data is critically important. My previous prompt was just for "V1" (basic operational reporting). What you're asking for is the "V2" **Aegis Intelligence Module**.
+
+This is what turns Aegis from a compliance tool (a *cost center*) into a strategic insights engine (a *value driver*). Pharma companies will absolutely pay for this.
+
+Let's architect this properly.
+
+### **The Core Problem with Advanced Analytics**
+
+We cannot run complex, platform-wide analytics queries (like "show me failure rates by age range, cross-referenced with region, for all of 2025") against our live (OLTP) database. It would be extremely slow and could crash the consumer-facing app.
+
+**The Solution:** We must create a new set of **dedicated analytics APIs** and a new **frontend analytics dashboard**. In a full-scale build, these APIs would query a separate, read-optimized data warehouse (OLAP). For our purposes, the Replit AI can build these new APIs to query the existing database but with more complex, "analytics-style" queries.
+
+### **What We Can Add (The "Wow" Features)**
+
+Here's what we can and should add to make this a true selling point, addressing your "population data" question and more:
+
+1.  **Population & Demographic Insights:**
+    * **How:** We'll enhance the **Screener Builder** to let admins add *optional, non-clinical* questions (like "Age Range," "Gender," "State/Region"). These are saved in the `answers_json` like any other question.
+    * **Value:** The analytics UI can now cross-reference outcomes with this data. Pharma clients can finally answer: "Are we seeing unexpected failure rates in women aged 18-25? Is the app failing to connect to EHRs in rural states? This is a critical safety and equity signal."
+
+2.  **Commercial Funnel & Partner Performance:**
+    * **How:** We have the data! We can compare `screening_sessions` (outcome = `ok_to_use`) against `verification_codes` (`status` = `used`).
+    * **Value:** Clients can see the drop-off between a consumer *getting* a code and *using* it. They can also see performance by partner: "CVS has a 99% verification success rate, but Walgreens.com is at 92%. Their e-commerce API integration must be failing. Let's call their tech team."
+
+3.  **Screener & Education Efficacy:**
+    * **How:** Analyze which questions in the screener *most often* lead to a `do_not_use` outcome. Track pass/fail rates on the `comprehensionCheck`.
+    * **Value:** "90% of our 'Do Not Use' outcomes come from Q3 (the nitrate check). This is great, the screener is working." OR "30% of users are failing the Comprehension Check on Q2. Our education video must be confusing. We need to remake it."
+
+This is infinitely more powerful than what we had. Let's create the prompt to build this.
+
+---
+
+### **Next Step: Instruction for Replit AI (Implement Advanced "Aegis Intelligence" Module)**
+
+Here is the comprehensive prompt to replace the basic analytics one.
+
+**Prompt for Replit AI (Implement "Aegis Intelligence" Module):**
+
+Excellent. We are now going to build the advanced **"Aegis Intelligence" Module**, which is a core selling point of the platform. This will replace the basic analytics dashboard with a comprehensive, multi-tabbed insights center.
+
+This requires two main efforts:
+1.  **Frontend (Pharma Admin UI):** Enhance the Screener Builder to *allow* admins to add optional demographic questions.
+2.  **Backend (API):** Create a new set of dedicated analytics endpoints.
+3.  **Frontend (Pharma Admin UI):** Build a new, multi-tabbed "Intelligence" page to display these analytics.
+
+**1. Task: Enhance the Screener Builder UI**
+* Modify the **Screener Builder** (in `frontend/pharma-admin-ui`):
+    * Add a new "Node" to the palette called **"Demographic Question"** (or add a "Non-Clinical" checkbox to the existing Question node).
+    * This node should allow admins to add *optional* questions (e.g., "What is your age range?", "What is your state?") with standard multiple-choice answers.
+    * These questions will **not** have logic branches but will be saved as part of the `screener_json` and their answers stored in `answers_json` for analytic purposes.
+
+**2. Task: Build the New Analytics APIs (`/api/v1/admin/analytics`)**
+* Create a new set of dedicated analytics endpoints. These routes must be protected by `authenticateToken`, `setTenantContext`, and `requireRole(['admin', 'editor', 'viewer', 'auditor'])`.
+* Create `src/routes/analytics.routes.ts` and `src/services/analytics.service.ts`.
+* **Endpoints to Build:**
+    * `GET /api/v1/admin/analytics/overview-stats`:
+        * **Logic:** Fetches core numbers for a `drugProgramId` (e.g., Total Screenings, Overall Eligibility Rate, Total Verifications).
+    * `GET /api/v1/admin/analytics/screener-funnel`:
+        * **Logic:** Analyzes `screening_sessions` for a `drugProgramId`.
+        * **Response:** `{ data: { started: 10000, completedScreener: 8000, passedScreener: 6000, passedComprehension: 5800, generatedCode: 5800, usedCode: 4500 } }`
+    * `GET /api/v1/admin/analytics/population-outcomes`:
+        * **Logic:** Analyzes `screening_sessions` and cross-references the `outcome` with the answer to a specified demographic question (passed as a query param, e.g., `?questionId=q_age_range`).
+        * **Response:** `{ data: [ { answer: '18-29', ok_to_use: 800, ask_a_doctor: 200 }, { answer: '30-45', ok_to_use: 1200, ask_a_doctor: 150 } ] }`
+    * `GET /api/v1/admin/analytics/partner-performance`:
+        * **Logic:** Analyzes `verification_codes` (both `used` and `expired`/`unused`), grouped by `partner_id` (via the audit log or a new `redeemed_by_partner_id` column).
+        * **Response:** `{ data: [ { partnerName: 'CVS (POS)', success: 1200, failed: 15 }, { partnerName: 'Walgreens (E-comm)', success: 800, failed: 75 } ] }`
+    * `GET /api/v1/admin/analytics/education-efficacy`:
+        * **Logic:** (Requires logic to store comprehension check results) Analyze pass/fail rates for the `comprehensionCheck` step.
+        * **Response:** `{ data: { pass: 5800, fail: 200, failRate: '3.3%' } }`
+
+**3. Task: Build the New "Intelligence" Frontend UI**
+* In `frontend/pharma-admin-ui`, create a new top-level page and add it to the sidebar, called **"Intelligence"**.
+* This page should be a dashboard with a **`Drug Program` selector dropdown** at the top.
+* The page should have **Tabs**:
+    * **Overview:** Shows data from `/overview-stats` and the `/screener-funnel` chart (e.g., a Recharts Funnel Chart).
+    * **Population Insights:**
+        * Has a *second* dropdown to select the demographic question (e.g., "Age Range", "Region").
+        * Calls `/population-outcomes?questionId=...` and displays a stacked bar chart showing the outcome breakdown for each answer.
+    * **Partner Performance:**
+        * Calls `/partner-performance` and displays a bar chart or table showing verification success/failure rates by partner.
+    * **Screener & Education Efficacy:**
+        * Calls `/education-efficacy` and shows the pass/fail KPI.
+        * (Optional, if time): Show a table of which screener questions are the most common "failure drivers" (from the old basic analytics).
+
+Please generate the necessary backend and frontend code to implement this full-featured "Aegis Intelligence Module".
