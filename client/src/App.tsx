@@ -49,6 +49,8 @@ import { PharmaAdminLayout } from "@/components/admin/PharmaAdminLayout";
 
 // Documentation
 import Documentation from "@/pages/Documentation";
+import UserGuide from "@/pages/docs/UserGuide";
+import TechnicalDocs from "@/pages/docs/TechnicalDocs";
 
 // Clinician Pages
 import ReviewQueue from "@/pages/clinician/ReviewQueue";
@@ -197,6 +199,12 @@ function Router() {
       <Route path="/superadmin/documentation">
         <SuperAdminRoute component={Documentation} />
       </Route>
+      <Route path="/docs/user-guide">
+        <SuperAdminRoute component={UserGuide} />
+      </Route>
+      <Route path="/docs/technical">
+        <SuperAdminRoute component={TechnicalDocs} />
+      </Route>
 
       {/* Pharma Admin Routes */}
       <Route path="/admin/dashboard">
@@ -231,6 +239,12 @@ function Router() {
       </Route>
       <Route path="/admin/documentation">
         <PharmaAdminRoute component={Documentation} />
+      </Route>
+      <Route path="/docs/user-guide">
+        <PharmaAdminRoute component={UserGuide} />
+      </Route>
+      <Route path="/docs/technical">
+        <PharmaAdminRoute component={TechnicalDocs} />
       </Route>
 
       {/* Clinician Routes */}

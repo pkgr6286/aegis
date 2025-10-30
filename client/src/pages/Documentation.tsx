@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Code2, FileText, Users, Layers, Database, ExternalLink, Download } from 'lucide-react';
+import { BookOpen, Code2, FileText, Users, Layers, Database } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Documentation() {
@@ -95,19 +95,9 @@ export default function Documentation() {
                   className="flex-1"
                   data-testid="button-view-user-guide"
                 >
-                  <a href="/docs/USER_GUIDE.md" target="_blank" rel="noopener noreferrer">
+                  <a href="/docs/user-guide">
                     <FileText className="w-4 h-4 mr-2" />
                     View Guide
-                    <ExternalLink className="w-3 h-3 ml-2" />
-                  </a>
-                </Button>
-                <Button
-                  variant="outline"
-                  asChild
-                  data-testid="button-download-user-guide"
-                >
-                  <a href="/docs/USER_GUIDE.md" download>
-                    <Download className="w-4 h-4" />
                   </a>
                 </Button>
               </div>
@@ -155,19 +145,9 @@ export default function Documentation() {
                   className="flex-1"
                   data-testid="button-view-tech-docs"
                 >
-                  <a href="/docs/TECHNICAL_DOCUMENTATION.md" target="_blank" rel="noopener noreferrer">
+                  <a href="/docs/technical">
                     <Code2 className="w-4 h-4 mr-2" />
                     View Docs
-                    <ExternalLink className="w-3 h-3 ml-2" />
-                  </a>
-                </Button>
-                <Button
-                  variant="outline"
-                  asChild
-                  data-testid="button-download-tech-docs"
-                >
-                  <a href="/docs/TECHNICAL_DOCUMENTATION.md" download>
-                    <Download className="w-4 h-4" />
                   </a>
                 </Button>
               </div>
