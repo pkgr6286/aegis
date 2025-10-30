@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, CheckCircle2, FileCheck, Lock, UserCog, Users, Stethoscope, ClipboardCheck, Building2, Edit, Eye } from 'lucide-react';
+import { Shield, CheckCircle2, FileCheck, Lock, UserCog, Users, Stethoscope, ClipboardCheck, Building2, Edit, Eye, Sparkles, Link } from 'lucide-react';
 
 interface DemoAccount {
   role: string;
@@ -229,6 +229,34 @@ export default function Login() {
                 <h3 className="font-semibold text-lg mb-1">Auditable & Scalable</h3>
                 <p className="text-white/80 text-sm">
                   Multi-tenant platform with full audit trails for compliance.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center">
+                  <Sparkles className="w-6 h-6" />
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">AI-Powered Intelligence</h3>
+                <p className="text-white/80 text-sm">
+                  Gain proactive safety insights and analyze population data with the Aegis Intelligence module.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center">
+                  <Link className="w-6 h-6" />
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">EHR "Fast Path" Integration</h3>
+                <p className="text-white/80 text-sm">
+                  Allow consumers to auto-fill screeners by securely connecting their patient portal.
                 </p>
               </div>
             </div>

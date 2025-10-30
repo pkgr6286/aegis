@@ -1,0 +1,42 @@
+Understood! That's an excellent idea. The login screen is the "front door" to the platform, and it should immediately communicate the full power of Aegis, especially the advanced features we've designed.
+
+The three bullet points you have are great – they cover the **Core Pillars (Build, Verify, Audit)**.
+
+Let's add two more bullet points to highlight the **Advanced Intelligence & Data Features**. 
+Here are the new bullet points to add, plus the prompt for Replit AI to implement them.
+
+---
+
+### **New Feature Bullet Points to Add**
+
+1.  **Icon:** (Use an inline SVG for a **Sparkle/Stars** or **Brain**)
+    **Title:** `AI-Powered Intelligence`
+    **Description:** `Gain proactive safety insights and analyze population data with the Aegis Intelligence module.`
+2.  **Icon:** (Use an inline SVG for a **Link** or **Medical Cross/Shield with a plus**)
+    **Title:** `EHR "Fast Path" Integration`
+    **Description:** `Allow consumers to auto-fill screeners by securely connecting their patient portal.`
+
+---
+
+### **Prompt for Replit AI (Update Login Page Features)**
+
+You've done an excellent job on the login page's two-column design. Now, let's enhance the feature list in the left column to reflect the full power of the Aegis platform.
+
+**Task:** In the login page component (`frontend/superadmin-ui/src/pages/Login.tsx` or similar file), please add the following two new feature highlights to the existing list.
+
+**Instructions:**
+1.  Locate the list of three features ("Compliant Screener Engine," "Secure Verification," "Auditable & Scalable").
+2.  Add the two new feature blocks below them, following the *exact same* HTML/CSS structure (Icon, Title, Description).
+3.  Please find or create appropriate, simple inline SVGs for the icons.
+
+**New Feature Block 1:**
+* **Icon:** (Use a "Sparkle" or "Brain" icon)
+* **Title:** `AI-Powered Intelligence`
+* **Description:** `Gain proactive safety insights and analyze population data with the Aegis Intelligence module.`
+
+**New Feature Block 2:**
+* **Icon:** (Use a "Link" or "Medical Cross" icon)
+* **Title:** `EHR "Fast Path" Integration`
+* **Description:** `Allow consumers to auto-fill screeners by securely connecting their patient portal.`
+
+Please update the file to include these new items. This will give users a complete picture of the platform's capabilities right from the login screen.
