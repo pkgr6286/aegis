@@ -5,12 +5,13 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { FileCheck, Download, AlertCircle, Sparkles, FileJson, FileSpreadsheet } from 'lucide-react';
+import { FileCheck, Download, AlertCircle, Sparkles, FileJson, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import type { DrugProgram } from '@/types/admin';
 
@@ -41,18 +42,20 @@ export default function Regulatory() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Fetch all programs
-  const { data: programs, isLoading: isProgramsLoading } = useQuery<DrugProgram[]>({
-    queryKey: ['/api/v1/admin/drug-programs'],
+  const { data: programsData, isLoading: isProgramsLoading } = useQuery({
+    queryKey: ['/admin/drug-programs'],
     enabled: true,
   });
 
+  const programs = (programsData as { success: boolean; data: DrugProgram[] })?.data || [];
+
   // Fetch versions for selected program
-  const { data: versionsResponse, isLoading: isVersionsLoading } = useQuery<{ versions: ScreenerVersion[] }>({
-    queryKey: ['/api/v1/admin/drug-programs', selectedProgramId, 'screeners'],
+  const { data: versionsData, isLoading: isVersionsLoading } = useQuery({
+    queryKey: ['/admin/drug-programs', selectedProgramId, 'screeners'],
     enabled: !!selectedProgramId,
   });
 
-  const versions = versionsResponse?.versions || [];
+  const versions = (versionsData as { success: boolean; data: { versions: ScreenerVersion[] } })?.data?.versions || [];
 
   const handleGeneratePackage = async () => {
     if (!selectedProgramId || !selectedVersionId) return;
@@ -79,8 +82,39 @@ export default function Regulatory() {
     link.click();
   };
 
-  const selectedProgram = programs?.find(p => p.id === selectedProgramId);
+  const selectedProgram = programs.find(p => p.id === selectedProgramId);
   const selectedVersion = versions.find(v => v.id === selectedVersionId);
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: 'spring',
+        stiffness: 100,
+        damping: 15,
+      },
+    },
+  };
+
+  const skeletonVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 },
+    exit: { opacity: 0, transition: { duration: 0.2 } },
+  };
 
   return (
     <div className="space-y-6 p-6" data-testid="regulatory-page">
@@ -185,93 +219,166 @@ export default function Regulatory() {
       </div>
 
       {/* Generate Button */}
-      <div className="flex items-center justify-center">
+      <motion.div 
+        className="flex items-center justify-center"
+        initial={{ opacity: 1 }}
+        animate={{ opacity: isGenerating ? 0.6 : 1 }}
+        transition={{ duration: 0.3 }}
+      >
         <Button
           size="lg"
           onClick={handleGeneratePackage}
           disabled={!selectedProgramId || !selectedVersionId || isGenerating}
-          className="min-w-[200px]"
+          className="min-w-[200px] transition-all duration-300"
           data-testid="button-generate-package"
         >
-          {isGenerating ? (
-            <>
-              <Sparkles className="mr-2 h-5 w-5 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <FileCheck className="mr-2 h-5 w-5" />
-              Generate Package
-            </>
-          )}
-        </Button>
-      </div>
-
-      {/* Package Contents */}
-      {packageData && (
-        <Card className="border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Download className="h-5 w-5" />
-              Package Contents
-            </CardTitle>
-            <CardDescription>
-              Generated for {selectedProgram?.name} - Version {selectedVersion?.version}
-              <br />
-              <span className="text-xs text-muted-foreground">
-                Generated at: {new Date(packageData.generatedAt).toLocaleString()}
-              </span>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {packageData.reports.map((report) => (
-              <div
-                key={report.id}
-                className="flex items-center justify-between p-4 rounded-lg border hover-elevate"
-                data-testid={`report-${report.id}`}
+          <AnimatePresence mode="wait">
+            {isGenerating ? (
+              <motion.div
+                key="generating"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="flex items-center"
               >
-                <div className="flex items-start gap-3 flex-1">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 flex-shrink-0 mt-0.5">
-                    {report.filename.endsWith('.json') ? (
-                      <FileJson className="w-5 h-5 text-primary" />
-                    ) : (
-                      <FileSpreadsheet className="w-5 h-5 text-primary" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm">{report.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">{report.description}</p>
-                    <p className="text-xs text-muted-foreground/60 mt-1 font-mono">{report.filename}</p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleDownload(report.endpoint, report.filename)}
-                  className="ml-4"
-                  data-testid={`button-download-${report.id}`}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </Button>
-              </div>
-            ))}
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Generating...
+              </motion.div>
+            ) : (
+              <motion.div
+                key="generate"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="flex items-center"
+              >
+                <FileCheck className="mr-2 h-5 w-5" />
+                Generate Package
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Button>
+      </motion.div>
 
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-sm">
-                <p className="font-semibold mb-2">Important Notes:</p>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  <li>All reports are generated from live production data</li>
-                  <li>Patient data is anonymized in accordance with HIPAA requirements</li>
-                  <li>Review all documents before submission to regulatory authorities</li>
-                  <li>Maintain a copy of this package for your compliance records</li>
-                </ul>
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
-      )}
+      {/* Skeleton Loading State */}
+      <AnimatePresence>
+        {isGenerating && !packageData && (
+          <motion.div
+            variants={skeletonVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="space-y-3"
+          >
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-4 w-72 mt-2" />
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-center gap-3 p-4 rounded-lg border">
+                    <Skeleton className="h-10 w-10 rounded-lg flex-shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-64" />
+                      <Skeleton className="h-3 w-full" />
+                    </div>
+                    <Skeleton className="h-9 w-28" />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Package Contents - Animated */}
+      <AnimatePresence>
+        {packageData && !isGenerating && (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+          >
+            <Card className="border-primary/20">
+              <CardHeader>
+                <motion.div variants={itemVariants}>
+                  <CardTitle className="flex items-center gap-2">
+                    <Download className="h-5 w-5" />
+                    Package Contents
+                  </CardTitle>
+                  <CardDescription>
+                    Generated for {selectedProgram?.name} - Version {selectedVersion?.version}
+                    <br />
+                    <span className="text-xs text-muted-foreground">
+                      Generated at: {new Date(packageData.generatedAt).toLocaleString()}
+                    </span>
+                  </CardDescription>
+                </motion.div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {packageData.reports.map((report, index) => (
+                  <motion.div
+                    key={report.id}
+                    variants={itemVariants}
+                    className="flex items-center justify-between p-4 rounded-lg border hover-elevate active-elevate-2 transition-all duration-200 group"
+                    data-testid={`report-${report.id}`}
+                  >
+                    <div className="flex items-start gap-3 flex-1">
+                      <motion.div
+                        className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 flex-shrink-0 mt-0.5"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ type: 'spring', stiffness: 300 }}
+                      >
+                        {report.filename.endsWith('.json') ? (
+                          <FileJson className="w-5 h-5 text-primary" />
+                        ) : (
+                          <FileSpreadsheet className="w-5 h-5 text-primary" />
+                        )}
+                      </motion.div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm">{report.name}</h3>
+                        <p className="text-xs text-muted-foreground mt-1">{report.description}</p>
+                        <p className="text-xs text-muted-foreground/60 mt-1 font-mono">{report.filename}</p>
+                      </div>
+                    </div>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDownload(report.endpoint, report.filename)}
+                        className="ml-4 transition-all duration-200"
+                        data-testid={`button-download-${report.id}`}
+                      >
+                        <Download className="h-4 w-4 mr-2 transition-transform group-hover:translate-y-0.5" />
+                        Download
+                      </Button>
+                    </motion.div>
+                  </motion.div>
+                ))}
+
+                <motion.div variants={itemVariants}>
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-sm">
+                      <p className="font-semibold mb-2">Important Notes:</p>
+                      <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                        <li>All reports are generated from live production data</li>
+                        <li>Patient data is anonymized in accordance with HIPAA requirements</li>
+                        <li>Review all documents before submission to regulatory authorities</li>
+                        <li>Maintain a copy of this package for your compliance records</li>
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Help Text */}
       {!packageData && selectedProgramId && selectedVersionId && !isGenerating && (
