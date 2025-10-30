@@ -13,7 +13,7 @@ interface DashboardStats {
 
 export default function PharmaAdminDashboard() {
   const { data: stats, isLoading, error } = useQuery<{ data: DashboardStats }>({
-    queryKey: ['/api/v1/admin/dashboard/stats'],
+    queryKey: ['/admin/dashboard/stats'],
   });
 
   if (error) {

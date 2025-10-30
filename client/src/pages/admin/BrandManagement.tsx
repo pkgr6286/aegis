@@ -61,7 +61,7 @@ export default function BrandManagement() {
 
   // Fetch brands
   const { data: brandsData, isLoading } = useQuery({
-    queryKey: ['/api/v1/admin/brand-configs'],
+    queryKey: ['/admin/brand-configs'],
   });
 
   const brands = (brandsData as { success: boolean; data: BrandConfig[] })?.data || [];
@@ -75,7 +75,7 @@ export default function BrandManagement() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/admin/brand-configs'] });
+      queryClient.invalidateQueries({ queryKey: ['/admin/brand-configs'] });
       toast({
         title: 'Brand created',
         description: 'Brand configuration created successfully',
@@ -101,7 +101,7 @@ export default function BrandManagement() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/admin/brand-configs'] });
+      queryClient.invalidateQueries({ queryKey: ['/admin/brand-configs'] });
       toast({
         title: 'Brand updated',
         description: 'Brand configuration updated successfully',
@@ -126,7 +126,7 @@ export default function BrandManagement() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/admin/brand-configs'] });
+      queryClient.invalidateQueries({ queryKey: ['/admin/brand-configs'] });
       toast({
         title: 'Brand deleted',
         description: 'Brand configuration deleted successfully',

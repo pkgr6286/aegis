@@ -83,7 +83,7 @@ export default function SessionReview() {
       });
       
       // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/clinician/sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['/clinician/sessions'] });
       queryClient.invalidateQueries({ queryKey: [`/api/v1/clinician/sessions/${sessionId}`] });
       
       // Navigate back to review queue

@@ -64,7 +64,7 @@ export default function AuditLogsPage() {
 
   // Fetch audit logs
   const { data: logsData, isLoading } = useQuery({
-    queryKey: ['/api/v1/admin/audit-logs', filters, currentPage],
+    queryKey: ['/admin/audit-logs', filters, currentPage],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filters.resourceType) params.append('resourceType', filters.resourceType);
@@ -76,7 +76,7 @@ export default function AuditLogsPage() {
       params.append('offset', String(currentPage * 20));
 
       return await apiClient.get<{ success: boolean; data: AuditLog[] }>(
-        `/api/v1/admin/audit-logs?${params.toString()}`
+        `/admin/audit-logs?${params.toString()}`
       );
     },
   });

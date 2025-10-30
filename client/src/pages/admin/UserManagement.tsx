@@ -73,7 +73,7 @@ export default function UserManagement() {
 
   // Fetch users
   const { data: usersData, isLoading } = useQuery({
-    queryKey: ['/api/v1/admin/users'],
+    queryKey: ['/admin/users'],
   });
 
   const users = (usersData as { success: boolean; data: TenantUser[] })?.data || [];
@@ -87,7 +87,7 @@ export default function UserManagement() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/admin/users'] });
       toast({
         title: 'User invited',
         description: 'Invitation sent successfully',
@@ -112,7 +112,7 @@ export default function UserManagement() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/admin/users'] });
       toast({
         title: 'User removed',
         description: 'User removed from tenant successfully',

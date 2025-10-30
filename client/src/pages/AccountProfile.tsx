@@ -19,7 +19,7 @@ export default function AccountProfile() {
 
   // Fetch current user profile
   const { data: profileData, isLoading } = useQuery({
-    queryKey: ['/api/v1/account/me'],
+    queryKey: ['/account/me'],
   });
 
   const profile = (profileData as { success: boolean; data: any })?.data;
@@ -53,7 +53,7 @@ export default function AccountProfile() {
       return await apiClient.put('/account/me', data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/account/me'] });
+      queryClient.invalidateQueries({ queryKey: ['/account/me'] });
       toast({
         title: 'Profile Updated',
         description: 'Your profile has been updated successfully.',

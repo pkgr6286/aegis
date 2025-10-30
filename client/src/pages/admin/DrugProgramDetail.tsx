@@ -23,7 +23,7 @@ export default function DrugProgramDetail() {
 
   // Fetch program details
   const { data: programData, isLoading: programLoading } = useQuery({
-    queryKey: ['/api/v1/admin/drug-programs', programId],
+    queryKey: ['/admin/drug-programs', programId],
     enabled: !!programId,
   });
 
@@ -31,7 +31,7 @@ export default function DrugProgramDetail() {
 
   // Fetch screener versions
   const { data: versionsData, isLoading: versionsLoading } = useQuery({
-    queryKey: ['/api/v1/admin/drug-programs', programId, 'screeners'],
+    queryKey: ['/admin/drug-programs', programId, 'screeners'],
     enabled: !!programId,
   });
 

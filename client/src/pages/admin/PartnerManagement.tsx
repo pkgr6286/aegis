@@ -87,7 +87,7 @@ export default function PartnerManagement() {
 
   // Fetch partners
   const { data: partnersData, isLoading } = useQuery({
-    queryKey: ['/api/v1/admin/partners'],
+    queryKey: ['/admin/partners'],
   });
 
   const partners = (partnersData as { success: boolean; data: Partner[] })?.data || [];
@@ -101,7 +101,7 @@ export default function PartnerManagement() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/admin/partners'] });
+      queryClient.invalidateQueries({ queryKey: ['/admin/partners'] });
       toast({
         title: 'Partner created',
         description: 'Partner created successfully',
@@ -132,7 +132,7 @@ export default function PartnerManagement() {
         setGeneratedKey(rawKey);
         setShowKey(true);
       }
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/admin/partners'] });
+      queryClient.invalidateQueries({ queryKey: ['/admin/partners'] });
       toast({
         title: 'API key generated',
         description: 'Save the key - it will not be shown again!',
@@ -157,7 +157,7 @@ export default function PartnerManagement() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/admin/partners'] });
+      queryClient.invalidateQueries({ queryKey: ['/admin/partners'] });
       toast({
         title: 'API key revoked',
         description: 'API key revoked successfully',

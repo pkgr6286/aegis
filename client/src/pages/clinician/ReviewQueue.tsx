@@ -42,7 +42,7 @@ export default function ReviewQueue() {
 
   // Fetch drug programs for filter
   const { data: programsData } = useQuery<{success: boolean; data: Array<{id: string; name: string}>}>({
-    queryKey: ['/api/v1/admin/drug-programs'],
+    queryKey: ['/admin/drug-programs'],
   });
 
   // Build query parameters

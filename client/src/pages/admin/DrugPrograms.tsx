@@ -77,14 +77,14 @@ export default function DrugPrograms() {
 
   // Fetch drug programs
   const { data: programsData, isLoading } = useQuery({
-    queryKey: ['/api/v1/admin/drug-programs'],
+    queryKey: ['/admin/drug-programs'],
   });
 
   const programs = (programsData as { success: boolean; data: DrugProgram[] })?.data || [];
 
   // Fetch brand configs for the dropdown
   const { data: brandsData } = useQuery({
-    queryKey: ['/api/v1/admin/brand-configs'],
+    queryKey: ['/admin/brand-configs'],
   });
 
   const brands = (brandsData as { success: boolean; data: BrandConfig[] })?.data || [];
@@ -98,7 +98,7 @@ export default function DrugPrograms() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/admin/drug-programs'] });
+      queryClient.invalidateQueries({ queryKey: ['/admin/drug-programs'] });
       toast({
         title: 'Program created',
         description: 'Drug program created successfully',
@@ -124,7 +124,7 @@ export default function DrugPrograms() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/admin/drug-programs'] });
+      queryClient.invalidateQueries({ queryKey: ['/admin/drug-programs'] });
       toast({
         title: 'Program updated',
         description: 'Drug program updated successfully',
@@ -149,7 +149,7 @@ export default function DrugPrograms() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/v1/admin/drug-programs'] });
+      queryClient.invalidateQueries({ queryKey: ['/admin/drug-programs'] });
       toast({
         title: 'Program deleted',
         description: 'Drug program deleted successfully',
