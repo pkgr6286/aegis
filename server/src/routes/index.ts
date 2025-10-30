@@ -7,6 +7,7 @@ import drugProgramRoutes from './drugProgram.routes';
 import pharmaAdminRoutes from './pharmaAdmin.routes';
 import analyticsRoutes from './analytics.routes';
 import aiAnalystRoutes from './aiAnalyst.routes';
+import regulatoryRoutes from './regulatory.routes';
 import clinicianRoutes from './clinician.routes';
 import publicRoutes from './public.routes';
 import ehrRoutes from './ehr.routes';
@@ -47,6 +48,7 @@ router.use('/v1/superadmin', authenticateToken, requireRole('super_admin'), supe
 router.use('/v1/admin/brand-configs', brandConfigRoutes);
 router.use('/v1/admin/drug-programs', drugProgramRoutes);
 router.use('/v1/admin/analytics', analyticsRoutes);
+router.use('/v1/admin/regulatory', regulatoryRoutes);
 router.use('/v1/admin', pharmaAdminRoutes);
 
 // Mount Clinician routes (protected)
