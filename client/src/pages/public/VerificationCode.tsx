@@ -12,9 +12,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Copy, CheckCircle, Clock, AlertCircle, ShoppingCart, Globe } from 'lucide-react';
+import { Copy, CheckCircle, Clock, AlertCircle, ShoppingCart, Globe, Smartphone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { GenerateCodeResponse } from '@/types/consumer';
+import googlePlayBadge from '@assets/Store=Google Play, Type=Dark, Language=English@4x_1761827642515.png';
+import appStoreBadge from '@assets/Component 2_1761827651230.png';
 
 export default function VerificationCode() {
   const { slug } = useParams<{ slug: string }>();
@@ -268,6 +270,51 @@ export default function VerificationCode() {
                 </ul>
               </AlertDescription>
             </Alert>
+          </CardContent>
+        </Card>
+
+        {/* App Download Promotion */}
+        <Card className="border-primary/20">
+          <CardHeader className="text-center pb-4">
+            <div className="flex justify-center mb-2">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
+                <Smartphone className="w-6 h-6 text-primary" />
+              </div>
+            </div>
+            <CardTitle className="text-xl">Get the Partner App</CardTitle>
+            <CardDescription>
+              Download the official app for exclusive offers, prescription management, and more
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a 
+                href="#" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="transition-transform hover:scale-105"
+                data-testid="link-app-store"
+              >
+                <img 
+                  src={appStoreBadge} 
+                  alt="Download on the App Store" 
+                  className="h-12"
+                />
+              </a>
+              <a 
+                href="#" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="transition-transform hover:scale-105"
+                data-testid="link-google-play"
+              >
+                <img 
+                  src={googlePlayBadge} 
+                  alt="Get it on Google Play" 
+                  className="h-12"
+                />
+              </a>
+            </div>
           </CardContent>
         </Card>
       </div>
