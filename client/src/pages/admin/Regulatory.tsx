@@ -63,7 +63,7 @@ export default function Regulatory() {
     try {
       setIsGenerating(true);
       const response = await apiClient.get<{ data: PackageMetadata }>(
-        `/api/v1/admin/regulatory/package?programId=${selectedProgramId}&versionId=${selectedVersionId}`
+        `/admin/regulatory/package?programId=${selectedProgramId}&versionId=${selectedVersionId}`
       );
 
       setPackageData(response.data);
