@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileCheck, Download, AlertCircle, Sparkles, FileJson, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
-import type { DrugProgram } from '@/types/admin';
+import type { DrugProgram } from '@/types/drugProgram';
 
 interface ScreenerVersion {
   id: string;
