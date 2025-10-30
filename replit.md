@@ -39,6 +39,7 @@ The Pharma Admin UI includes comprehensive pages for:
 - **Drug Programs**: CRUD for programs, status badges, brand configuration, and public slug management.
 - **Drug Program Detail**: Tabbed interface for overview, screener versions, and settings.
 - **Screener Builder**: Visual flow-based editor supporting four question types (boolean for Yes/No, choice for multiple options, numeric for number inputs, diagnostic_test for lab/medical test requirements) with interactive preview mode and EHR configuration.
+- **Regulatory Submission Center**: FDA documentation generator producing 4 submission-ready reports (Design Spec JSON, Version History CSV, Study Data CSV, ACNU Failure Log CSV) with premium framer-motion animations including skeleton loading states, staggered cascade reveals, and smooth microinteractions. Saves pharma companies 3-6 months of manual documentation work per product launch.
 
 The Consumer UI provides patient-facing screening experience:
 - **EHR Fast Path**: Optional EHR integration allowing patients to auto-fill health data from their patient portal via OAuth
