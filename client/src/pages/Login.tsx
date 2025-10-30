@@ -89,7 +89,7 @@ const PHARMA_COMPANIES: CompanyAccounts[] = [
     editor: { role: 'Editor', email: 'grace.lockman@lilly.com', name: 'Grace Lockman', icon: Edit, color: 'text-cyan-500' },
     viewer: { role: 'Viewer', email: 'derek.williamson@lilly.com', name: 'Derek Williamson', icon: Eye, color: 'text-slate-500' },
     clinician: { role: 'Clinician', email: 'warren.nader@lilly.com', name: 'Warren Nader', icon: Stethoscope, color: 'text-green-500' },
-    auditor: { role: 'Auditor', email: 'alena.o\'reilly@lilly.com', name: 'Alena O\'Reilly', icon: ClipboardCheck, color: 'text-orange-500' },
+    auditor: { role: 'Auditor', email: 'alena.oreilly@lilly.com', name: 'Alena O\'Reilly', icon: ClipboardCheck, color: 'text-orange-500' },
   },
   {
     company: 'Bayer',

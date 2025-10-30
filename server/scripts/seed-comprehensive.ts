@@ -31,6 +31,9 @@ import {
   screeningSessions,
   verificationCodes,
 } from '../src/db/schema/consumer';
+import {
+  auditLogs,
+} from '../src/db/schema/core';
 import { eq } from 'drizzle-orm';
 import type { ScreenerJSON } from '../../client/src/types/screener';
 
@@ -1497,33 +1500,55 @@ async function seedComprehensiveData() {
 
       createdData.programs.push(program);
 
-      // Step 6: Create screener version
-      console.log(`   📝 Creating screener version...`);
+      // Step 6: Create historical screener versions (3 versions)
+      console.log(`   📝 Creating screener versions (3 historical)...`);
       
-      // Generate visual flow nodes and edges
-      const { nodes, edges } = generateFlowNodesAndEdges(pharmaData.drugProgram.screenerJson);
-      const screenerJsonWithFlow = {
-        ...pharmaData.drugProgram.screenerJson,
-        nodes,
-        edges,
-      };
+      const screenerVersionsList: any[] = [];
+      const versionNotes = [
+        'Initial version - basic ACNU screening',
+        'Enhanced version - added EHR mapping and diagnostic tests',
+        'Current version - added education module and comprehension checks'
+      ];
       
-      const [screenerVersion] = await db.insert(screenerVersions).values({
-        tenantId: tenant.id,
-        drugProgramId: program.id,
-        version: 1,
-        screenerJson: screenerJsonWithFlow,
-        notes: 'Initial version - comprehensive ACNU screening',
-        createdBy: adminUser.id,
-        updatedBy: adminUser.id,
-      }).returning();
-      console.log(`   ✅ Screener version created`);
+      for (let versionNum = 1; versionNum <= 3; versionNum++) {
+        // Generate visual flow nodes and edges
+        const { nodes, edges } = generateFlowNodesAndEdges(pharmaData.drugProgram.screenerJson);
+        const screenerJsonWithFlow = {
+          ...pharmaData.drugProgram.screenerJson,
+          nodes,
+          edges,
+        };
+        
+        // Create timestamp for historical versions (v1: 90 days ago, v2: 30 days ago, v3: now)
+        const createdAt = new Date();
+        if (versionNum === 1) {
+          createdAt.setDate(createdAt.getDate() - 90);
+        } else if (versionNum === 2) {
+          createdAt.setDate(createdAt.getDate() - 30);
+        }
+        
+        const [version] = await db.insert(screenerVersions).values({
+          tenantId: tenant.id,
+          drugProgramId: program.id,
+          version: versionNum,
+          screenerJson: screenerJsonWithFlow,
+          notes: versionNotes[versionNum - 1],
+          createdBy: adminUser.id,
+          updatedBy: adminUser.id,
+          createdAt,
+          updatedAt: createdAt,
+        }).returning();
+        
+        screenerVersionsList.push(version);
+      }
+      console.log(`   ✅ Created 3 screener versions`);
 
-      // Update program to link active screener version
+      // Set the latest version as active
+      const activeVersion = screenerVersionsList[screenerVersionsList.length - 1];
       await db.update(drugPrograms)
-        .set({ activeScreenerVersionId: screenerVersion.id })
+        .set({ activeScreenerVersionId: activeVersion.id })
         .where(eq(drugPrograms.id, program.id));
-      console.log(`   ✅ Active screener version linked`);
+      console.log(`   ✅ Active screener version set to v3`);
 
       // Step 7: Create partners
       console.log(`   🤝 Creating partners...`);
@@ -1567,11 +1592,32 @@ async function seedComprehensiveData() {
       }
       console.log(`   ✅ Partners created`);
 
-      // Step 8: Simulate screening sessions
+      // Step 8: Simulate screening sessions (100-150 total, distributed across versions)
       console.log(`   🧪 Simulating screening sessions...`);
-      const sessionCount = faker.number.int({ min: 10, max: 20 });
+      const sessionCount = faker.number.int({ min: 100, max: 150 });
+      
+      // Distribute sessions across versions: 30% v1, 30% v2, 40% v3
+      const v1Count = Math.floor(sessionCount * 0.3);
+      const v2Count = Math.floor(sessionCount * 0.3);
+      const v3Count = sessionCount - v1Count - v2Count;
       
       for (let i = 0; i < sessionCount; i++) {
+        // Determine which version this session belongs to
+        let versionIndex: number;
+        let daysAgo: number;
+        if (i < v1Count) {
+          versionIndex = 0; // v1
+          daysAgo = faker.number.int({ min: 60, max: 90 }); // 60-90 days ago
+        } else if (i < v1Count + v2Count) {
+          versionIndex = 1; // v2
+          daysAgo = faker.number.int({ min: 15, max: 30 }); // 15-30 days ago
+        } else {
+          versionIndex = 2; // v3
+          daysAgo = faker.number.int({ min: 1, max: 14 }); // 1-14 days ago
+        }
+        
+        const version = screenerVersionsList[versionIndex];
+        
         // Generate realistic answers based on screener questions
         const answersJson: Record<string, any> = {};
         const questions = pharmaData.drugProgram.screenerJson.questions;
@@ -1618,15 +1664,21 @@ async function seedComprehensiveData() {
           else outcome = 'do_not_use';
         }
 
+        // Create session with timestamp matching the version period
+        const completedAt = new Date();
+        completedAt.setDate(completedAt.getDate() - daysAgo);
+
         const [session] = await db.insert(screeningSessions).values({
           tenantId: tenant.id,
           drugProgramId: program.id,
-          screenerVersionId: screenerVersion.id,
+          screenerVersionId: version.id,
           path: faker.helpers.arrayElement(['manual', 'ehr_assisted', 'ehr_mandatory']),
           answersJson,
           outcome,
           status: 'completed',
-          completedAt: faker.date.recent({ days: 30 }),
+          completedAt,
+          createdAt: completedAt,
+          updatedAt: completedAt,
         }).returning();
 
         createdData.sessions.push(session);
@@ -1650,6 +1702,159 @@ async function seedComprehensiveData() {
         }
       }
       console.log(`   ✅ ${sessionCount} screening sessions created`);
+      
+      // Step 10: Create comprehensive audit logs
+      console.log(`   📋 Creating audit logs...`);
+      const auditLogEntries: any[] = [];
+      
+      // Get all team members for variety in audit logs
+      const allTenantUsers = await db.query.tenantUsers.findMany({
+        where: eq(tenantUsers.tenantId, tenant.id),
+        with: { user: true }
+      });
+      
+      // 1. Tenant creation log
+      auditLogEntries.push({
+        tenantId: tenant.id,
+        userId: adminUser.id,
+        action: 'tenant.create',
+        entityType: 'Tenant',
+        entityId: tenant.id,
+        changes: { new: { name: tenant.name, status: tenant.status } },
+        timestamp: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
+      });
+      
+      // 2. Admin user invitation
+      auditLogEntries.push({
+        tenantId: tenant.id,
+        userId: adminUser.id,
+        action: 'user.invite',
+        entityType: 'TenantUser',
+        entityId: adminUser.id,
+        changes: { new: { email: adminUser.email, role: 'admin' } },
+        timestamp: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+      });
+      
+      // 3. Team member invitations (for each editor, viewer, clinician, auditor)
+      allTenantUsers.slice(1).forEach((tu, index) => {
+        auditLogEntries.push({
+          tenantId: tenant.id,
+          userId: adminUser.id,
+          action: 'user.invite',
+          entityType: 'TenantUser',
+          entityId: tu.userId,
+          changes: { new: { email: tu.user.email, role: tu.role } },
+          timestamp: new Date(Date.now() - (85 - index * 2) * 24 * 60 * 60 * 1000),
+        });
+      });
+      
+      // 4. Brand configuration creation
+      auditLogEntries.push({
+        tenantId: tenant.id,
+        userId: adminUser.id,
+        action: 'brand.create',
+        entityType: 'BrandConfig',
+        entityId: brandConfig.id,
+        changes: { new: { name: brandConfig.name } },
+        timestamp: new Date(Date.now() - 85 * 24 * 60 * 60 * 1000),
+      });
+      
+      // 5. Drug program creation
+      auditLogEntries.push({
+        tenantId: tenant.id,
+        userId: adminUser.id,
+        action: 'program.create',
+        entityType: 'DrugProgram',
+        entityId: program.id,
+        changes: { new: { name: program.name, slug: program.slug, status: 'active' } },
+        timestamp: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+      });
+      
+      // 6. Screener version creation logs (for each version)
+      screenerVersionsList.forEach((version, index) => {
+        const daysAgo = index === 0 ? 90 : index === 1 ? 30 : 0;
+        auditLogEntries.push({
+          tenantId: tenant.id,
+          userId: adminUser.id,
+          action: 'screener.version.create',
+          entityType: 'ScreenerVersion',
+          entityId: version.id,
+          changes: { new: { version: version.version, notes: version.notes } },
+          timestamp: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000),
+        });
+        
+        // Also log screener publish action for v2 and v3
+        if (index > 0) {
+          auditLogEntries.push({
+            tenantId: tenant.id,
+            userId: adminUser.id,
+            action: 'screener.publish',
+            entityType: 'DrugProgram',
+            entityId: program.id,
+            changes: {
+              old: { activeScreenerVersionId: screenerVersionsList[index - 1].id },
+              new: { activeScreenerVersionId: version.id }
+            },
+            timestamp: new Date(Date.now() - (daysAgo - 1) * 24 * 60 * 60 * 1000),
+          });
+        }
+      });
+      
+      // 7. Partner creation logs
+      const partnersList = await db.query.partners.findMany({
+        where: eq(partners.tenantId, tenant.id)
+      });
+      partnersList.forEach((partner, index) => {
+        auditLogEntries.push({
+          tenantId: tenant.id,
+          userId: adminUser.id,
+          action: 'partner.create',
+          entityType: 'Partner',
+          entityId: partner.id,
+          changes: { new: { name: partner.name, type: partner.type, status: 'active' } },
+          timestamp: new Date(Date.now() - (80 - index * 2) * 24 * 60 * 60 * 1000),
+        });
+      });
+      
+      // 8. Partner API key generation logs
+      const apiKeysList = await db.query.partnerApiKeys.findMany({
+        where: eq(partnerApiKeys.tenantId, tenant.id),
+        with: { partner: true }
+      });
+      apiKeysList.forEach((key, index) => {
+        auditLogEntries.push({
+          tenantId: tenant.id,
+          userId: adminUser.id,
+          action: 'partner.key.create',
+          entityType: 'PartnerApiKey',
+          entityId: key.id,
+          changes: { new: { partnerId: key.partnerId, keyPrefix: key.keyPrefix, status: 'active' } },
+          timestamp: new Date(Date.now() - (75 - index * 2) * 24 * 60 * 60 * 1000),
+        });
+      });
+      
+      // 9. Sample verification success logs (for some codes)
+      const recentCodes = createdData.codes.filter(c => c.status === 'used').slice(0, 5);
+      recentCodes.forEach((code, index) => {
+        auditLogEntries.push({
+          tenantId: tenant.id,
+          userId: null, // System action via partner
+          action: 'verification.success',
+          entityType: 'VerificationCode',
+          entityId: code.id,
+          changes: {
+            old: { status: 'unused' },
+            new: { status: 'used' }
+          },
+          timestamp: new Date(Date.now() - (7 - index) * 24 * 60 * 60 * 1000),
+        });
+      });
+      
+      // Insert all audit logs
+      if (auditLogEntries.length > 0) {
+        await db.insert(auditLogs).values(auditLogEntries);
+      }
+      console.log(`   ✅ Created ${auditLogEntries.length} audit log entries`);
       
       console.log(`✅ ${pharmaData.name} complete!\n`);
     }

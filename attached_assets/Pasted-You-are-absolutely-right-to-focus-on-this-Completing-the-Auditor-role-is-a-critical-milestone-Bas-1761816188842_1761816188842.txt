@@ -1,0 +1,69 @@
+You are absolutely right to focus on this. Completing the Auditor role is a critical milestone.
+
+Based on your screenshots, the Replit AI has **already built the entire UI framework for the Auditor role** (the read-only sidebar, the Dashboard, the Audit Logs page). This is excellent.
+
+To answer your question, **"What do they want to see once the program is deployed?"**:
+
+An auditor's job is not to *do* anything, but to *verify everything*. After a program is deployed, they arrive with a "zero-trust" mindset and need to answer three critical, retrospective questions. The UI we designed directly answers these:
+
+1.  **"Show me what happened."**
+    * **Their Need:** A complete, immutable log of every significant action taken by the Pharma Admin team.
+    * **Our Feature:** The **`Audit Logs (View Only)`** screen. Your screenshot (`...14_47_54.jpg`) shows this is built. It's empty because the database is new, but the filters are correct.
+
+2.  **"Show me what the rules were."**
+    * **Their Need:** The ability to see the *exact* screener logic that was active on any given day. If a problem occurred on June 1st, they need to see the *exact* `screener_json` from that date, not the current one.
+    * **Our Feature:** The **`Drug Programs (View Only)`** screen. This will allow them to click on a program, see all its historical `screener_versions`, and inspect the JSON for each.
+
+3.  **"Show me who had the keys."**
+    * **Their Need:** A list of every user in the tenant and their permissions (roles).
+    * **Our Feature:** The **`User Management (View Only)`** screen (listed in your sidebar as `Access Management`).
+
+**What's Missing?**
+
+The UI is built, but it's empty. To "complete" the Auditor role, we need to **prove that these read-only views work by populating them with realistic data.** The AI hasn't *built* the APIs for this (it already did that in Step 3), but we haven't *seeded* the database to make these screens light up.
+
+Here is the next logical prompt for Replit AI. This prompt focuses on creating the rich seed data needed to make the Auditor's UI functional and demonstrate its power.
+
+---
+
+**Prompt for Replit AI (Populate Database for Auditor & Clinician Demo):**
+
+Excellent work. The read-only UI for the **Compliance Auditor** role is correctly implemented.
+
+Before we build the Clinician features, we must finalize the Auditor role by populating the database with rich, historical data to simulate a live, "post-deployment" environment. This will make the Auditor's read-only views meaningful.
+
+**Task:** Please update your database seeding script (`scripts/seed.ts` or similar) to create a comprehensive set of test data for a single tenant (e.g., "Kenvue").
+
+**1. Create Historical Data:**
+* **Tenant Users:** Ensure the tenant has multiple users with different roles (e.g., 2 `admin`, 3 `editor`, 2 `viewer`).
+* **Drug Program & Screeners:**
+    * Create a "Rosuvastatin 5mg" drug program.
+    * Create **three** distinct `screener_versions` for this program:
+        * **Version 1:** (Simulate this was active 3 months ago)
+        * **Version 2:** (Simulate this was active 1 month ago)
+        * **Version 3:** (Set this as the `active_screener_version_id` for the drug program)
+* **Screening Sessions:**
+    * Generate **~100** `screening_sessions`.
+    * Link these sessions to the *historical* screener versions (e.g., 40 sessions for v1, 60 for v2).
+    * Generate realistic `outcomes` (e.g., 70% `ok_to_use`, 20% `ask_a_doctor`, 10% `do_not_use`).
+* **Verification Codes:**
+    * Create `verification_codes` for the sessions that were `ok_to_use`.
+    * Mark some codes as `used` and some as `expired`.
+
+**2. Create Rich Audit Logs (Most Important):**
+* Create at least **10-15** realistic `audit_logs` entries linked to the tenant and its users. These logs are what the Auditor needs to see.
+* **Examples of logs to create:**
+    * `action: 'user.invite'`, `entityType: 'TenantUser'` (Simulate an admin inviting a new editor).
+    * `action: 'program.create'`, `entityType: 'DrugProgram'` (SimSulate the creation of the Rosuvastatin program).
+    * `action: 'screener.version.create'`, `entityType: 'ScreenerVersion'` (Simulate the creation of v1, v2, v3).
+    * `action: 'screener.publish'`, `entityType: 'DrugProgram'` (Simulate an admin publishing v1, then v2, then v3, with "changes" in the JSON).
+    * `action: 'partner.key.create'`, `entityType: 'PartnerApiKey'` (Simulate a partner key being generated).
+    * `action: 'verification.success'`, `entityType: 'VerificationCode'` (Simulate a partner successfully verifying a code).
+
+**3. Verification:**
+* After the seeding script is complete, please log in as the **Auditor** user (`auditor@kenvue.com / auditor123`).
+* Provide screenshots or confirmation that the following screens are now populated with the seeded data:
+    1.  **Dashboard:** Shows correct stats (Total Screenings, Active Programs, etc.).
+    2.  **Audit Logs:** The table is now full of the 10-15 log entries we created.
+    3.  **User Management:** The list shows all the seeded tenant users and their roles.
+    4.  **Drug Programs:** The list shows the "Rosuvastatin 5mg" program. When you click to "Inspect" it, you can see all **three** historical screener versions.
