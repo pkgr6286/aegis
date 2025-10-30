@@ -13,7 +13,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, Pill, Users, Building2, FileText, Palette, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, Pill, Users, Building2, FileText, Palette, ClipboardList, BarChart3 } from 'lucide-react';
 
 interface NavigationItem {
   title: string;
@@ -47,6 +47,11 @@ const adminNavigationGroups: NavigationGroup[] = [
         title: 'Drug Programs',
         icon: Pill,
         url: '/admin/programs',
+      },
+      {
+        title: 'Intelligence',
+        icon: BarChart3,
+        url: '/admin/intelligence',
       },
       {
         title: 'Audit Logs',

@@ -43,6 +43,7 @@ import AuditLogsPage from "@/pages/admin/AuditLogs";
 import DrugPrograms from "@/pages/admin/DrugPrograms";
 import DrugProgramDetail from "@/pages/admin/DrugProgramDetail";
 import ScreenerBuilder from "@/pages/admin/ScreenerBuilder";
+import Intelligence from "@/pages/admin/Intelligence";
 import { PharmaAdminLayout } from "@/components/admin/PharmaAdminLayout";
 
 // Clinician Pages
@@ -214,6 +215,9 @@ function Router() {
       </Route>
       <Route path="/admin/audit-logs">
         <PharmaAdminRoute component={AuditLogsPage} />
+      </Route>
+      <Route path="/admin/intelligence">
+        <PharmaAdminRoute component={Intelligence} />
       </Route>
 
       {/* Clinician Routes */}
