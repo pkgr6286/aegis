@@ -55,7 +55,7 @@ export default function Regulatory() {
     enabled: !!selectedProgramId,
   });
 
-  const versions = (versionsData as { success: boolean; data: { versions: ScreenerVersion[] } })?.data?.versions || [];
+  const versions = (versionsData as { success: boolean; data: ScreenerVersion[] })?.data || [];
 
   const handleGeneratePackage = async () => {
     if (!selectedProgramId || !selectedVersionId) return;
