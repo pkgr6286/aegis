@@ -176,6 +176,40 @@ export const consumerService = {
   },
 
   /**
+   * Update session outcome (e.g., after comprehension check failure)
+   */
+  async updateSessionOutcome(sessionId: string, outcome: 'ok_to_use' | 'ask_a_doctor' | 'do_not_use', reason: string) {
+    // Get the session
+    const session = await screeningSessionRepository.findById(sessionId);
+    if (!session) {
+      throw new Error('Screening session not found');
+    }
+
+    if (session.status !== 'completed') {
+      throw new Error('Session must be completed before updating outcome');
+    }
+
+    // Update the session outcome
+    const updatedSession = await screeningSessionRepository.updateOutcome(sessionId, outcome);
+
+    // Create evaluation object matching the new outcome
+    const evaluation = {
+      outcome,
+      reason,
+      recommendedActions: outcome === 'ok_to_use' 
+        ? ['You may use this product'] 
+        : outcome === 'ask_a_doctor'
+        ? ['Please consult your healthcare provider before using this product']
+        : ['Do not use this product. Please consult your healthcare provider'],
+    };
+
+    return {
+      session: updatedSession,
+      evaluation,
+    };
+  },
+
+  /**
    * Generate verification code for a successful session
    */
   async generateCode(sessionId: string, data: GenerateCodeInput) {

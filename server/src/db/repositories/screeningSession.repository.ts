@@ -79,6 +79,21 @@ export const screeningSessionRepository = {
   },
 
   /**
+   * Update session outcome (e.g., after comprehension check failure)
+   */
+  async updateOutcome(sessionId: string, outcome: 'ok_to_use' | 'ask_a_doctor' | 'do_not_use') {
+    const results = await db
+      .update(screeningSessions)
+      .set({
+        outcome,
+      })
+      .where(eq(screeningSessions.id, sessionId))
+      .returning();
+    
+    return results[0] || null;
+  },
+
+  /**
    * Check if session is valid for code generation
    * (completed and outcome is 'ok_to_use')
    */

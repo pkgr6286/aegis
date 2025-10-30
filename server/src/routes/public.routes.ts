@@ -185,6 +185,62 @@ router.put('/sessions/:id', authenticateSession, async (req, res) => {
 });
 
 /**
+ * PATCH /api/v1/public/sessions/:id/outcome
+ * Update session outcome after comprehension check failure
+ * Protected by session JWT
+ */
+router.patch('/sessions/:id/outcome', authenticateSession, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verify session ID matches the JWT
+    if (req.sessionId !== id) {
+      return res.status(403).json({
+        error: 'Session ID mismatch',
+        message: 'Token does not match the session being updated',
+      });
+    }
+
+    // Validate outcome data
+    const updateOutcomeSchema = z.object({
+      outcome: z.enum(['ok_to_use', 'ask_a_doctor', 'do_not_use']),
+      reason: z.string(),
+    });
+
+    const data = updateOutcomeSchema.parse(req.body);
+
+    // Update the session outcome
+    const result = await consumerService.updateSessionOutcome(id, data.outcome, data.reason);
+
+    res.json({
+      success: true,
+      data: {
+        evaluation: result.evaluation,
+      },
+      message: 'Session outcome updated successfully',
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.errors,
+      });
+    }
+
+    console.error('Error updating session outcome:', error);
+
+    if (error instanceof Error && error.message.includes('not found')) {
+      return res.status(404).json({ error: error.message });
+    }
+
+    res.status(500).json({
+      error: 'Failed to update session outcome',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
  * POST /api/v1/public/sessions/:id/generate-code
  * Generate verification code for a successful session
  * Protected by session JWT
