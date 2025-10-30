@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
@@ -10,6 +10,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import {
   BarChart,
   Bar,
@@ -31,6 +33,9 @@ import {
   BarChart3,
   Target,
   Award,
+  Bot,
+  Send,
+  Sparkles,
 } from 'lucide-react';
 import type { DrugProgram } from '@/types/drugProgram';
 import {
@@ -42,6 +47,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { apiClient } from '@/lib/apiClient';
+import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface OverviewStats {
   totalScreenings: number;
@@ -95,9 +103,18 @@ interface PartnerPerformance {
   successRate: number;
 }
 
+interface ChatMessage {
+  role: 'user' | 'ai';
+  content: string;
+  timestamp: string;
+}
+
 export default function Intelligence() {
+  const { toast } = useToast();
   const [selectedProgramId, setSelectedProgramId] = useState<string>('');
   const [selectedQuestionId, setSelectedQuestionId] = useState<string>('');
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState<string>('');
 
   const { data: programsData, isLoading: programsLoading } = useQuery({
     queryKey: ['/admin/drug-programs'],
@@ -188,6 +205,54 @@ export default function Intelligence() {
     'Not Eligible': item.do_not_use,
   }));
 
+  const aiQueryMutation = useMutation({
+    mutationFn: async (query: string) => {
+      return await apiClient.post<{ success: boolean; data: { query: string; response: string; timestamp: string } }>(
+        '/admin/analytics/query-ai',
+        {
+          query,
+          drugProgramId: selectedProgramId,
+        }
+      );
+    },
+    onSuccess: (response) => {
+      const aiMessage: ChatMessage = {
+        role: 'ai',
+        content: response.data.response,
+        timestamp: response.data.timestamp,
+      };
+      setChatMessages((prev) => [...prev, aiMessage]);
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'AI Query Failed',
+        description: error.response?.data?.message || 'Failed to get AI response',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleSendMessage = () => {
+    if (!chatInput.trim() || !selectedProgramId) return;
+
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: chatInput,
+      timestamp: new Date().toISOString(),
+    };
+
+    setChatMessages((prev) => [...prev, userMessage]);
+    aiQueryMutation.mutate(chatInput);
+    setChatInput('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
   return (
     <div className="p-8 space-y-8">
       <div>
@@ -225,6 +290,112 @@ export default function Intelligence() {
           </CardContent>
         </Card>
       ) : (
+        <>
+          <Card className="border-primary/20">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Bot className="h-5 w-5 text-primary" />
+                <CardTitle>AI Analyst</CardTitle>
+                <Sparkles className="h-4 w-4 text-primary" />
+              </div>
+              <CardDescription>
+                Ask natural language questions about your screening data and get AI-powered insights
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {chatMessages.length > 0 && (
+                <ScrollArea className="h-96 w-full rounded-md border p-4">
+                  <div className="space-y-4">
+                    {chatMessages.map((message, index) => (
+                      <div
+                        key={index}
+                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-[80%] rounded-lg p-3 ${
+                            message.role === 'user'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            {message.role === 'ai' && <Bot className="h-4 w-4" />}
+                            <span className="text-xs font-semibold">
+                              {message.role === 'user' ? 'You' : 'Aegis Intelligence'}
+                            </span>
+                          </div>
+                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {aiQueryMutation.isPending && (
+                      <div className="flex justify-start">
+                        <div className="max-w-[80%] rounded-lg p-3 bg-muted">
+                          <div className="flex items-center gap-2">
+                            <Bot className="h-4 w-4 animate-pulse" />
+                            <span className="text-xs font-semibold">Aegis Intelligence</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">Analyzing your data...</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              )}
+              <div className="flex gap-2">
+                <Textarea
+                  placeholder="Ask a question: 'Why is our screener failing?' or 'Compare manual vs EHR performance'"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="min-h-[60px] resize-none"
+                  data-testid="textarea-ai-query"
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!chatInput.trim() || aiQueryMutation.isPending}
+                  size="icon"
+                  className="h-[60px] w-[60px]"
+                  data-testid="button-send-ai-query"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+              {chatMessages.length === 0 && (
+                <div className="text-center text-sm text-muted-foreground space-y-2">
+                  <p className="font-medium">Try asking:</p>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    <Badge
+                      variant="outline"
+                      className="cursor-pointer hover-elevate"
+                      onClick={() => setChatInput('Why is our screener failing most often?')}
+                    >
+                      Why is our screener failing?
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className="cursor-pointer hover-elevate"
+                      onClick={() => setChatInput('Compare manual entry vs EHR path performance')}
+                    >
+                      Compare manual vs EHR
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className="cursor-pointer hover-elevate"
+                      onClick={() => setChatInput('What are the top failure drivers?')}
+                    >
+                      Top failure drivers?
+                    </Badge>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+        </>
+      )}
+      
+      {selectedProgramId && (
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList>
             <TabsTrigger value="overview" data-testid="tab-overview">
