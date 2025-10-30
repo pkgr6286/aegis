@@ -10,8 +10,14 @@ import { analyticsService } from '../services/analytics.service';
 import { aiAnalystService } from '../services/aiAnalyst.service';
 import { analyticsQuerySchema } from '../validations/analytics.validation';
 import { z } from 'zod';
+import { authenticateToken, setTenantContextMiddleware, requireTenantRole } from '../middleware/auth.middleware';
 
 const router = Router();
+
+// All routes require authentication, tenant context, and viewer+ role
+router.use(authenticateToken);
+router.use(setTenantContextMiddleware);
+router.use(requireTenantRole('viewer', 'editor', 'admin', 'auditor', 'clinician'));
 
 /**
  * GET /api/v1/admin/analytics/overview-stats

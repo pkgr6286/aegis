@@ -15,6 +15,7 @@ export const analyticsService = {
    * Get overview statistics for a drug program
    */
   async getOverviewStats(tenantId: string, drugProgramId: string) {
+    console.log('[Analytics] getOverviewStats called with:', { tenantId, drugProgramId });
     const { db } = await import('../db');
     const { screeningSessions } = await import('../db/schema/consumer');
     const { verificationCodes } = await import('../db/schema/consumer');
@@ -29,6 +30,8 @@ export const analyticsService = {
           eq(screeningSessions.drugProgramId, drugProgramId)
         )
       );
+    
+    console.log('[Analytics] totalScreenings count:', totalScreenings.count);
 
     const [completedScreenings] = await db
       .select({ count: count() })
