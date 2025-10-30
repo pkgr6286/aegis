@@ -44,7 +44,8 @@ import DrugPrograms from "@/pages/admin/DrugPrograms";
 import DrugProgramDetail from "@/pages/admin/DrugProgramDetail";
 import ScreenerBuilder from "@/pages/admin/ScreenerBuilder";
 import Intelligence from "@/pages/admin/Intelligence";
-import { PharmaAdminLayout } from "@/components/admin/PharmaAdminLayout";
+import Regulatory from "@/pages/admin/Regulatory";
+import { PharmaAdminLayout } from "@/pages/admin/PharmaAdminLayout";
 
 // Clinician Pages
 import ReviewQueue from "@/pages/clinician/ReviewQueue";
@@ -218,6 +219,9 @@ function Router() {
       </Route>
       <Route path="/admin/intelligence">
         <PharmaAdminRoute component={Intelligence} />
+      </Route>
+      <Route path="/admin/regulatory">
+        <PharmaAdminRoute component={Regulatory} />
       </Route>
 
       {/* Clinician Routes */}
