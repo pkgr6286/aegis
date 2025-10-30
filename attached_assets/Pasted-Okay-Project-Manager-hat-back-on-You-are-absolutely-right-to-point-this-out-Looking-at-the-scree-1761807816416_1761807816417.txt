@@ -1,0 +1,122 @@
+Okay, Project Manager hat back on\! You are absolutely right to point this out. Looking at the screenshots, the current Consumer UI flow jumps directly from the questions to the outcome screen. We have indeed missed implementing the **Educational Content & Comprehension Check** steps (CON-204 and CON-205 from our PRD), which are critical for many ACNU scenarios.
+
+Let's rectify this immediately.
+
+**Why it's crucial:**
+
+  * **Regulatory Requirement:** For many ACNU drugs, the FDA *requires* manufacturers to demonstrate that consumers not only self-select correctly but also *understand* how to use the medication safely. An education module + comprehension check is a standard way to achieve this.
+  * **User Safety:** Ensuring users understand contraindications, dosing, side effects, etc., *before* they get a code to purchase is paramount.
+
+**How We Implement It (Strategy):**
+
+We need to integrate these steps seamlessly into the existing Consumer UI flow. The most logical place is typically:
+
+1.  After the user answers all the screening questions (`PUT /api/v1/public/sessions/:id` returns a *provisional* success, maybe indicating education is needed).
+2.  **Before** displaying the final "OK to Use" outcome or generating the verification code.
+
+This requires modifications to both the backend configuration (`screener_json`) and the frontend Consumer UI.
+
+**Detailed Implementation Plan:**
+
+**Phase 1: Backend/Configuration Update (Requires Pharma Admin UI - Screener Builder Modification)**
+
+  * **Goal:** Allow Pharma Admins to define educational content and comprehension questions *within* the Screener Builder.
+  * **Schema Change:** We need to enhance the `screener_json` structure stored in `app.screener_versions`. Add new optional sections within the main JSON object:
+    ```json
+    {
+      "startQuestionId": "q1_age_check",
+      "defaultOutcome": "ask_a_doctor",
+      "questions": { ... },
+      "rules": [ ... ],
+      "educationModule": { // NEW SECTION
+        "required": true, // Or false if optional
+        "content": [
+          { "type": "video", "url": "https://provider.com/video.mp4", "title": "How to Use Your Inhaler" },
+          { "type": "text", "markdown": "### Important Safety Info\n* Do not exceed dose.\n* See doctor if..." }
+        ]
+      },
+      "comprehensionCheck": { // NEW SECTION
+        "required": true,
+        "passingScore": 80, // e.g., 80% correct needed
+        "questions": [
+          { "id": "cq1", "text": "What is the maximum daily dose?", "options": ["1 puff", "2 puffs", "4 puffs"], "correctAnswer": "2 puffs" },
+          { "id": "cq2", "text": "Is this medicine for sudden breathing problems?", "options": ["Yes", "No"], "correctAnswer": "No" }
+        ],
+        "failOutcome": "ask_a_doctor" // What happens if they fail the check
+      }
+    }
+    ```
+  * **Screener Builder UI Update:** The visual builder needs new "Nodes" or configuration sections in the Properties Inspector to allow admins to:
+      * Enable/disable the Education Module and Comprehension Check.
+      * Add content blocks (linking videos, writing text/markdown).
+      * Define quiz questions, options, correct answers, passing score, and the outcome upon failure.
+  * **API Update (`POST /.../screeners`):** Ensure the backend correctly validates and saves this enhanced `screener_json` structure.
+
+**Phase 2: Frontend Consumer UI Implementation**
+
+  * **Goal:** Display the education content and administer the comprehension check based on the `screener_json`.
+  * **Flow Modification:**
+    1.  After the user submits answers (`PUT /api/v1/public/sessions/:id`), the backend evaluates the core screening logic.
+    2.  If the *provisional* outcome is `ok_to_use` AND the `screener_json` includes a `required: true` education module:
+          * The backend response should indicate this (e.g., `{"success": true, "data": { "sessionId": "...", "outcome": "pending_education" }}`).
+          * The Frontend then navigates to the new **Education Screen**.
+    3.  If no education is required OR after successfully completing education/comprehension:
+          * The Frontend proceeds to call `POST /.../generate-code` or displays the final outcome (`ask_a_doctor`, `do_not_use`).
+  * **New UI Components:**
+      * **Education Screen:** A component that iterates through the `educationModule.content` array and displays videos (e.g., using an `<iframe src={content.url}>`) or renders text/markdown. Includes a "Next" or "I Understand" button.
+      * **Comprehension Check Screen:** A component that displays the quiz questions from `comprehensionCheck.questions`. It collects answers, calculates the score client-side.
+          * **On Pass:** Proceeds to the next step (usually code generation).
+          * **On Fail:**
+              * Option 1: Allow retry (maybe once or twice).
+              * Option 2: Immediately navigate to the specified `failOutcome` screen (e.g., "Ask a Doctor"). Needs a backend call (`PUT /.../sessions/:id`) to update the session's final outcome.
+  * **API Calls:**
+      * The primary API change might be modifying the response of `PUT /api/v1/public/sessions/:id` to include the `pending_education` status.
+      * A potential *new* `PUT /api/v1/public/sessions/:id/complete_education` endpoint might be needed if the backend needs to explicitly track completion of this step before allowing code generation, or to update the final outcome if the comprehension check fails.
+
+-----
+
+**Prompt for Replit AI (Implement Education & Comprehension Check):**
+
+Okay, the core consumer screening flow is working. Now, we need to implement the critical **Educational Content and Comprehension Check** steps (Features CON-204 and CON-205).
+
+**Task:** Modify the backend configuration and the frontend Consumer UI to integrate these steps.
+
+**1. Backend/Configuration Changes:**
+
+  * Update the structure of the `screener_json` (as stored in `app.screener_versions.screener_json`) to include new optional `educationModule` and `comprehensionCheck` sections, as detailed below:
+    ```json
+    // Add these structures to the main screener_json object
+    "educationModule": {
+      "required": boolean,
+      "content": [ { "type": "video", "url": string, "title": string } | { "type": "text", "markdown": string } ]
+    },
+    "comprehensionCheck": {
+      "required": boolean,
+      "passingScore": number, // Percentage (0-100)
+      "questions": [ { "id": string, "text": string, "options": string[], "correctAnswer": string } ],
+      "failOutcome": "'ask_a_doctor' | 'do_not_use'" // Outcome if check fails
+    }
+    ```
+  * Modify the **Pharma Admin UI Screener Builder** (`frontend/pharma-admin-ui`) to allow admins to configure these new `educationModule` and `comprehensionCheck` sections visually (e.g., adding content blocks, defining quiz questions).
+  * Update the backend API `POST /api/v1/admin/programs/:programId/screeners` to validate and save this enhanced JSON structure.
+
+**2. Frontend Consumer UI Changes (`frontend/consumer-ui`):**
+
+  * **Modify Screener Flow Logic:**
+      * Adjust the `PUT /api/v1/public/sessions/:id` (Submit Answers) endpoint and/or its frontend handling. If the screening outcome is provisionally `ok_to_use` AND the fetched `screener_json` has `educationModule.required === true`, the flow should navigate to the new Education Screen instead of directly to the Outcome Screen.
+  * **Create New Components/Screens:**
+      * **`EducationScreen.tsx`:** Displays content from `screener_json.educationModule.content` (videos, markdown). Has a button to proceed.
+      * **`ComprehensionCheckScreen.tsx`:** Displays the quiz from `screener_json.comprehensionCheck.questions`. Calculates score client-side.
+          * If score \>= `passingScore`, proceed to the next step (usually code generation: call `POST /.../generate-code`).
+          * If score \< `passingScore`:
+              * (Optionally allow 1 retry).
+              * If final fail: Make a `PUT /api/v1/public/sessions/:id` call to update the session's `outcome` to the `comprehensionCheck.failOutcome` value from the JSON. Then, navigate to the corresponding Outcome Screen.
+  * **Integrate into Routing:** Add routes for these new screens within the consumer application's router.
+
+**Final Instructions:**
+
+  * Implement the necessary changes to the `screener_json` structure and the Pharma Admin Screener Builder UI.
+  * Implement the new Education and Comprehension Check screens and integrate them into the Consumer UI flow logic as described.
+  * Ensure the backend API (`PUT /.../sessions/:id`) supports potentially updating the final outcome based on a failed comprehension check.
+
+Please generate the required modifications to the backend JSON structure, the Pharma Admin UI, and the Consumer UI to fully implement these educational steps.
