@@ -12,7 +12,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, Building2, Users, FileText, Shield } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, FileText, Shield, BookOpen } from 'lucide-react';
 
 const navigationGroups = [
   {
@@ -47,6 +47,16 @@ const navigationGroups = [
         title: 'Platform Audit Logs',
         icon: FileText,
         url: '/superadmin/audit-logs',
+      },
+    ],
+  },
+  {
+    label: 'RESOURCES',
+    items: [
+      {
+        title: 'Documentation',
+        icon: BookOpen,
+        url: '/superadmin/documentation',
       },
     ],
   },

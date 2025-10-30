@@ -47,6 +47,9 @@ import Intelligence from "@/pages/admin/Intelligence";
 import Regulatory from "@/pages/admin/Regulatory";
 import { PharmaAdminLayout } from "@/components/admin/PharmaAdminLayout";
 
+// Documentation
+import Documentation from "@/pages/Documentation";
+
 // Clinician Pages
 import ReviewQueue from "@/pages/clinician/ReviewQueue";
 import SessionReview from "@/pages/clinician/SessionReview";
@@ -191,6 +194,9 @@ function Router() {
       <Route path="/superadmin/audit-logs">
         <SuperAdminRoute component={SuperAdminAuditLogs} />
       </Route>
+      <Route path="/superadmin/documentation">
+        <SuperAdminRoute component={Documentation} />
+      </Route>
 
       {/* Pharma Admin Routes */}
       <Route path="/admin/dashboard">
@@ -222,6 +228,9 @@ function Router() {
       </Route>
       <Route path="/admin/regulatory">
         <PharmaAdminRoute component={Regulatory} />
+      </Route>
+      <Route path="/admin/documentation">
+        <PharmaAdminRoute component={Documentation} />
       </Route>
 
       {/* Clinician Routes */}

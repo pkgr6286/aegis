@@ -13,7 +13,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, Pill, Users, Building2, FileText, Palette, ClipboardList, BarChart3, FileCheck } from 'lucide-react';
+import { LayoutDashboard, Pill, Users, Building2, FileText, Palette, ClipboardList, BarChart3, FileCheck, BookOpen } from 'lucide-react';
 
 interface NavigationItem {
   title: string;
@@ -89,6 +89,16 @@ const adminNavigationGroups: NavigationGroup[] = [
         icon: Palette,
         url: '/admin/brands',
         roles: ['admin', 'editor'], // Hide from viewers and auditors
+      },
+    ],
+  },
+  {
+    label: 'RESOURCES',
+    items: [
+      {
+        title: 'Documentation',
+        icon: BookOpen,
+        url: '/admin/documentation',
       },
     ],
   },
