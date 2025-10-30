@@ -7,6 +7,7 @@
 
 import { Router } from 'express';
 import { analyticsService } from '../services/analytics.service';
+import { aiAnalystService } from '../services/aiAnalyst.service';
 import { analyticsQuerySchema } from '../validations/analytics.validation';
 import { z } from 'zod';
 
@@ -229,6 +230,51 @@ router.get('/education-efficacy', async (req, res) => {
     console.error('Error fetching education efficacy:', error);
     res.status(500).json({
       error: 'Failed to fetch education efficacy',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * POST /api/v1/admin/analytics/query-ai
+ * Ask the AI Analyst a natural language question about analytics data
+ */
+const queryAISchema = z.object({
+  query: z.string().min(3, 'Question must be at least 3 characters').max(500, 'Question too long'),
+  drugProgramId: z.string().uuid('Invalid drug program ID'),
+});
+
+router.post('/query-ai', async (req, res) => {
+  try {
+    const tenantId = req.tenantId!;
+    const { query, drugProgramId } = queryAISchema.parse(req.body);
+
+    const aiResponse = await aiAnalystService.queryAI({
+      query,
+      tenantId,
+      drugProgramId,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        query,
+        response: aiResponse,
+        timestamp: new Date().toISOString(),
+      },
+    });
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.errors,
+      });
+    }
+
+    console.error('Error in AI Analyst query:', error);
+    res.status(500).json({
+      error: 'Failed to process AI query',
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }

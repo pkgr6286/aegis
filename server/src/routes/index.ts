@@ -6,6 +6,7 @@ import brandConfigRoutes from './brandConfig.routes';
 import drugProgramRoutes from './drugProgram.routes';
 import pharmaAdminRoutes from './pharmaAdmin.routes';
 import analyticsRoutes from './analytics.routes';
+import aiAnalystRoutes from './aiAnalyst.routes';
 import clinicianRoutes from './clinician.routes';
 import publicRoutes from './public.routes';
 import ehrRoutes from './ehr.routes';
