@@ -133,6 +133,54 @@ function PharmaAdminRoute({ component: Component }: { component: () => JSX.Eleme
   );
 }
 
+// Protected Route wrapper for any authenticated user (works for both super admin and pharma admin)
+function AuthenticatedRoute({ component: Component }: { component: () => JSX.Element }) {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
+  const hasRedirected = useRef(false);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="space-y-4">
+          <Skeleton className="h-12 w-48" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated && !hasRedirected.current) {
+    hasRedirected.current = true;
+    setTimeout(() => setLocation('/login'), 0);
+    return <div className="min-h-screen flex items-center justify-center"><Skeleton className="h-12 w-48" /></div>;
+  }
+
+  const userType = getUserType(user);
+  
+  // Render with appropriate layout based on user type
+  if (userType === 'superadmin') {
+    return (
+      <DashboardLayout>
+        <Component />
+      </DashboardLayout>
+    );
+  } else if (userType === 'pharma-admin') {
+    return (
+      <PharmaAdminLayout>
+        <Component />
+      </PharmaAdminLayout>
+    );
+  }
+
+  // If neither, redirect to login
+  if (!hasRedirected.current) {
+    hasRedirected.current = true;
+    setTimeout(() => setLocation('/login'), 0);
+  }
+  return <div className="min-h-screen flex items-center justify-center"><Skeleton className="h-12 w-48" /></div>;
+}
+
 // Root redirect component - NO <Redirect> COMPONENT
 function RootRedirect() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -199,12 +247,6 @@ function Router() {
       <Route path="/superadmin/documentation">
         <SuperAdminRoute component={Documentation} />
       </Route>
-      <Route path="/docs/user-guide">
-        <SuperAdminRoute component={UserGuide} />
-      </Route>
-      <Route path="/docs/technical">
-        <SuperAdminRoute component={TechnicalDocs} />
-      </Route>
 
       {/* Pharma Admin Routes */}
       <Route path="/admin/dashboard">
@@ -240,11 +282,13 @@ function Router() {
       <Route path="/admin/documentation">
         <PharmaAdminRoute component={Documentation} />
       </Route>
+
+      {/* Shared Documentation Routes (accessible by both super admin and pharma admin) */}
       <Route path="/docs/user-guide">
-        <PharmaAdminRoute component={UserGuide} />
+        <AuthenticatedRoute component={UserGuide} />
       </Route>
       <Route path="/docs/technical">
-        <PharmaAdminRoute component={TechnicalDocs} />
+        <AuthenticatedRoute component={TechnicalDocs} />
       </Route>
 
       {/* Clinician Routes */}
