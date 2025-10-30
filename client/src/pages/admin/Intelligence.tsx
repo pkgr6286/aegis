@@ -106,49 +106,49 @@ export default function Intelligence() {
   const programs = (programsData as { success: boolean; data: DrugProgram[] })?.data || [];
 
   const { data: overviewData, isLoading: overviewLoading } = useQuery({
-    queryKey: ['/admin/analytics/overview-stats', selectedProgramId],
+    queryKey: [`/admin/analytics/overview-stats?drugProgramId=${selectedProgramId}`],
     enabled: !!selectedProgramId,
   });
 
   const overviewStats = (overviewData as { success: boolean; data: OverviewStats })?.data;
 
   const { data: funnelData, isLoading: funnelLoading } = useQuery({
-    queryKey: ['/admin/analytics/screener-funnel', selectedProgramId],
+    queryKey: [`/admin/analytics/screener-funnel?drugProgramId=${selectedProgramId}`],
     enabled: !!selectedProgramId,
   });
 
   const funnel = (funnelData as { success: boolean; data: FunnelData })?.data;
 
   const { data: pathData, isLoading: pathLoading } = useQuery({
-    queryKey: ['/admin/analytics/path-performance', selectedProgramId],
+    queryKey: [`/admin/analytics/path-performance?drugProgramId=${selectedProgramId}`],
     enabled: !!selectedProgramId,
   });
 
   const pathPerformance = (pathData as { success: boolean; data: PathPerformance })?.data;
 
   const { data: outcomesData, isLoading: outcomesLoading } = useQuery({
-    queryKey: ['/admin/analytics/outcomes-by-question', selectedProgramId],
+    queryKey: [`/admin/analytics/outcomes-by-question?drugProgramId=${selectedProgramId}`],
     enabled: !!selectedProgramId,
   });
 
   const outcomes = (outcomesData as { success: boolean; data: OutcomeByQuestion[] })?.data || [];
 
   const { data: populationData } = useQuery({
-    queryKey: ['/admin/analytics/population-outcomes', selectedProgramId],
+    queryKey: [`/admin/analytics/population-outcomes?drugProgramId=${selectedProgramId}`],
     enabled: !!selectedProgramId,
   });
 
   const availableQuestions = (populationData as { success: boolean; data: Array<{ questionId: string }> })?.data || [];
 
   const { data: populationOutcomesData, isLoading: populationLoading } = useQuery({
-    queryKey: ['/admin/analytics/population-outcomes', selectedProgramId, selectedQuestionId],
+    queryKey: [`/admin/analytics/population-outcomes?drugProgramId=${selectedProgramId}&questionId=${selectedQuestionId}`],
     enabled: !!selectedProgramId && !!selectedQuestionId,
   });
 
   const populationOutcomes = (populationOutcomesData as { success: boolean; data: Array<{ answer: string; ok_to_use: number; ask_a_doctor: number; do_not_use: number; total: number }> })?.data || [];
 
   const { data: partnerData, isLoading: partnerLoading } = useQuery({
-    queryKey: ['/admin/analytics/partner-performance', selectedProgramId],
+    queryKey: [`/admin/analytics/partner-performance?drugProgramId=${selectedProgramId}`],
     enabled: !!selectedProgramId,
   });
 
