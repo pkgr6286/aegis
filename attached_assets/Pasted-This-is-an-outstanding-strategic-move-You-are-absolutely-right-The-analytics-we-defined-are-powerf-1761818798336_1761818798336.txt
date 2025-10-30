@@ -1,0 +1,101 @@
+This is an outstanding strategic move. You are absolutely right. The analytics we defined are powerful, but they are *descriptive* (showing what happened). The true "wow" factor, and the biggest selling point for Aegis, is to add **predictive and prescriptive AI**.
+
+Pharma executives and regulatory teams don't just want data; they want *answers*. They want the platform to tell them what's wrong and how to fix it. We can absolutely do this by integrating the Gemini API directly into our analytics module.
+
+Here is the plan to evolve the **"Aegis Intelligence Module"** with true AI capabilities.
+
+### **The "Cool AI" Features We Will Add**
+
+1.  **AI Analyst Chat (Gemini RAG):**
+
+      * **What it is:** A chat interface directly on the "Intelligence" dashboard where an admin can ask natural language questions about their data.
+      * **User Asks:** "Why is our screener failing most often in California?" or "Compare the verification funnel for Crestor-OTC vs. our new Tylenol Sleep program."
+      * **How it works (Backend):** We'll use a Retrieval-Augmented Generation (RAG) pattern. The backend will receive the user's question, query our analytics database for the *relevant* data, and then feed both the question and the data into a Gemini prompt.
+      * **Gemini's Role:** "You are an expert pharmaceutical regulatory analyst. Based *only* on the following data: `[JSON data from our API]`, answer the user's question: `[User's query]`."
+
+2.  **Proactive Anomaly Detection & Insights:**
+
+      * **What it is:** Instead of waiting for the admin to find a problem, the AI will find it for them and surface it on the dashboard.
+      * **Example Insight Card:** "📈 **New Insight:** We've detected a 40% spike in `ask_a_doctor` outcomes for users aged 18-25 on the 'Advair OTC' program in the last 48 hours. This may indicate a new trend or user confusion."
+      * **How it works (Backend):** A scheduled backend job (e.g., daily cron job) runs analytics, feeds the summary into a Gemini prompt ("Are there any dangerous or commercially significant anomalies in this data?"), and stores the AI's "insight" in a new database table. The dashboard just displays these insights.
+
+3.  **Screener Optimization Advisor:**
+
+      * **What it is:** An AI-powered "lint" tool for screeners.
+      * **How it works:** In the Screener Builder, an admin can click an "Analyze" button. The AI analyzes the `screener_json` *and* its real-world performance data (from the analytics APIs).
+      * **Example Recommendation:** "We noticed a 60% user drop-off at Question 4, 'Do you have hepatic impairment?' The average time on this question is 75 seconds. **Recommendation:** This medical term is confusing. Rephrase to 'Have you ever been diagnosed with a liver condition?'"
+
+Let's start by implementing the most impactful and interactive feature: **The AI Analyst Chat**.
+
+-----
+
+### **Next Step: Instruction for Replit AI (Implement AI Analyst Chat)**
+
+Here is the comprehensive prompt to build the AI Analyst feature.
+
+**Prompt for Replit AI (Implement "AI Analyst" Chat Module):**
+
+Excellent. The "Aegis Intelligence" module foundation is set. We will now add a powerful generative AI feature to it: the **AI Analyst Chat**.
+
+This task involves adding a new backend API endpoint to communicate with the Gemini API and a new frontend chat interface on the "Intelligence" page.
+
+**1. Task: Enhance Backend (New AI Service & API)**
+
+  * **New File (`src/services/aiAnalyst.service.ts`):**
+
+      * Create a new service. This service will be responsible for orchestrating the RAG (Retrieval-Augmented Generation) flow.
+      * It needs to import and use the *other* analytics service functions (e.g., `analyticsService.getScreenerFunnel`, `analyticsService.getPopulationOutcomes`).
+      * **Function: `queryAI(query: string, tenantId: string, drugProgramId: string)`:**
+        1.  **Parse Intent (Simple):** Determine which analytics data is needed. (For V1, we can start by just fetching *all* data from the other analytics endpoints, like `getScreenerFunnel`, `getPopulationOutcomes`, etc.).
+        2.  **Fetch Context:** Call the internal `analyticsService` functions to get the up-to-date, structured analytics data (the "context").
+        3.  **Build Prompt:** Create a `systemInstruction` and a `user_prompt` to send to Gemini.
+        4.  **Call Gemini API:** Make a `POST` request to the `gemini-2.5-flash-preview-09-2025:generateContent` endpoint. The payload should look like this:
+            ```json
+            {
+              "systemInstruction": {
+                "parts": [ { "text": "You are 'Aegis Intelligence', an expert pharmaceutical regulatory and commercial analyst. You provide concise, data-driven insights. Answer the user's question based *only* on the structured JSON data provided. Do not make up information. If the data is insufficient, state that." } ]
+              },
+              "contents": [
+                {
+                  "role": "user",
+                  "parts": [
+                    { "text": "USER_QUESTION: ${query}" },
+                    { "text": "DATA_CONTEXT: ${JSON.stringify(fetchedAnalyticsData)}" }
+                  ]
+                }
+              ]
+            }
+            ```
+        5.  **Return Response:** Parse the Gemini API response (`result.candidates[0].content.parts[0].text`) and return the text.
+
+  * **New Route File (`src/routes/aiAnalyst.routes.ts`):**
+
+      * Create a new route file.
+      * **Endpoint:** `POST /api/v1/admin/analytics/query-ai`
+      * **Security:** Protect this route with `authenticateToken`, `setTenantContext`, and `requireRole(['admin', 'editor', 'viewer', 'auditor'])`.
+      * **Logic:** This route should validate the body (e.g., `z.object({ query: z.string(), drugProgramId: z.string().uuid() })`) and call the new `aiAnalystService.queryAI` function. It should then stream the response back to the client if possible, or send the full text response.
+
+  * **Update Main Router (`src/routes/index.ts`):**
+
+      * Mount the new `aiAnalystRouter` under the `/api/v1/admin/analytics` path (or merge with `analyticsRouter`).
+
+**2. Task: Enhance Frontend "Intelligence" UI (`frontend/pharma-admin-ui`)**
+
+  * **Modify `src/pages/admin/Intelligence.tsx`:**
+      * Add a new, prominent component on this page: the **"AI Analyst Chat"** widget.
+      * **UI Components:**
+          * **`MessageList`:** A scrollable `div` that displays the chat history (messages from "User" and "Aegis Intelligence").
+          * **`ChatInput`:** A `textarea` and "Send" button (or "Enter" keypress handler).
+      * **Logic (State):**
+          * Use `useState` to manage the list of chat messages (`messages`).
+          * Use `useState` to manage the loading state (`isLoading`).
+      * **Flow:**
+        1.  When the user sends a query:
+        2.  Append the user's message to the `messages` state.
+        3.  Set `isLoading = true`.
+        4.  Call the new backend endpoint: `POST /api/v1/admin/analytics/query-ai` with the `{ query, drugProgramId }`.
+        5.  When the response is received:
+        6.  Set `isLoading = false`.
+        7.  Append the AI's text response to the `messages` state.
+
+Please generate the necessary backend and frontend code to implement this "AI Analyst Chat" feature.
