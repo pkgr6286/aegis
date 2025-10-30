@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, CheckCircle2, FileCheck, Lock, UserCog, Users, Stethoscope, ClipboardCheck, Building2, Edit, Eye, Sparkles, Link } from 'lucide-react';
+import { Shield, CheckCircle2, FileCheck, Lock, UserCog, Users, Stethoscope, ClipboardCheck, Building2, Edit, Eye, Sparkles, Link as LinkIcon } from 'lucide-react';
 
 interface DemoAccount {
   role: string;
@@ -250,7 +250,7 @@ export default function Login() {
             <div className="flex gap-4">
               <div className="flex-shrink-0">
                 <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center">
-                  <Link className="w-6 h-6" />
+                  <LinkIcon className="w-6 h-6" />
                 </div>
               </div>
               <div>
