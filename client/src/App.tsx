@@ -45,7 +45,7 @@ import DrugProgramDetail from "@/pages/admin/DrugProgramDetail";
 import ScreenerBuilder from "@/pages/admin/ScreenerBuilder";
 import Intelligence from "@/pages/admin/Intelligence";
 import Regulatory from "@/pages/admin/Regulatory";
-import { PharmaAdminLayout } from "@/pages/admin/PharmaAdminLayout";
+import { PharmaAdminLayout } from "@/components/admin/PharmaAdminLayout";
 
 // Clinician Pages
 import ReviewQueue from "@/pages/clinician/ReviewQueue";
