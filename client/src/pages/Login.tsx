@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, CheckCircle2, FileCheck, Lock, UserCog, Users, Stethoscope, ClipboardCheck, Building2 } from 'lucide-react';
+import { Shield, CheckCircle2, FileCheck, Lock, UserCog, Users, Stethoscope, ClipboardCheck, Building2, Edit, Eye } from 'lucide-react';
 
 interface DemoAccount {
   role: string;
@@ -20,6 +20,8 @@ interface DemoAccount {
 interface CompanyAccounts {
   company: string;
   admin: DemoAccount;
+  editor: DemoAccount;
+  viewer: DemoAccount;
   clinician: DemoAccount;
   auditor: DemoAccount;
 }
@@ -36,62 +38,82 @@ const PHARMA_COMPANIES: CompanyAccounts[] = [
   {
     company: 'Kenvue',
     admin: { role: 'Admin', email: 'benjamin.serbiak@kenvue.com', name: 'Benjamin Serbiak', icon: UserCog, color: 'text-blue-500' },
-    clinician: { role: 'Clinician', email: 'petra.bins@kenvue.com', name: 'Petra Bins', icon: Stethoscope, color: 'text-green-500' },
-    auditor: { role: 'Auditor', email: 'lisandro.toy@kenvue.com', name: 'Lisandro Toy', icon: ClipboardCheck, color: 'text-orange-500' },
+    editor: { role: 'Editor', email: 'maudie.upton@kenvue.com', name: 'Maudie Upton', icon: Edit, color: 'text-cyan-500' },
+    viewer: { role: 'Viewer', email: 'matteo.mann@kenvue.com', name: 'Matteo Mann', icon: Eye, color: 'text-slate-500' },
+    clinician: { role: 'Clinician', email: 'connie.keebler@kenvue.com', name: 'Connie Keebler', icon: Stethoscope, color: 'text-green-500' },
+    auditor: { role: 'Auditor', email: 'jackie.treutel@kenvue.com', name: 'Jackie Treutel', icon: ClipboardCheck, color: 'text-orange-500' },
   },
   {
     company: 'Haleon',
     admin: { role: 'Admin', email: 'sarah.mitchell@haleon.com', name: 'Sarah Mitchell', icon: UserCog, color: 'text-blue-500' },
-    clinician: { role: 'Clinician', email: 'simeon.grant@haleon.com', name: 'Simeon Grant', icon: Stethoscope, color: 'text-green-500' },
-    auditor: { role: 'Auditor', email: 'dortha.weissnat@haleon.com', name: 'Dortha Weissnat', icon: ClipboardCheck, color: 'text-orange-500' },
+    editor: { role: 'Editor', email: 'jacinthe.pagac@haleon.com', name: 'Jacinthe Pagac', icon: Edit, color: 'text-cyan-500' },
+    viewer: { role: 'Viewer', email: 'reginald.boyer@haleon.com', name: 'Reginald Boyer', icon: Eye, color: 'text-slate-500' },
+    clinician: { role: 'Clinician', email: 'kurtis.kshlerin@haleon.com', name: 'Kurtis Kshlerin', icon: Stethoscope, color: 'text-green-500' },
+    auditor: { role: 'Auditor', email: 'keshaun.pouros@haleon.com', name: 'Keshaun Pouros', icon: ClipboardCheck, color: 'text-orange-500' },
   },
   {
     company: 'Pfizer',
     admin: { role: 'Admin', email: 'michael.thompson@pfizer.com', name: 'Michael Thompson', icon: UserCog, color: 'text-blue-500' },
-    clinician: { role: 'Clinician', email: 'anna.osinski-rath@pfizer.com', name: 'Anna Osinski-Rath', icon: Stethoscope, color: 'text-green-500' },
-    auditor: { role: 'Auditor', email: 'sophie.mitchell@pfizer.com', name: 'Sophie Mitchell', icon: ClipboardCheck, color: 'text-orange-500' },
+    editor: { role: 'Editor', email: 'alec.koelpin@pfizer.com', name: 'Alec Koelpin', icon: Edit, color: 'text-cyan-500' },
+    viewer: { role: 'Viewer', email: 'myriam.wisozk@pfizer.com', name: 'Myriam Wisozk', icon: Eye, color: 'text-slate-500' },
+    clinician: { role: 'Clinician', email: 'bernard.schuppe@pfizer.com', name: 'Bernard Schuppe', icon: Stethoscope, color: 'text-green-500' },
+    auditor: { role: 'Auditor', email: 'paris.haley@pfizer.com', name: 'Paris Haley', icon: ClipboardCheck, color: 'text-orange-500' },
   },
   {
     company: 'Sanofi',
     admin: { role: 'Admin', email: 'jennifer.rodriguez@sanofi.com', name: 'Jennifer Rodriguez', icon: UserCog, color: 'text-blue-500' },
-    clinician: { role: 'Clinician', email: 'will.prosacco@sanofi.com', name: 'Will Prosacco', icon: Stethoscope, color: 'text-green-500' },
-    auditor: { role: 'Auditor', email: 'penelope.kunze@sanofi.com', name: 'Penelope Kunze', icon: ClipboardCheck, color: 'text-orange-500' },
+    editor: { role: 'Editor', email: 'mayra.douglas@sanofi.com', name: 'Mayra Douglas', icon: Edit, color: 'text-cyan-500' },
+    viewer: { role: 'Viewer', email: 'sammie.schuppe@sanofi.com', name: 'Sammie Schuppe', icon: Eye, color: 'text-slate-500' },
+    clinician: { role: 'Clinician', email: 'yoshiko.erdman@sanofi.com', name: 'Yoshiko Erdman', icon: Stethoscope, color: 'text-green-500' },
+    auditor: { role: 'Auditor', email: 'magdalena.pouros@sanofi.com', name: 'Magdalena Pouros', icon: ClipboardCheck, color: 'text-orange-500' },
   },
   {
     company: 'AstraZeneca',
     admin: { role: 'Admin', email: 'david.chen@astrazeneca.com', name: 'David Chen', icon: UserCog, color: 'text-blue-500' },
-    clinician: { role: 'Clinician', email: 'harmon.block@astrazeneca.com', name: 'Harmon Block', icon: Stethoscope, color: 'text-green-500' },
-    auditor: { role: 'Auditor', email: 'horace.zieme@astrazeneca.com', name: 'Horace Zieme', icon: ClipboardCheck, color: 'text-orange-500' },
+    editor: { role: 'Editor', email: 'fiona.reinger@astrazeneca.com', name: 'Fiona Reinger', icon: Edit, color: 'text-cyan-500' },
+    viewer: { role: 'Viewer', email: 'aliyah.schiller@astrazeneca.com', name: 'Aliyah Schiller', icon: Eye, color: 'text-slate-500' },
+    clinician: { role: 'Clinician', email: 'giuseppe.bruen@astrazeneca.com', name: 'Giuseppe Bruen', icon: Stethoscope, color: 'text-green-500' },
+    auditor: { role: 'Auditor', email: 'glen.orn@astrazeneca.com', name: 'Glen Orn', icon: ClipboardCheck, color: 'text-orange-500' },
   },
   {
     company: 'Merck',
     admin: { role: 'Admin', email: 'emily.johnson@merck.com', name: 'Emily Johnson', icon: UserCog, color: 'text-blue-500' },
-    clinician: { role: 'Clinician', email: 'katrine.weimann@merck.com', name: 'Katrine Weimann', icon: Stethoscope, color: 'text-green-500' },
-    auditor: { role: 'Auditor', email: 'miguel.kunde@merck.com', name: 'Miguel Kunde', icon: ClipboardCheck, color: 'text-orange-500' },
+    editor: { role: 'Editor', email: 'jacky.goyette@merck.com', name: 'Jacky Goyette', icon: Edit, color: 'text-cyan-500' },
+    viewer: { role: 'Viewer', email: 'brice.hand@merck.com', name: 'Brice Hand', icon: Eye, color: 'text-slate-500' },
+    clinician: { role: 'Clinician', email: 'maurine.ward-goldner@merck.com', name: 'Maurine Ward-Goldner', icon: Stethoscope, color: 'text-green-500' },
+    auditor: { role: 'Auditor', email: 'eudora.abernathy@merck.com', name: 'Eudora Abernathy', icon: ClipboardCheck, color: 'text-orange-500' },
   },
   {
     company: 'Eli Lilly',
     admin: { role: 'Admin', email: 'robert.williams@lilly.com', name: 'Robert Williams', icon: UserCog, color: 'text-blue-500' },
-    clinician: { role: 'Clinician', email: 'gene.rohan@lilly.com', name: 'Gene Rohan', icon: Stethoscope, color: 'text-green-500' },
-    auditor: { role: 'Auditor', email: 'dianna.rau@lilly.com', name: 'Dianna Rau', icon: ClipboardCheck, color: 'text-orange-500' },
+    editor: { role: 'Editor', email: 'grace.lockman@lilly.com', name: 'Grace Lockman', icon: Edit, color: 'text-cyan-500' },
+    viewer: { role: 'Viewer', email: 'derek.williamson@lilly.com', name: 'Derek Williamson', icon: Eye, color: 'text-slate-500' },
+    clinician: { role: 'Clinician', email: 'warren.nader@lilly.com', name: 'Warren Nader', icon: Stethoscope, color: 'text-green-500' },
+    auditor: { role: 'Auditor', email: 'alena.o\'reilly@lilly.com', name: 'Alena O\'Reilly', icon: ClipboardCheck, color: 'text-orange-500' },
   },
   {
     company: 'Bayer',
     admin: { role: 'Admin', email: 'catherine.anderson@bayer.com', name: 'Catherine Anderson', icon: UserCog, color: 'text-blue-500' },
-    clinician: { role: 'Clinician', email: 'harrison.jenkins@bayer.com', name: 'Harrison Jenkins', icon: Stethoscope, color: 'text-green-500' },
-    auditor: { role: 'Auditor', email: 'elise.lynch-frami@bayer.com', name: 'Elise Lynch-Frami', icon: ClipboardCheck, color: 'text-orange-500' },
+    editor: { role: 'Editor', email: 'jenifer.harris@bayer.com', name: 'Jenifer Harris', icon: Edit, color: 'text-cyan-500' },
+    viewer: { role: 'Viewer', email: 'akeem.deckow@bayer.com', name: 'Akeem Deckow', icon: Eye, color: 'text-slate-500' },
+    clinician: { role: 'Clinician', email: 'maria.weimann@bayer.com', name: 'Maria Weimann', icon: Stethoscope, color: 'text-green-500' },
+    auditor: { role: 'Auditor', email: 'nolan.kemmer-gibson@bayer.com', name: 'Nolan Kemmer-Gibson', icon: ClipboardCheck, color: 'text-orange-500' },
   },
   {
     company: 'AbbVie',
     admin: { role: 'Admin', email: 'thomas.martin@abbvie.com', name: 'Thomas Martin', icon: UserCog, color: 'text-blue-500' },
-    clinician: { role: 'Clinician', email: 'antonia.zulauf@abbvie.com', name: 'Antonia Zulauf', icon: Stethoscope, color: 'text-green-500' },
-    auditor: { role: 'Auditor', email: 'dandre.schaefer@abbvie.com', name: 'Dandre Schaefer', icon: ClipboardCheck, color: 'text-orange-500' },
+    editor: { role: 'Editor', email: 'letitia.crist@abbvie.com', name: 'Letitia Crist', icon: Edit, color: 'text-cyan-500' },
+    viewer: { role: 'Viewer', email: 'lora.ondricka@abbvie.com', name: 'Lora Ondricka', icon: Eye, color: 'text-slate-500' },
+    clinician: { role: 'Clinician', email: 'joesph.mitchell@abbvie.com', name: 'Joesph Mitchell', icon: Stethoscope, color: 'text-green-500' },
+    auditor: { role: 'Auditor', email: 'cynthia.pollich@abbvie.com', name: 'Cynthia Pollich', icon: ClipboardCheck, color: 'text-orange-500' },
   },
   {
     company: 'P&G Health',
     admin: { role: 'Admin', email: 'maria.garcia@pghealth.com', name: 'Maria Garcia', icon: UserCog, color: 'text-blue-500' },
-    clinician: { role: 'Clinician', email: 'augustus.schuster-streich@pghealth.com', name: 'Augustus Schuster-Streich', icon: Stethoscope, color: 'text-green-500' },
-    auditor: { role: 'Auditor', email: 'ottilie.hoeger@pghealth.com', name: 'Ottilie Hoeger', icon: ClipboardCheck, color: 'text-orange-500' },
+    editor: { role: 'Editor', email: 'carmelo.sanford@pghealth.com', name: 'Carmelo Sanford', icon: Edit, color: 'text-cyan-500' },
+    viewer: { role: 'Viewer', email: 'xzavier.brekke@pghealth.com', name: 'Xzavier Brekke', icon: Eye, color: 'text-slate-500' },
+    clinician: { role: 'Clinician', email: 'verlie.jacobi@pghealth.com', name: 'Verlie Jacobi', icon: Stethoscope, color: 'text-green-500' },
+    auditor: { role: 'Auditor', email: 'aletha.fahey@pghealth.com', name: 'Aletha Fahey', icon: ClipboardCheck, color: 'text-orange-500' },
   },
 ];
 
@@ -332,7 +354,7 @@ export default function Login() {
                       </AccordionTrigger>
                       <AccordionContent className="px-3 pb-3 pt-1">
                         <div className="space-y-2">
-                          {[company.admin, company.clinician, company.auditor].map((account) => {
+                          {[company.admin, company.editor, company.viewer, company.clinician, company.auditor].map((account) => {
                             const Icon = account.icon;
                             return (
                               <button
