@@ -26,9 +26,11 @@ import { QuestionNode } from '@/components/screener/nodes/QuestionNode';
 import { OutcomeNode } from '@/components/screener/nodes/OutcomeNode';
 import { NodePalette } from '@/components/screener/NodePalette';
 import { PropertiesInspector } from '@/components/screener/PropertiesInspector';
+import { ScreenerSettings } from '@/components/screener/ScreenerSettings';
 import { BooleanQuestion } from '@/components/consumer/questions/BooleanQuestion';
 import { NumericQuestion } from '@/components/consumer/questions/NumericQuestion';
 import { ChoiceQuestion } from '@/components/consumer/questions/ChoiceQuestion';
+import type { EducationModule, ComprehensionCheck } from '@/types/screener';
 
 const nodeTypes: NodeTypes = {
   start: StartNode,
@@ -60,6 +62,9 @@ export default function ScreenerBuilder() {
   const [showPreview, setShowPreview] = useState(false);
   const [previewQuestionIndex, setPreviewQuestionIndex] = useState(0);
   const [previewAnswers, setPreviewAnswers] = useState<Record<string, any>>({});
+  const [showSettings, setShowSettings] = useState(false);
+  const [educationModule, setEducationModule] = useState<EducationModule | undefined>();
+  const [comprehensionCheck, setComprehensionCheck] = useState<ComprehensionCheck | undefined>();
   const nodeIdCounter = useRef(1);
 
   const isNewVersion = versionId === 'new';
@@ -80,6 +85,8 @@ export default function ScreenerBuilder() {
         if (screenerJson.nodes && screenerJson.edges) {
           setNodes(screenerJson.nodes);
           setEdges(screenerJson.edges);
+          setEducationModule(screenerJson.educationModule);
+          setComprehensionCheck(screenerJson.comprehensionCheck);
           setIsLoaded(true);
           
           // Show success message
@@ -181,6 +188,15 @@ export default function ScreenerBuilder() {
     },
     [setNodes, setEdges, selectedNodeId]
   );
+
+  const handleUpdateSettings = useCallback((settings: { educationModule?: EducationModule; comprehensionCheck?: ComprehensionCheck }) => {
+    setEducationModule(settings.educationModule);
+    setComprehensionCheck(settings.comprehensionCheck);
+    toast({
+      title: 'Settings updated',
+      description: 'Education and comprehension check settings have been updated.',
+    });
+  }, [toast]);
 
   const handleSaveDraft = () => {
     toast({
@@ -315,13 +331,45 @@ export default function ScreenerBuilder() {
           </ReactFlow>
         </div>
 
-        {/* Right Panel - Properties Inspector */}
-        <div className="w-80 border-l bg-muted/30 overflow-y-auto">
-          <PropertiesInspector
-            selectedNode={selectedNode}
-            onUpdateNode={updateNodeData}
-            onDeleteNode={deleteNode}
-          />
+        {/* Right Panel - Properties Inspector / Settings */}
+        <div className="w-80 border-l bg-muted/30 flex flex-col">
+          {/* Toggle between Properties and Settings */}
+          <div className="flex border-b bg-background">
+            <Button
+              variant={showSettings ? 'ghost' : 'default'}
+              size="sm"
+              className="flex-1 rounded-none"
+              onClick={() => setShowSettings(false)}
+              data-testid="button-show-properties"
+            >
+              Properties
+            </Button>
+            <Button
+              variant={showSettings ? 'default' : 'ghost'}
+              size="sm"
+              className="flex-1 rounded-none"
+              onClick={() => setShowSettings(true)}
+              data-testid="button-show-settings"
+            >
+              Settings
+            </Button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto">
+            {showSettings ? (
+              <ScreenerSettings
+                educationModule={educationModule}
+                comprehensionCheck={comprehensionCheck}
+                onUpdate={handleUpdateSettings}
+              />
+            ) : (
+              <PropertiesInspector
+                selectedNode={selectedNode}
+                onUpdateNode={updateNodeData}
+                onDeleteNode={deleteNode}
+              />
+            )}
+          </div>
         </div>
       </div>
 
