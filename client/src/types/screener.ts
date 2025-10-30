@@ -60,6 +60,50 @@ export interface ScreenerLogic {
 }
 
 /**
+ * Education Content Block Types
+ */
+export type EducationContentType = 'video' | 'text';
+
+/**
+ * Education Content Block
+ */
+export interface EducationContent {
+  type: EducationContentType;
+  url?: string; // For video type
+  title?: string; // For video type
+  markdown?: string; // For text type
+}
+
+/**
+ * Education Module Configuration
+ */
+export interface EducationModule {
+  required: boolean;
+  content: EducationContent[];
+}
+
+/**
+ * Comprehension Check Question
+ */
+export interface ComprehensionQuestion {
+  id: string;
+  text: string;
+  options: string[];
+  correctAnswer: string;
+}
+
+/**
+ * Comprehension Check Configuration
+ */
+export interface ComprehensionCheck {
+  required: boolean;
+  passingScore: number; // Percentage (0-100)
+  questions: ComprehensionQuestion[];
+  failOutcome: ScreenerOutcome; // Outcome if check fails
+  allowRetry?: boolean; // Whether to allow one retry
+}
+
+/**
  * Complete Screener JSON
  */
 export interface ScreenerJSON {
@@ -68,6 +112,8 @@ export interface ScreenerJSON {
   questions: ScreenerQuestion[];
   logic: ScreenerLogic;
   disclaimers?: string[];
+  educationModule?: EducationModule; // Optional education content
+  comprehensionCheck?: ComprehensionCheck; // Optional comprehension quiz
   nodes?: ScreenerNode[]; // Visual flow nodes for builder
   edges?: ScreenerEdge[]; // Visual flow edges for builder
 }
