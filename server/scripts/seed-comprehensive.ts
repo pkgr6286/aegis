@@ -1677,8 +1677,6 @@ async function seedComprehensiveData() {
           outcome,
           status: 'completed',
           completedAt,
-          createdAt: completedAt,
-          updatedAt: completedAt,
         }).returning();
 
         createdData.sessions.push(session);
@@ -1834,8 +1832,8 @@ async function seedComprehensiveData() {
       });
       
       // 9. Sample verification success logs (for some codes)
-      const recentCodes = createdData.codes.filter(c => c.status === 'used').slice(0, 5);
-      recentCodes.forEach((code, index) => {
+      const recentCodes = createdData.codes.filter((c: any) => c.status === 'used').slice(0, 5);
+      recentCodes.forEach((code: any, index: number) => {
         auditLogEntries.push({
           tenantId: tenant.id,
           userId: null, // System action via partner
