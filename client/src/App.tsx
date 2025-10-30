@@ -18,6 +18,8 @@ import Forbidden from "@/pages/Forbidden";
 // Consumer Pages (Public Screening Flow)
 import Welcome from "@/pages/public/Welcome";
 import Screener from "@/pages/public/Screener";
+import EducationModule from "@/pages/public/EducationModule";
+import ComprehensionModule from "@/pages/public/ComprehensionModule";
 import Outcome from "@/pages/public/Outcome";
 import VerificationCode from "@/pages/public/VerificationCode";
 
@@ -161,6 +163,8 @@ function Router() {
       {/* Consumer Screening Flow (Public) */}
       <Route path="/screen/:slug" component={Welcome} />
       <Route path="/screen/:slug/questions" component={Screener} />
+      <Route path="/screen/:slug/education" component={EducationModule} />
+      <Route path="/screen/:slug/comprehension" component={ComprehensionModule} />
       <Route path="/screen/:slug/outcome" component={Outcome} />
       <Route path="/screen/:slug/code" component={VerificationCode} />
 

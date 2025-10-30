@@ -377,7 +377,23 @@ export default function Screener() {
       // This ensures Outcome component can access it immediately
       sessionStorage.setItem('pending_evaluation', JSON.stringify(response.data.evaluation));
 
-      console.log('[Screener] Navigating to outcome page');
+      console.log('[Screener] Checking for education module and comprehension check');
+      
+      // Check for required education module
+      if (screenerConfig.educationModule?.required) {
+        console.log('[Screener] Education module required, navigating to education screen');
+        navigate(`/screen/${slug}/education`);
+        return;
+      }
+
+      // Check for required comprehension check (if no education module)
+      if (screenerConfig.comprehensionCheck?.required) {
+        console.log('[Screener] Comprehension check required, navigating to comprehension screen');
+        navigate(`/screen/${slug}/comprehension`);
+        return;
+      }
+
+      console.log('[Screener] No education or comprehension required, navigating to outcome page');
       // Navigate to outcome page
       navigate(`/screen/${slug}/outcome`);
     } catch (err) {

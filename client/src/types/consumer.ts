@@ -48,6 +48,33 @@ export interface ScreenerRule {
   targetQuestionId?: string; // For 'skip_to' actions
 }
 
+export interface EducationContent {
+  type: 'video' | 'text';
+  url?: string; // For video type
+  title?: string; // For video type
+  markdown?: string; // For text type
+}
+
+export interface EducationModule {
+  required: boolean;
+  content: EducationContent[];
+}
+
+export interface ComprehensionQuestion {
+  id: string;
+  text: string;
+  options: string[];
+  correctAnswer: string;
+}
+
+export interface ComprehensionCheck {
+  required: boolean;
+  passingScore: number; // Percentage (0-100)
+  questions: ComprehensionQuestion[];
+  failOutcome: 'ask_a_doctor' | 'do_not_use';
+  allowRetry?: boolean;
+}
+
 export interface ScreenerConfig {
   id: string;
   version: string;
@@ -58,6 +85,8 @@ export interface ScreenerConfig {
     askADoctor: any[]; // Array of condition objects
     doNotUse: any[]; // Array of condition objects
   };
+  educationModule?: EducationModule;
+  comprehensionCheck?: ComprehensionCheck;
 }
 
 // ------------------------------------------------------------------
