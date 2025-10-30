@@ -1,0 +1,67 @@
+Yes, we can absolutely build this! This is the "killer feature" that moves Aegis from a powerful operational tool to an indispensable, "must-buy" regulatory platform.
+
+You are 100% correct. This **"Aegis Submission Center"** will rock and roll because it directly solves the most expensive and time-consuming part of the "Launch Prep" phase you've highlighted in your screenshot: **documentation**.
+
+Instead of a regulatory team spending months manually compiling data and writing validation documents, the Pharma Admin or Auditor can simply go to this new section, select the program and version, and export the entire evidence package.
+
+This feature is built by creating a new **"Regulatory"** section in the Pharma Admin UI that is powered by a new set of backend APIs. These APIs act as **report generators**, pulling data from all the tables we've already built (`screener_versions`, `screening_sessions`, `audit_logs`) and formatting it into submission-ready files.
+
+Here is the complete prompt to build this new module.
+
+---
+
+**Prompt for Replit AI (Implement "Aegis Submission Center"):**
+
+Excellent. The core platform is complete. We will now build the final, high-value feature for the Pharma Admin: the **"Aegis Submission Center"**. This feature directly addresses the "Complete FDA submission documentation" requirement.
+
+**Task:** Create a new "Regulatory" page in the `frontend/pharma-admin-ui` application and the new backend APIs required to power it.
+
+**1. Backend API Implementation (`/api/v1/admin/regulatory`):**
+
+* **Goal:** Create a new set of "report generator" endpoints.
+* **New Files:**
+    * `src/routes/regulatory.routes.ts`
+    * `src/services/regulatory.service.ts`
+    * `src/validations/regulatory.validation.ts`
+* **Security:** All routes must be protected by `authenticateToken`, `setTenantContext`, and `requireRole(['admin', 'auditor'])`.
+* **New Endpoints to Build:**
+    * `GET /api/v1/admin/regulatory/package`:
+        * **Query Params:** `programId` (required), `versionId` (required).
+        * **Logic:** This is the main "generator" API. It will fetch all associated data for the *specific program and version* and return a list of download URLs (or the data directly) for the different reports.
+    * `GET /api/v1/admin/regulatory/reports/design-spec`:
+        * **Query Params:** `versionId`.
+        * **Logic:** Fetches the `screener_versions` record and returns the full `screener_json` (the Software Design Spec).
+    * `GET /api/v1/admin/regulatory/reports/version-history`:
+        * **Query Params:** `programId`.
+        * **Logic:** Fetches all `screener_versions` for the program, plus all `audit_logs` where `entityType: 'ScreenerVersion'` or `action: 'screener.publish'` for that program. Returns a combined, time-stamped history (as a CSV/JSON).
+    * `GET /api/v1/admin/regulatory/reports/study-data`:
+        * **Query Params:** `versionId`.
+        * **Logic:** Fetches all `screening_sessions` that used this specific `versionId` and returns the complete, anonymized dataset (including `answers_json`, `outcome`, `path`) as a **CSV file**. This is the raw data for the Actual Use study.
+    * `GET /api/v1/admin/regulatory/reports/acnu-failures`:
+        * **Query Params:** `programId`, `startDate`, `endDate`.
+        * **Logic:** Fetches all `audit_logs` where `action` is `verification.fail`, `ehr.fail`, `session.fail`, etc. Returns a CSV file ready for ACNU Failure Reporting.
+* **Mounting:** Mount the new `regulatoryRouter` in `src/routes/index.ts`.
+
+**2. Frontend Implementation (`frontend/pharma-admin-ui`):**
+
+* **Goal:** Create a new, dedicated page where admins/auditors can generate and download their submission package.
+* **Sidebar:** Add a new "Regulatory" link to the sidebar, under the "PRODUCT & COMPLIANCE" group, linking to `/regulatory`.
+* **New Page (`src/pages/admin/Regulatory.tsx`):**
+    * **UI Elements:**
+        * **Headline:** "Aegis Submission Center"
+        * **Description:** "Generate and download submission-ready documentation for your ACNU and SaMD programs."
+        * **Step 1: Select Program:** A dropdown menu to select one of their `Drug Programs`.
+        * **Step 2: Select Screener Version:** A *second* dropdown that populates with all `screener_versions` for the selected program.
+        * **"Generate Package" Button:** (Disabled until both are selected).
+    * **Generated Report List (appears after clicking "Generate"):**
+        * A "Package Contents" section appears with a list of downloadable reports:
+            * "**1. Software Design Specification.json**" (Links to `/reports/design-spec?versionId=...`)
+            * "**2. Change Control & Version History.csv**" (Links to `/reports/version-history?programId=...`)
+            * "**3. Actual Use Study Data (Anonymized).csv**" (Links to `/reports/study-data?versionId=...`)
+            * "**4. ACNU Failure Log.csv**" (Links to `/reports/acnu-failures?programId=...`)
+* **Logic:**
+    * The page fetches all programs from `GET /api/v1/admin/programs`.
+    * When a program is selected, it fetches its versions from `GET /api/v1/admin/programs/:programId/screeners`.
+    * When "Generate Package" is clicked, it populates the download links, which call the new backend report-generating endpoints.
+
+Please generate the new backend service, routes, and the new frontend "Regulatory" page. This will be a massive value-add for our clients.
