@@ -147,6 +147,12 @@ export default function TechnicalDocs() {
                   <div className="space-y-2">
                     <ApiEndpoint 
                       method="POST" 
+                      path="/auth/register"
+                      description="Register new user"
+                      body={{ email: "user@company.com", password: "password123", firstName: "John", lastName: "Doe" }}
+                    />
+                    <ApiEndpoint 
+                      method="POST" 
                       path="/auth/login"
                       description="Authenticate user and receive JWT token"
                       body={{ email: "user@company.com", password: "password123" }}
@@ -154,15 +160,48 @@ export default function TechnicalDocs() {
                     />
                     <ApiEndpoint 
                       method="POST" 
-                      path="/auth/logout"
-                      description="Invalidate current session"
+                      path="/auth/forgot-password"
+                      description="Request password reset email"
+                      body={{ email: "user@company.com" }}
                     />
                     <ApiEndpoint 
+                      method="POST" 
+                      path="/auth/reset-password"
+                      description="Reset password with token"
+                      body={{ token: "reset_token", newPassword: "newpass123" }}
+                    />
+                    <ApiEndpoint 
+                      method="POST" 
+                      path="/auth/accept-invite"
+                      description="Accept invitation and create account"
+                      body={{ token: "invite_token", firstName: "Jane", lastName: "Smith", password: "password123" }}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-semibold">Account Management</h4>
+                  <div className="space-y-2">
+                    <ApiEndpoint 
                       method="GET" 
-                      path="/auth/me"
-                      description="Get current user profile"
+                      path="/account/me"
+                      description="Get current user account details"
                       auth
-                      response={{ success: true, data: { id: "uuid", email: "user@company.com", tenantRole: "admin" } }}
+                      response={{ success: true, data: { id: "uuid", email: "user@company.com", firstName: "John" } }}
+                    />
+                    <ApiEndpoint 
+                      method="PUT" 
+                      path="/account/me"
+                      description="Update user profile"
+                      auth
+                      body={{ firstName: "John", lastName: "Updated" }}
+                    />
+                    <ApiEndpoint 
+                      method="PUT" 
+                      path="/account/me/password"
+                      description="Change password"
+                      auth
+                      body={{ currentPassword: "old", newPassword: "new" }}
                     />
                   </div>
                 </div>
@@ -343,6 +382,113 @@ export default function TechnicalDocs() {
                     />
                   </div>
                 </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-semibold">Brand Configuration</h4>
+                  <div className="space-y-2">
+                    <ApiEndpoint 
+                      method="GET" 
+                      path="/admin/brand-configs"
+                      description="List all brand configurations"
+                      auth
+                    />
+                    <ApiEndpoint 
+                      method="POST" 
+                      path="/admin/brand-configs"
+                      description="Create new brand configuration"
+                      auth
+                      body={{ name: "Primary Brand", config: { logoUrl: "...", primaryColor: "#1D463A" } }}
+                    />
+                    <ApiEndpoint 
+                      method="PUT" 
+                      path="/admin/brand-configs/:id"
+                      description="Update brand configuration"
+                      auth
+                    />
+                    <ApiEndpoint 
+                      method="DELETE" 
+                      path="/admin/brand-configs/:id"
+                      description="Delete brand configuration"
+                      auth
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-semibold">Advanced Analytics</h4>
+                  <div className="space-y-2">
+                    <ApiEndpoint 
+                      method="GET" 
+                      path="/admin/analytics/overview-stats"
+                      description="Overview statistics for drug program"
+                      auth
+                      response={{ success: true, data: { totalSessions: 1000, eligibleRate: 0.65 } }}
+                    />
+                    <ApiEndpoint 
+                      method="GET" 
+                      path="/admin/analytics/screener-funnel"
+                      description="Screener funnel with drop-off analysis"
+                      auth
+                    />
+                    <ApiEndpoint 
+                      method="GET" 
+                      path="/admin/analytics/outcomes-by-question"
+                      description="Question-level failure analysis"
+                      auth
+                    />
+                    <ApiEndpoint 
+                      method="GET" 
+                      path="/admin/analytics/path-performance"
+                      description="EHR vs Manual path comparison"
+                      auth
+                    />
+                    <ApiEndpoint 
+                      method="GET" 
+                      path="/admin/analytics/population-outcomes"
+                      description="Population-level outcome breakdown"
+                      auth
+                    />
+                    <ApiEndpoint 
+                      method="GET" 
+                      path="/admin/analytics/partner-performance"
+                      description="Partner conversion analytics"
+                      auth
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-semibold">AI-Powered Intelligence</h4>
+                  <div className="space-y-2">
+                    <ApiEndpoint 
+                      method="POST" 
+                      path="/admin/analytics/query-ai"
+                      description="Ask AI Analyst natural language questions about program data"
+                      auth
+                      body={{ query: "Why is our screener failing most often?", drugProgramId: "uuid" }}
+                      response={{ success: true, data: { query: "...", response: "AI analysis...", timestamp: "..." } }}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-semibold">Partner Verification</h4>
+                  <div className="space-y-2">
+                    <ApiEndpoint 
+                      method="POST" 
+                      path="/verify"
+                      description="Verify and mark code as used (for POS/ecommerce)"
+                      body={{ code: "ABC12345", partnerId: "uuid" }}
+                      response={{ success: true, data: { valid: true, programName: "...", patientInfo: "..." } }}
+                    />
+                    <ApiEndpoint 
+                      method="GET" 
+                      path="/verify/:code"
+                      description="Check code validity without marking as used"
+                      response={{ success: true, data: { valid: true, expiresAt: "..." } }}
+                    />
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -382,45 +528,117 @@ export default function TechnicalDocs() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <h4 className="font-semibold">Core Schema</h4>
+                <h4 className="font-semibold">Public Schema (Global)</h4>
                 
                 <SchemaTable 
                   name="tenants"
                   description="Pharmaceutical company tenants"
                   columns={[
                     { name: 'id', type: 'UUID', key: 'PK', description: 'Unique identifier' },
-                    { name: 'company_name', type: 'TEXT', description: 'Company name (e.g., Kenvue)' },
-                    { name: 'primary_contact_email', type: 'TEXT', description: 'Admin email' },
-                    { name: 'status', type: 'ENUM', description: 'active | suspended | inactive' },
-                    { name: 'subscription_tier', type: 'TEXT', description: 'Subscription level' },
+                    { name: 'name', type: 'VARCHAR(255)', description: 'Company name (e.g., Kenvue)' },
+                    { name: 'status', type: 'ENUM', description: 'active | suspended | trial' },
+                    { name: 'metadata', type: 'JSONB', description: 'Extensibility data' },
+                    { name: 'retired_at', type: 'TIMESTAMP', description: 'Soft delete timestamp' },
                     { name: 'created_at', type: 'TIMESTAMP', description: 'Creation timestamp' },
+                    { name: 'updated_at', type: 'TIMESTAMP', description: 'Last update timestamp' },
                   ]}
                 />
 
                 <SchemaTable 
                   name="users"
-                  description="Platform and tenant users"
+                  description="Global user identities (can belong to multiple tenants)"
                   columns={[
                     { name: 'id', type: 'UUID', key: 'PK', description: 'Unique identifier' },
-                    { name: 'email', type: 'TEXT', key: 'UNIQUE', description: 'User email' },
-                    { name: 'password_hash', type: 'TEXT', description: 'bcrypt hashed password' },
-                    { name: 'full_name', type: 'TEXT', description: 'Full name' },
-                    { name: 'system_role', type: 'ENUM', description: 'super_admin | support_staff | null' },
-                    { name: 'tenant_id', type: 'UUID', key: 'FK', description: 'Foreign key to tenants' },
-                    { name: 'tenant_role', type: 'ENUM', description: 'admin | editor | viewer | clinician | auditor' },
-                    { name: 'status', type: 'ENUM', description: 'active | invited | suspended' },
+                    { name: 'email', type: 'VARCHAR(255)', key: 'UNIQUE', description: 'User email' },
+                    { name: 'hashed_password', type: 'VARCHAR(255)', description: 'bcrypt hashed password' },
+                    { name: 'first_name', type: 'VARCHAR(255)', description: 'First name' },
+                    { name: 'last_name', type: 'VARCHAR(255)', description: 'Last name' },
+                    { name: 'last_login_at', type: 'TIMESTAMP', description: 'Last login timestamp' },
+                    { name: 'created_at', type: 'TIMESTAMP', description: 'Creation timestamp' },
+                    { name: 'updated_at', type: 'TIMESTAMP', description: 'Last update timestamp' },
                   ]}
                 />
 
                 <SchemaTable 
-                  name="brands"
-                  description="Tenant brand configuration"
+                  name="user_system_roles"
+                  description="Junction table for system-level roles (Super Admins)"
+                  columns={[
+                    { name: 'user_id', type: 'UUID', key: 'FK+PK', description: 'Foreign key to users' },
+                    { name: 'role', type: 'ENUM', key: 'PK', description: 'super_admin | support_staff' },
+                  ]}
+                />
+
+                <SchemaTable 
+                  name="password_reset_tokens"
+                  description="Secure password reset tokens with expiration"
+                  columns={[
+                    { name: 'id', type: 'UUID', key: 'PK', description: 'Unique identifier' },
+                    { name: 'user_id', type: 'UUID', key: 'FK', description: 'Foreign key to users' },
+                    { name: 'token', type: 'VARCHAR(255)', key: 'UNIQUE', description: 'Reset token hash' },
+                    { name: 'status', type: 'ENUM', description: 'active | used | expired' },
+                    { name: 'expires_at', type: 'TIMESTAMP', description: 'Token expiration' },
+                    { name: 'created_at', type: 'TIMESTAMP', description: 'Creation timestamp' },
+                  ]}
+                />
+
+                <SchemaTable 
+                  name="invitation_tokens"
+                  description="User invitation tokens for tenant onboarding"
+                  columns={[
+                    { name: 'id', type: 'UUID', key: 'PK', description: 'Unique identifier' },
+                    { name: 'email', type: 'VARCHAR(255)', description: 'Invited user email' },
+                    { name: 'tenant_id', type: 'UUID', key: 'FK', description: 'Target tenant' },
+                    { name: 'role', type: 'ENUM', description: 'admin | editor | viewer | clinician | auditor' },
+                    { name: 'token', type: 'VARCHAR(255)', key: 'UNIQUE', description: 'Invitation token' },
+                    { name: 'status', type: 'ENUM', description: 'active | used | expired' },
+                    { name: 'expires_at', type: 'TIMESTAMP', description: 'Token expiration' },
+                    { name: 'created_at', type: 'TIMESTAMP', description: 'Creation timestamp' },
+                  ]}
+                />
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-semibold">Core Schema (Tenant-Scoped)</h4>
+
+                <SchemaTable 
+                  name="tenant_users"
+                  description="Junction table connecting users to tenants with roles"
                   columns={[
                     { name: 'id', type: 'UUID', key: 'PK', description: 'Unique identifier' },
                     { name: 'tenant_id', type: 'UUID', key: 'FK', description: 'Foreign key to tenants' },
-                    { name: 'brand_name', type: 'TEXT', description: 'Brand name' },
-                    { name: 'primary_color', type: 'TEXT', description: 'Hex color code' },
-                    { name: 'logo_url', type: 'TEXT', description: 'Brand logo URL' },
+                    { name: 'user_id', type: 'UUID', key: 'FK', description: 'Foreign key to users' },
+                    { name: 'role', type: 'ENUM', description: 'admin | editor | viewer | clinician | auditor' },
+                    { name: 'metadata', type: 'JSONB', description: 'Extensibility data' },
+                    { name: 'created_at', type: 'TIMESTAMP', description: 'Creation timestamp' },
+                    { name: 'created_by', type: 'UUID', key: 'FK', description: 'User who created this record' },
+                  ]}
+                />
+
+                <SchemaTable 
+                  name="audit_logs"
+                  description="Comprehensive tenant-scoped activity tracking"
+                  columns={[
+                    { name: 'id', type: 'UUID', key: 'PK', description: 'Unique identifier' },
+                    { name: 'tenant_id', type: 'UUID', key: 'FK', description: 'Foreign key to tenants' },
+                    { name: 'user_id', type: 'UUID', key: 'FK', description: 'User who performed action' },
+                    { name: 'action', type: 'VARCHAR(255)', description: 'Action type (e.g., user.create)' },
+                    { name: 'entity_type', type: 'VARCHAR(255)', description: 'Entity type (e.g., DrugProgram)' },
+                    { name: 'entity_id', type: 'UUID', description: 'Affected entity ID' },
+                    { name: 'changes', type: 'JSONB', description: 'Before/after change data' },
+                    { name: 'timestamp', type: 'TIMESTAMP', description: 'When action occurred' },
+                  ]}
+                />
+
+                <SchemaTable 
+                  name="brand_configs"
+                  description="Tenant brand configurations (logos, colors)"
+                  columns={[
+                    { name: 'id', type: 'UUID', key: 'PK', description: 'Unique identifier' },
+                    { name: 'tenant_id', type: 'UUID', key: 'FK', description: 'Foreign key to tenants' },
+                    { name: 'name', type: 'VARCHAR(255)', description: 'Brand name' },
+                    { name: 'config', type: 'JSONB', description: 'Brand assets (logo, colors, etc.)' },
+                    { name: 'created_at', type: 'TIMESTAMP', description: 'Creation timestamp' },
+                    { name: 'created_by', type: 'UUID', key: 'FK', description: 'Creator user ID' },
                   ]}
                 />
               </div>
@@ -462,19 +680,53 @@ export default function TechnicalDocs() {
                 
                 <SchemaTable 
                   name="screening_sessions"
-                  description="Patient screening instances"
+                  description="Patient screening instances with outcomes"
                   columns={[
                     { name: 'id', type: 'UUID', key: 'PK', description: 'Unique identifier' },
-                    { name: 'program_id', type: 'UUID', key: 'FK', description: 'Foreign key to drug_programs' },
-                    { name: 'screener_version_id', type: 'UUID', key: 'FK', description: 'Screener version used' },
-                    { name: 'patient_email', type: 'TEXT', description: 'Patient email (encrypted)' },
-                    { name: 'answers', type: 'JSONB', description: 'All question answers' },
-                    { name: 'outcome', type: 'TEXT', description: 'eligible | ineligible | pending' },
-                    { name: 'verification_code', type: 'TEXT', description: 'Access code for patient' },
+                    { name: 'tenant_id', type: 'UUID', key: 'FK', description: 'Foreign key to tenants' },
+                    { name: 'drug_program_id', type: 'UUID', key: 'FK', description: 'Foreign key to drug_programs' },
+                    { name: 'screener_version_id', type: 'UUID', key: 'FK', description: 'Screener version used (frozen)' },
+                    { name: 'status', type: 'ENUM', description: 'started | completed | abandoned' },
+                    { name: 'outcome', type: 'ENUM', description: 'eligible | ineligible | ask_doctor' },
+                    { name: 'path', type: 'ENUM', description: 'manual | ehr' },
+                    { name: 'answers_json', type: 'JSONB', description: 'All question answers' },
                     { name: 'review_status', type: 'ENUM', description: 'pending | reviewed | follow_up_required' },
                     { name: 'reviewed_by', type: 'UUID', key: 'FK', description: 'Clinician user ID' },
                     { name: 'reviewed_at', type: 'TIMESTAMP', description: 'Review timestamp' },
-                    { name: 'ehr_connected', type: 'BOOLEAN', description: 'Used EHR Fast Path' },
+                    { name: 'created_at', type: 'TIMESTAMP', description: 'Session start time' },
+                    { name: 'completed_at', type: 'TIMESTAMP', description: 'Session completion time' },
+                  ]}
+                />
+
+                <SchemaTable 
+                  name="verification_codes"
+                  description="Single-use codes for POS/ecommerce redemption"
+                  columns={[
+                    { name: 'id', type: 'UUID', key: 'PK', description: 'Unique identifier' },
+                    { name: 'tenant_id', type: 'UUID', key: 'FK', description: 'Foreign key to tenants' },
+                    { name: 'screening_session_id', type: 'UUID', key: 'FK+UNIQUE', description: '1-to-1 with session' },
+                    { name: 'code', type: 'VARCHAR(12)', key: 'UNIQUE', description: 'Human-readable code (e.g., nanoid)' },
+                    { name: 'status', type: 'ENUM', description: 'active | used | expired' },
+                    { name: 'expires_at', type: 'TIMESTAMP', description: 'Code expiration' },
+                    { name: 'used_at', type: 'TIMESTAMP', description: 'When code was redeemed' },
+                    { name: 'used_by_partner_id', type: 'UUID', key: 'FK', description: 'Partner who redeemed' },
+                    { name: 'created_at', type: 'TIMESTAMP', description: 'Code generation time' },
+                  ]}
+                />
+
+                <SchemaTable 
+                  name="ehr_consents"
+                  description="Patient EHR data sharing consent records"
+                  columns={[
+                    { name: 'id', type: 'UUID', key: 'PK', description: 'Unique identifier' },
+                    { name: 'tenant_id', type: 'UUID', key: 'FK', description: 'Foreign key to tenants' },
+                    { name: 'screening_session_id', type: 'UUID', key: 'FK', description: 'Associated session' },
+                    { name: 'provider', type: 'VARCHAR(100)', description: 'EHR provider (epic, cerner, etc.)' },
+                    { name: 'status', type: 'ENUM', description: 'pending | approved | denied' },
+                    { name: 'scope_requested', type: 'TEXT[]', description: 'FHIR scopes requested' },
+                    { name: 'access_token', type: 'TEXT', description: 'Encrypted OAuth access token' },
+                    { name: 'token_expires_at', type: 'TIMESTAMP', description: 'Token expiration' },
+                    { name: 'created_at', type: 'TIMESTAMP', description: 'Consent request time' },
                   ]}
                 />
               </div>
@@ -484,34 +736,45 @@ export default function TechnicalDocs() {
                 
                 <SchemaTable 
                   name="partners"
-                  description="Third-party integration partners"
+                  description="Third-party integration partners (POS, ecommerce, etc.)"
                   columns={[
                     { name: 'id', type: 'UUID', key: 'PK', description: 'Unique identifier' },
                     { name: 'tenant_id', type: 'UUID', key: 'FK', description: 'Foreign key to tenants' },
-                    { name: 'partner_name', type: 'TEXT', description: 'Partner name' },
-                    { name: 'partner_type', type: 'ENUM', description: 'retail_pos | ecommerce | ehr | pharmacy' },
-                    { name: 'api_key', type: 'TEXT', description: 'Hashed API key' },
-                    { name: 'webhook_url', type: 'TEXT', description: 'Webhook endpoint' },
+                    { name: 'name', type: 'VARCHAR(255)', description: 'Partner name' },
+                    { name: 'type', type: 'ENUM', description: 'retail_pos | ecommerce | pharmacy | ehr' },
                     { name: 'status', type: 'ENUM', description: 'active | suspended | revoked' },
+                    { name: 'created_at', type: 'TIMESTAMP', description: 'Creation timestamp' },
+                    { name: 'created_by', type: 'UUID', key: 'FK', description: 'Creator user ID' },
                   ]}
                 />
-              </div>
 
-              <div className="space-y-4">
-                <h4 className="font-semibold">Audit Schema</h4>
-                
                 <SchemaTable 
-                  name="audit_logs"
-                  description="Comprehensive activity tracking"
+                  name="partner_api_keys"
+                  description="Secure API key storage for partner authentication"
                   columns={[
                     { name: 'id', type: 'UUID', key: 'PK', description: 'Unique identifier' },
                     { name: 'tenant_id', type: 'UUID', key: 'FK', description: 'Foreign key to tenants' },
-                    { name: 'user_id', type: 'UUID', key: 'FK', description: 'User who performed action' },
-                    { name: 'entity_type', type: 'TEXT', description: 'drug_program | screener | user | etc' },
-                    { name: 'entity_id', type: 'UUID', description: 'ID of affected entity' },
-                    { name: 'action', type: 'TEXT', description: 'created | updated | deleted | published' },
-                    { name: 'details', type: 'JSONB', description: 'Action details and changes' },
-                    { name: 'timestamp', type: 'TIMESTAMP', description: 'When action occurred' },
+                    { name: 'partner_id', type: 'UUID', key: 'FK', description: 'Foreign key to partners' },
+                    { name: 'key_prefix', type: 'VARCHAR(12)', key: 'UNIQUE', description: 'Visible key prefix (e.g., cvs_prod)' },
+                    { name: 'hashed_key', type: 'VARCHAR(255)', description: 'bcrypt/argon2 hashed key' },
+                    { name: 'status', type: 'ENUM', description: 'active | revoked | expired' },
+                    { name: 'expires_at', type: 'TIMESTAMP', description: 'Key expiration (optional)' },
+                    { name: 'created_at', type: 'TIMESTAMP', description: 'Key generation time' },
+                    { name: 'created_by', type: 'UUID', key: 'FK', description: 'User who created key' },
+                  ]}
+                />
+
+                <SchemaTable 
+                  name="partner_configs"
+                  description="Partner-specific configuration and security settings"
+                  columns={[
+                    { name: 'id', type: 'UUID', key: 'PK', description: 'Unique identifier' },
+                    { name: 'tenant_id', type: 'UUID', key: 'FK', description: 'Foreign key to tenants' },
+                    { name: 'partner_id', type: 'UUID', key: 'FK+UNIQUE', description: '1-to-1 with partner' },
+                    { name: 'whitelisted_redirect_urls', type: 'TEXT[]', description: 'Allowed redirect URLs (security)' },
+                    { name: 'metadata', type: 'JSONB', description: 'Custom partner settings' },
+                    { name: 'created_at', type: 'TIMESTAMP', description: 'Configuration creation time' },
+                    { name: 'updated_at', type: 'TIMESTAMP', description: 'Last update time' },
                   ]}
                 />
               </div>
