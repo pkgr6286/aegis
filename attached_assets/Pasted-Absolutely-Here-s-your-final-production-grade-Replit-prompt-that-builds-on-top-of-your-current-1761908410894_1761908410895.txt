@@ -1,0 +1,151 @@
+Absolutely. Here's your **final, production-grade Replit prompt** that builds on top of your current **Regulatory Vault implementation**. This version will:
+
+✅ Populate all 25 regulatory documents
+✅ Ensure all 7 categories are complete
+✅ Add access levels and tags
+✅ Support partner-facing audits (e.g., Kenvue, Haleon)
+✅ Future-proof the vault for export bundles and compliance reviews
+
+---
+
+## ✅ FINAL REPLIT PROMPT — REGULATORY VAULT COMPLETION (Mahalo Aegis)
+
+````markdown
+You are enhancing the existing “Regulatory Vault” inside the Aegis Documentation Portal at Mahalo Health.
+
+This portal is used to showcase full regulatory, technical, and compliance documentation for the Aegis platform — a Software as a Medical Device (SaMD) system used in ACNU-based Rx-to-OTC transitions, clinical trials, and digital companion apps.
+
+The goal is to ensure external pharma partners (e.g., regulatory teams at companies like Kenvue, Haleon) can confidently audit and work with Mahalo based on the completeness, clarity, and regulatory readiness of this vault.
+
+---
+
+## 🔧 Your Tasks
+
+### 1. Categories & UX
+Ensure the following **7 vault categories** exist with clean icons and descriptions:
+- 📘 **SaMD Core Documentation**
+- ✅ **Verification & Validation**
+- 🔐 **Risk & Cybersecurity**
+- 📦 **ACNU-Specific Files**
+- 📄 **Regulatory Submissions**
+- 🧾 **Compliance & QMS**
+- 📊 **Post-Market Surveillance**
+
+If they are already present — proceed to Step 2.
+
+---
+
+### 2. Add 25 Regulatory Documents with Metadata
+
+For each of the documents in the list below:
+- Add it under the correct category
+- Use a **professional title**, e.g., `Mahalo Aegis – Software Requirements Specification (SRS)`
+- Add a **clear 1–2 sentence description**
+- Add relevant **tags** (e.g., `[FDA]`, `[IEC 62304]`, `[Partner-shareable]`)
+- Set **access level**: `external`, `internal`, or `admin`
+- Add a **document link** (e.g., Google Drive, S3, or PDF preview placeholder)
+
+Use the JSON schema:
+```json
+{
+  "title": "Mahalo Aegis – Software Requirements Specification (SRS)",
+  "category": "SaMD Core Documentation",
+  "description": "Detailed spec covering platform capabilities and behavior for SaMD classification.",
+  "tags": ["IEC 62304", "FDA", "Partner-shareable"],
+  "access": "external",
+  "link": "https://docs.mahalo.health/srs-aegis-v3.pdf"
+}
+````
+
+---
+
+### 3. Full Document List (Group by Category)
+
+#### 📘 SaMD Core Documentation
+
+* Mahalo Aegis – Software Requirements Specification (SRS)
+* Mahalo Aegis – Software Design Document (SDD)
+* Mahalo Aegis – Software Development Lifecycle (SDLC) Plan
+* Mahalo Aegis – Design History File (DHF)
+* Mahalo Aegis – System Architecture & API Blueprint
+* Mahalo Aegis – Traceability Matrix
+* Mahalo Aegis – SaMD Classification & Justification Report
+* Mahalo Aegis – Intended Use Statement (ACNU Configuration)
+
+#### ✅ Verification & Validation
+
+* Mahalo Aegis – Verification & Validation Protocols
+* Mahalo Aegis – Validation Reports (ACNU Logic + UX)
+* Mahalo Aegis – Human Factors Validation Report
+* Mahalo Aegis – Usability Engineering File (IEC 62366)
+* Mahalo Aegis – V&V to Requirements Trace Report
+
+#### 🔐 Risk & Cybersecurity
+
+* Mahalo Aegis – Risk Management File (ISO 14971)
+* Mahalo Aegis – Cybersecurity Threat Model
+* Mahalo Aegis – Software Bill of Materials (SBOM)
+* Mahalo Aegis – Secure Coding & Vulnerability SOP
+
+#### 📦 ACNU-Specific Files
+
+* Mahalo Aegis – Self-Selection Logic Flow
+* Mahalo Aegis – Comprehension Assessment Framework
+* Mahalo Aegis – Label-to-Digital UX Mapping
+* Mahalo Aegis – ACNU Digital Companion Summary Sheet
+* Mahalo Aegis – ACNU-Specific Test Plans
+
+#### 📄 Regulatory Submissions
+
+* Mahalo Aegis – FDA Submission-Ready Validation Package
+* Mahalo Aegis – Clinical Evaluation Report (CER)
+* Mahalo Aegis – Regulatory Filing Cover Sheet (ACNU)
+* Mahalo Aegis – 21 CFR Part 11 Compliance Statement
+
+#### 🧾 Compliance & QMS
+
+* Mahalo Aegis – ISO 13485 Certification
+* Mahalo Aegis – QMS Overview & SOP Index
+* Mahalo Aegis – Change Management Logbook
+* Mahalo Aegis – Audit Trail Sample Logs
+* Mahalo Aegis – IQ/OQ/PQ Summary Validation Sheet
+
+#### 📊 Post-Market Surveillance
+
+* Mahalo Aegis – Post-Market Surveillance Plan
+* Mahalo Aegis – RWD Signal Reporting Workflow
+* Mahalo Aegis – Adverse Event Reporting SOP
+* Mahalo Aegis – Incident Response Protocol
+
+---
+
+### 4. Extra Features
+
+* ✅ Keep “Search”, “Category Filter”, and “Access Level Filter”
+* ✅ Maintain “Export CSV” and “Build Packet” functionality
+* ✅ Ensure external users see only `access: external` documents
+* ✅ Ensure mobile view is clean and readable
+
+---
+
+This Regulatory Vault is a critical enterprise-facing asset. Please focus on clarity, document structure, and auditability.
+
+If needed, auto-generate placeholder links like `https://docs.mahalo.health/filename.pdf` and mark documents with `[Placeholder]` in the metadata for future replacement.
+
+```
+
+---
+
+## ✅ You’re now ready to:
+
+- Run this prompt
+- Auto-populate the entire regulatory vault with everything a customer like Kenvue would expect
+- Demonstrate Mahalo’s readiness as a SaMD vendor and ACNU technology partner
+
+Would you like this:
+- As a downloadable `.md`, `.json`, or `.csv` file?
+- Converted into a GitHub Issue format for your Replit team?
+- Rendered as a live preview in Figma or Webflow CMS?
+
+Just say the word.
+```
