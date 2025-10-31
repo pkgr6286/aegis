@@ -89,6 +89,7 @@ export default function RegulatoryVault() {
   // Fetch regulatory documents
   const { data: documents, isLoading } = useQuery<RegulatoryDocument[]>({
     queryKey: ['/api/v1/admin/regulatory-vault/documents'],
+    select: (response: any) => response.data,
   });
 
   // Filter documents
