@@ -6,10 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { 
   FolderLock, Download, FileText, Shield, TestTube, 
   Lock, FileCheck, ClipboardList, BarChart3, Search, Filter, X,
-  Package, FileDown, CheckSquare, Square
+  Package, FileDown, CheckSquare, Square, LayoutGrid, Table as TableIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -84,6 +92,7 @@ export default function RegulatoryVault() {
   const [selectedAccessLevel, setSelectedAccessLevel] = useState<string>('all');
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
   const { toast } = useToast();
 
   // Fetch regulatory documents
@@ -181,15 +190,14 @@ export default function RegulatoryVault() {
 
   const submissionPacketMutation = useMutation({
     mutationFn: async (documentIds: string[]) => {
-      return await apiRequest('/admin/regulatory-vault/submission-packet', {
-        method: 'POST',
-        body: JSON.stringify({ documentIds }),
-      });
+      const response = await apiRequest('POST', '/api/v1/admin/regulatory-vault/submission-packet', { documentIds });
+      return await response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
+      const docCount = data?.data?.length || 0;
       toast({
         title: 'Submission Packet Ready',
-        description: `${data.data.length} documents prepared for FDA submission`,
+        description: `${docCount} documents prepared for FDA submission`,
       });
       // In a real implementation, this would trigger a ZIP download
       // For now, we'll show success message
@@ -329,6 +337,28 @@ export default function RegulatoryVault() {
               
               {/* Action Buttons */}
               <div className="flex gap-2">
+                {/* View Toggle */}
+                <div className="flex gap-1 border rounded-md p-1">
+                  <Button
+                    variant={viewMode === 'card' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('card')}
+                    data-testid="button-view-card"
+                    className="h-7"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'table' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('table')}
+                    data-testid="button-view-table"
+                    className="h-7"
+                  >
+                    <TableIcon className="w-4 h-4" />
+                  </Button>
+                </div>
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -458,7 +488,7 @@ export default function RegulatoryVault() {
                       No documents in this category match your filters
                     </CardContent>
                   </Card>
-                ) : (
+                ) : viewMode === 'card' ? (
                   <div className="grid gap-4 md:grid-cols-2">
                     <AnimatePresence mode="popLayout">
                       {categoryDocs.map((doc) => (
@@ -552,6 +582,110 @@ export default function RegulatoryVault() {
                       ))}
                     </AnimatePresence>
                   </div>
+                ) : (
+                  <Card>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          {isMultiSelectMode && (
+                            <TableHead className="w-12">
+                              <Checkbox
+                                checked={categoryDocs.every(doc => selectedDocIds.has(doc.id))}
+                                onCheckedChange={(checked) => {
+                                  const newSelected = new Set(selectedDocIds);
+                                  categoryDocs.forEach(doc => {
+                                    if (checked) {
+                                      newSelected.add(doc.id);
+                                    } else {
+                                      newSelected.delete(doc.id);
+                                    }
+                                  });
+                                  setSelectedDocIds(newSelected);
+                                }}
+                                data-testid={`checkbox-select-category-${categoryKey}`}
+                              />
+                            </TableHead>
+                          )}
+                          <TableHead>Document Title</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Access Level</TableHead>
+                          <TableHead>Tags</TableHead>
+                          <TableHead className="w-32">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {categoryDocs.map((doc) => (
+                          <TableRow 
+                            key={doc.id}
+                            className={isMultiSelectMode && selectedDocIds.has(doc.id) ? 'bg-primary/5' : ''}
+                            data-testid={`row-document-${doc.id}`}
+                          >
+                            {isMultiSelectMode && (
+                              <TableCell>
+                                <Checkbox
+                                  checked={selectedDocIds.has(doc.id)}
+                                  onCheckedChange={() => handleToggleDocument(doc.id)}
+                                  data-testid={`checkbox-${doc.id}`}
+                                />
+                              </TableCell>
+                            )}
+                            <TableCell className="font-medium max-w-xs">
+                              <div className="line-clamp-2">{doc.title}</div>
+                            </TableCell>
+                            <TableCell className="max-w-md">
+                              <div className="text-sm text-muted-foreground line-clamp-2">
+                                {doc.description}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant={doc.accessLevel === 'admin' ? 'destructive' : doc.accessLevel === 'internal' ? 'default' : 'secondary'}
+                                data-testid={`badge-access-${doc.id}`}
+                              >
+                                {doc.accessLevel}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-1">
+                                {doc.tags.slice(0, 2).map((tag, idx) => (
+                                  <Badge key={idx} variant="outline" className="text-xs">
+                                    {tag}
+                                  </Badge>
+                                ))}
+                                {doc.tags.length > 2 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{doc.tags.length - 2}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {!isMultiSelectMode && (
+                                <div className="flex gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleDownload(doc)}
+                                    data-testid={`button-download-${doc.id}`}
+                                  >
+                                    <Download className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleDownload(doc)}
+                                    data-testid={`button-view-${doc.id}`}
+                                  >
+                                    <FileText className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Card>
                 )}
               </motion.div>
             );
