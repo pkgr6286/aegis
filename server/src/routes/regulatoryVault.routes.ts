@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { regulatoryVaultService } from '../services/regulatoryVault.service';
-import { authenticate, requireTenantRole } from '../middleware/auth.middleware';
-import { validate } from '../middleware/validate.middleware';
+import { authenticateToken, requireTenantRole } from '../middleware/auth.middleware';
+import { validateRequest } from '../middleware/validation.middleware';
 import {
   createRegulatoryDocumentSchema,
   updateRegulatoryDocumentSchema,
@@ -21,9 +21,9 @@ const router = Router();
  */
 router.get(
   '/documents',
-  authenticate,
+  authenticateToken,
   requireTenantRole(['admin', 'editor', 'viewer', 'auditor']),
-  validate(listRegulatoryDocumentsSchema, 'query'),
+  validateRequest(listRegulatoryDocumentsSchema, 'query'),
   async (req, res, next) => {
     try {
       const documents = await regulatoryVaultService.listDocuments(
@@ -48,7 +48,7 @@ router.get(
  */
 router.get(
   '/documents/:id',
-  authenticate,
+  authenticateToken,
   requireTenantRole(['admin', 'editor', 'viewer', 'auditor']),
   async (req, res, next) => {
     try {
@@ -74,9 +74,9 @@ router.get(
  */
 router.post(
   '/documents',
-  authenticate,
+  authenticateToken,
   requireTenantRole(['admin', 'editor']),
-  validate(createRegulatoryDocumentSchema),
+  validateRequest(createRegulatoryDocumentSchema),
   async (req, res, next) => {
     try {
       const document = await regulatoryVaultService.createDocument(
@@ -101,9 +101,9 @@ router.post(
  */
 router.put(
   '/documents/:id',
-  authenticate,
+  authenticateToken,
   requireTenantRole(['admin', 'editor']),
-  validate(updateRegulatoryDocumentSchema),
+  validateRequest(updateRegulatoryDocumentSchema),
   async (req, res, next) => {
     try {
       const document = await regulatoryVaultService.updateDocument(
@@ -129,7 +129,7 @@ router.put(
  */
 router.delete(
   '/documents/:id',
-  authenticate,
+  authenticateToken,
   requireTenantRole(['admin']),
   async (req, res, next) => {
     try {
@@ -152,9 +152,9 @@ router.delete(
  */
 router.post(
   '/submission-packet',
-  authenticate,
+  authenticateToken,
   requireTenantRole(['admin', 'editor']),
-  validate(submissionPacketSchema),
+  validateRequest(submissionPacketSchema),
   async (req, res, next) => {
     try {
       const documents = await regulatoryVaultService.getSubmissionPacket(
