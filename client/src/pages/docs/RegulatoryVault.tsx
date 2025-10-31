@@ -1,17 +1,20 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   FolderLock, Download, FileText, Shield, TestTube, 
-  Lock, FileCheck, ClipboardList, BarChart3, Search, Filter, X
+  Lock, FileCheck, ClipboardList, BarChart3, Search, Filter, X,
+  Package, FileDown, CheckSquare, Square
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 // Category metadata
 const CATEGORIES = {
@@ -79,6 +82,8 @@ export default function RegulatoryVault() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedAccessLevel, setSelectedAccessLevel] = useState<string>('all');
+  const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const { toast } = useToast();
 
   // Fetch regulatory documents
@@ -112,6 +117,103 @@ export default function RegulatoryVault() {
       description: `Downloading ${doc.title}...`,
     });
     window.open(doc.fileUrl, '_blank');
+  };
+
+  const handleToggleDocument = (docId: string) => {
+    const newSelected = new Set(selectedDocIds);
+    if (newSelected.has(docId)) {
+      newSelected.delete(docId);
+    } else {
+      newSelected.add(docId);
+    }
+    setSelectedDocIds(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedDocIds.size === filteredDocuments?.length) {
+      setSelectedDocIds(new Set());
+    } else {
+      setSelectedDocIds(new Set(filteredDocuments?.map(d => d.id) || []));
+    }
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (selectedCategory !== 'all') queryParams.set('category', selectedCategory);
+      if (selectedAccessLevel !== 'all') queryParams.set('accessLevel', selectedAccessLevel);
+      if (searchTerm) queryParams.set('searchTerm', searchTerm);
+
+      const url = `/api/v1/admin/regulatory-vault/export/csv?${queryParams.toString()}`;
+      
+      // Fetch CSV directly
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) throw new Error('Export failed');
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `regulatory-documents-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+
+      toast({
+        title: 'Export Complete',
+        description: `Exported ${filteredDocuments?.length || 0} documents to CSV`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Export Failed',
+        description: 'Failed to export documents to CSV',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const submissionPacketMutation = useMutation({
+    mutationFn: async (documentIds: string[]) => {
+      return await apiRequest('/admin/regulatory-vault/submission-packet', {
+        method: 'POST',
+        body: JSON.stringify({ documentIds }),
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Submission Packet Ready',
+        description: `${data.data.length} documents prepared for FDA submission`,
+      });
+      // In a real implementation, this would trigger a ZIP download
+      // For now, we'll show success message
+      setIsMultiSelectMode(false);
+      setSelectedDocIds(new Set());
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to create submission packet',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleCreateSubmissionPacket = () => {
+    if (selectedDocIds.size === 0) {
+      toast({
+        title: 'No Documents Selected',
+        description: 'Please select at least one document for the submission packet',
+        variant: 'destructive',
+      });
+      return;
+    }
+    submissionPacketMutation.mutate(Array.from(selectedDocIds));
   };
 
   const fadeInUp = {
@@ -219,9 +321,78 @@ export default function RegulatoryVault() {
             </div>
 
             {/* Results Count */}
-            <div className="text-sm text-muted-foreground">
-              Showing {filteredDocuments?.length || 0} of {documents?.length || 0} documents
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Showing {filteredDocuments?.length || 0} of {documents?.length || 0} documents
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportCSV}
+                  data-testid="button-export-csv"
+                >
+                  <FileDown className="w-4 h-4 mr-2" />
+                  Export CSV
+                </Button>
+                
+                <Button
+                  variant={isMultiSelectMode ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => {
+                    setIsMultiSelectMode(!isMultiSelectMode);
+                    if (isMultiSelectMode) {
+                      setSelectedDocIds(new Set());
+                    }
+                  }}
+                  data-testid="button-toggle-multiselect"
+                >
+                  <Package className="w-4 h-4 mr-2" />
+                  {isMultiSelectMode ? 'Cancel Selection' : 'Build Packet'}
+                </Button>
+              </div>
             </div>
+
+            {/* Multi-select Actions */}
+            {isMultiSelectMode && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/20"
+              >
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSelectAll}
+                    data-testid="button-select-all"
+                  >
+                    {selectedDocIds.size === filteredDocuments?.length ? (
+                      <CheckSquare className="w-4 h-4 mr-2" />
+                    ) : (
+                      <Square className="w-4 h-4 mr-2" />
+                    )}
+                    {selectedDocIds.size === filteredDocuments?.length ? 'Deselect All' : 'Select All'}
+                  </Button>
+                  <span className="text-sm font-medium">
+                    {selectedDocIds.size} document{selectedDocIds.size !== 1 ? 's' : ''} selected
+                  </span>
+                </div>
+                
+                <Button
+                  size="sm"
+                  onClick={handleCreateSubmissionPacket}
+                  disabled={selectedDocIds.size === 0 || submissionPacketMutation.isPending}
+                  data-testid="button-create-packet"
+                >
+                  <Package className="w-4 h-4 mr-2" />
+                  {submissionPacketMutation.isPending ? 'Creating...' : 'Create Submission Packet'}
+                </Button>
+              </motion.div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
@@ -298,24 +469,41 @@ export default function RegulatoryVault() {
                           exit={{ opacity: 0, scale: 0.95 }}
                           transition={{ duration: 0.2 }}
                         >
-                          <Card className="h-full hover-elevate" data-testid={`card-document-${doc.id}`}>
+                          <Card 
+                            className={`h-full hover-elevate transition-all ${
+                              isMultiSelectMode && selectedDocIds.has(doc.id) ? 'ring-2 ring-primary' : ''
+                            }`}
+                            data-testid={`card-document-${doc.id}`}
+                          >
                             <CardHeader>
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex-1 space-y-1">
-                                  <CardTitle className="text-base leading-tight">
-                                    {doc.title}
-                                  </CardTitle>
-                                  <CardDescription className="text-xs line-clamp-2">
-                                    {doc.description}
-                                  </CardDescription>
+                              <div className="flex items-start gap-2">
+                                {/* Checkbox for multi-select mode */}
+                                {isMultiSelectMode && (
+                                  <Checkbox
+                                    checked={selectedDocIds.has(doc.id)}
+                                    onCheckedChange={() => handleToggleDocument(doc.id)}
+                                    className="mt-1"
+                                    data-testid={`checkbox-${doc.id}`}
+                                  />
+                                )}
+                                
+                                <div className="flex-1 flex items-start justify-between gap-2">
+                                  <div className="flex-1 space-y-1">
+                                    <CardTitle className="text-base leading-tight">
+                                      {doc.title}
+                                    </CardTitle>
+                                    <CardDescription className="text-xs line-clamp-2">
+                                      {doc.description}
+                                    </CardDescription>
+                                  </div>
+                                  <Badge 
+                                    variant={doc.accessLevel === 'admin' ? 'destructive' : doc.accessLevel === 'internal' ? 'default' : 'secondary'}
+                                    className="shrink-0"
+                                    data-testid={`badge-access-${doc.id}`}
+                                  >
+                                    {doc.accessLevel}
+                                  </Badge>
                                 </div>
-                                <Badge 
-                                  variant={doc.accessLevel === 'admin' ? 'destructive' : doc.accessLevel === 'internal' ? 'default' : 'secondary'}
-                                  className="shrink-0"
-                                  data-testid={`badge-access-${doc.id}`}
-                                >
-                                  {doc.accessLevel}
-                                </Badge>
                               </div>
                             </CardHeader>
                             <CardContent className="space-y-3">
@@ -336,25 +524,27 @@ export default function RegulatoryVault() {
                               )}
 
                               {/* Actions */}
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  className="flex-1"
-                                  onClick={() => handleDownload(doc)}
-                                  data-testid={`button-download-${doc.id}`}
-                                >
-                                  <Download className="w-3 h-3 mr-2" />
-                                  Download
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleDownload(doc)}
-                                  data-testid={`button-view-${doc.id}`}
-                                >
-                                  <FileText className="w-3 h-3" />
-                                </Button>
-                              </div>
+                              {!isMultiSelectMode && (
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    className="flex-1"
+                                    onClick={() => handleDownload(doc)}
+                                    data-testid={`button-download-${doc.id}`}
+                                  >
+                                    <Download className="w-3 h-3 mr-2" />
+                                    Download
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleDownload(doc)}
+                                    data-testid={`button-view-${doc.id}`}
+                                  >
+                                    <FileText className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              )}
                             </CardContent>
                           </Card>
                         </motion.div>

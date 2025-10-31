@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { regulatoryVaultService } from '../services/regulatoryVault.service';
 import { authenticateToken, requireTenantRole } from '../middleware/auth.middleware';
-import { validateRequest } from '../middleware/validation.middleware';
+import { validateRequest, validateQuery } from '../middleware/validation.middleware';
 import {
   createRegulatoryDocumentSchema,
   updateRegulatoryDocumentSchema,
@@ -23,7 +23,7 @@ router.get(
   '/documents',
   authenticateToken,
   requireTenantRole('admin', 'editor', 'viewer', 'auditor'),
-  validateRequest(listRegulatoryDocumentsSchema, 'query'),
+  validateQuery(listRegulatoryDocumentsSchema),
   async (req, res, next) => {
     try {
       const documents = await regulatoryVaultService.listDocuments(
@@ -182,7 +182,7 @@ router.get(
   '/export/csv',
   authenticateToken,
   requireTenantRole('admin', 'editor', 'viewer', 'auditor'),
-  validateRequest(listRegulatoryDocumentsSchema, 'query'),
+  validateQuery(listRegulatoryDocumentsSchema),
   async (req, res, next) => {
     try {
       const csvContent = await regulatoryVaultService.exportToCSV(
