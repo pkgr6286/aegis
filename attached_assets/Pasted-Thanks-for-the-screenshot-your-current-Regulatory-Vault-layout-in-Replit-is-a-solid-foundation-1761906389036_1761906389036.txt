@@ -1,0 +1,188 @@
+Thanks for the screenshot — your current **Regulatory Vault layout in Replit** is a solid foundation, but it's **missing mapped documents and possibly a few category clarifications**.
+
+Let’s do a **full audit** and give you a **Replit prompt + full document list per category**, so your customers (like Kenvue, Haleon, etc.) feel confident in Mahalo’s **regulatory maturity and SaMD readiness**.
+
+---
+
+## ✅ AUDIT: Are All Categories Covered?
+
+| Category (in Vault)                   | Status    | Notes                 |
+| ------------------------------------- | --------- | --------------------- |
+| ✅ SaMD Core Documentation             | ✅ Present | Good                  |
+| ✅ Verification & Validation           | ✅ Present | Good                  |
+| ✅ Risk & Cybersecurity                | ✅ Present | Good                  |
+| ✅ ACNU-Specific Files                 | ✅ Present | Excellent             |
+| ✅ Regulatory Submissions              | ✅ Present | Good                  |
+| ✅ Compliance & QMS                    | ✅ Present | Good                  |
+| ✅ Post-Market Surveillance            | ✅ Present | Good                  |
+| ❌ Partner Guides / Submission Builder | ❌ Missing | Optional, but helpful |
+
+💡 **No new categories are needed**, but **all of them are currently empty**.
+
+---
+
+## 📁 DOCUMENT LIST FOR EACH CATEGORY
+
+Each document has been **Mahalo-branded**, clearly named, and categorized for Replit to ingest.
+
+---
+
+### 📘 SaMD Core Documentation
+
+| Document Name                                                     | Notes |
+| ----------------------------------------------------------------- | ----- |
+| Mahalo Aegis – Software Requirements Specification (SRS)          |       |
+| Mahalo Aegis – Design History File (DHF)                          |       |
+| Mahalo Aegis – System Architecture & API Blueprint                |       |
+| Mahalo Aegis – Requirements to Test Traceability Matrix           |       |
+| Mahalo Aegis – Intended Use Statement for SaMD ACNU Configuration |       |
+| Mahalo Aegis – SaMD Classification & Justification (IMDRF/FDA)    |       |
+
+---
+
+### ✅ Verification & Validation
+
+| Document Name                                                        | Notes |
+| -------------------------------------------------------------------- | ----- |
+| Mahalo Aegis – Verification & Validation Protocols                   |       |
+| Mahalo Aegis – Validation Reports for Self-Selection & Comprehension |       |
+| Mahalo Aegis – Human Factors Validation Report                       |       |
+| Mahalo Aegis – Usability Engineering File (IEC 62366)                |       |
+| Mahalo Aegis – Design Trace Matrix with V&V Outcomes                 |       |
+
+---
+
+### 🔐 Risk & Cybersecurity
+
+| Document Name                                    | Notes |
+| ------------------------------------------------ | ----- |
+| Mahalo Aegis – Risk Management File (ISO 14971)  |       |
+| Mahalo Aegis – Cybersecurity Threat Model        |       |
+| Mahalo Aegis – Software Bill of Materials (SBOM) |       |
+| Mahalo Aegis – Vulnerability Management Policy   |       |
+| Mahalo Aegis – Secure Coding SOP                 |       |
+
+---
+
+### 📦 ACNU-Specific Files
+
+| Document Name                                             | Notes |
+| --------------------------------------------------------- | ----- |
+| Mahalo Aegis – ACNU Self-Selection Logic Flow             |       |
+| Mahalo Aegis – Comprehension Assessment Framework         |       |
+| Mahalo Aegis – Rx Label to Digital UX Mapping             |       |
+| Mahalo Aegis – ACNU Digital Companion Summary Sheet       |       |
+| Mahalo Aegis – ACNU-Specific Test Protocols & Validations |       |
+| Mahalo Aegis – ACNU Configuration Change History          |       |
+
+---
+
+### 📄 Regulatory Submissions
+
+| Document Name                                                   | Notes |
+| --------------------------------------------------------------- | ----- |
+| Mahalo Aegis – FDA Submission-Ready Validation Package          |       |
+| Mahalo Aegis – Clinical Evaluation Report (CER)                 |       |
+| Mahalo Aegis – Regulatory Cover Sheet for OTC Companion         |       |
+| Mahalo Aegis – 21 CFR Part 11 Compliance Declaration            |       |
+| Mahalo Aegis – Regulatory Filing Checklist for ACNU Submissions |       |
+
+---
+
+### 🧾 Compliance & QMS
+
+| Document Name                                         | Notes |
+| ----------------------------------------------------- | ----- |
+| Mahalo Aegis – QMS Overview and SOP Index             |       |
+| Mahalo Aegis – ISO 13485 Certification                |       |
+| Mahalo Aegis – Change Management Logbook              |       |
+| Mahalo Aegis – Audit Trail Sample Export              |       |
+| Mahalo Aegis – User Access & Role Matrix              |       |
+| Mahalo Aegis – Platform Validation (IQ/OQ/PQ) Summary |       |
+
+---
+
+### 📊 Post-Market Surveillance
+
+| Document Name                                                 | Notes |
+| ------------------------------------------------------------- | ----- |
+| Mahalo Aegis – Post-Market Surveillance Plan                  |       |
+| Mahalo Aegis – Real-World Data Capture & Signal Reporting SOP |       |
+| Mahalo Aegis – Adverse Event Escalation Workflow              |       |
+| Mahalo Aegis – Incident Response Plan (SaMD)                  |       |
+| Mahalo Aegis – Monitoring Dashboards and Analytics Schema     |       |
+
+---
+
+## 🧠 Optional Add-on Section (Future)
+
+**🔧 Partner Guides or Regulatory Toolkit**
+
+* Mahalo Aegis – Submission Prep Guide (For Pharma Regulatory Teams)
+* Mahalo Aegis – Document Export & Bundle Tool (coming soon)
+
+---
+
+## 🛠️ REPLIT PROMPT — Populate the Vault with All Docs
+
+````markdown
+You are building a Regulatory Vault inside the Aegis Documentation Portal. This vault will be accessed by internal teams and external partners (e.g., pharma regulatory reviewers), and should reflect Mahalo's full compliance and validation maturity.
+
+Please do the following:
+
+1. Ensure the following 7 categories exist (already visible):
+   - SaMD Core Documentation
+   - Verification & Validation
+   - Risk & Cybersecurity
+   - ACNU-Specific Files
+   - Regulatory Submissions
+   - Compliance & QMS
+   - Post-Market Surveillance
+
+2. In each category, upload document entries with:
+   - Clean, professional title (see document list below)
+   - Short description of purpose (for hover/click preview)
+   - Tags (e.g., [FDA], [IEC 62304], [ISO 14971], [Partner-shareable])
+   - Link to Google Drive, S3, or PDF preview URL
+   - Access Level: admin | internal | external
+
+3. Add filters for:
+   - Tags
+   - Category
+   - Access Level
+
+4. Set default view to show “external” access-level documents to external users.
+
+5. Use this structured data format for each document:
+```json
+{
+  "title": "Mahalo Aegis – Software Requirements Specification (SRS)",
+  "category": "SaMD Core Documentation",
+  "description": "Detailed spec covering platform capabilities and behavior for SaMD classification.",
+  "tags": ["IEC 62304", "FDA", "Partner-shareable"],
+  "access": "external",
+  "link": "https://docs.mahalo.health/srs-aegis-v3.pdf"
+}
+````
+
+6. Populate all 25 documents from the following categories:
+   (Insert full document list per category from above.)
+
+7. Make sure to preview formatting on both desktop and mobile (as partners may access from both).
+
+Optional (future):
+
+* Add export-to-zip feature for pre-bundled submission folders.
+* Add badge view (✅ ISO 13485 certified, ✅ FDA-ready, etc.)
+
+```
+
+---
+
+Would you like this:
+- As a downloadable JSON seed file?
+- Converted to a Google Sheet for your ops team?
+- Embedded directly into your existing Vercel project?
+
+Just say the word — I’ll generate it instantly.
+```
