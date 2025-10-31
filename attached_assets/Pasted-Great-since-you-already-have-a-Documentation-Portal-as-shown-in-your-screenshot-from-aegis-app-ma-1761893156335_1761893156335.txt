@@ -1,0 +1,127 @@
+Great — since you already have a Documentation Portal (as shown in your screenshot from aegis-app.mahalo.health), here’s exactly how to integrate the Regulatory Vault into that existing system in a way that’s:
+	•	✅ Seamlessly embedded in the UX
+	•	✅ Easy to manage and scale
+	•	✅ Customer-facing (but role-controlled)
+	•	✅ Compliant with what Kenvue and other pharma partners will expect
+
+⸻
+
+✅ Step-by-Step Plan to Add the Regulatory Vault Inside the Aegis Documentation Portal
+
+⸻
+
+🔹 Step 1: Add a New Vault Section to Sidebar
+
+In the sidebar or navigation menu, add a new entry:
+
+📂 Regulatory Vault
+Access SaMD, ACNU, and FDA compliance documentation
+
+
+⸻
+
+🔹 Step 2: Create Subsections as Categories
+
+Inside the Regulatory Vault page, structure it using expandable categories:
+
+Section Title	Example Documents
+📘 SaMD Core Documentation	SRS, DHF, Architecture, Traceability Matrix
+🔬 Verification & Validation (V&V)	Test protocols, test reports, HFE results
+🧪 Risk & Cybersecurity	Risk file, threat models, SBOM
+📜 ACNU-Specific Files	Self-selection logic, comprehension UX, label translation
+🏛 Regulatory Submissions	FDA submission package, CER, classification memo
+🛡 Compliance & QMS	ISO 13485 proof, Part 11 statement, audit logs
+📊 Post-Market Surveillance	Maintenance SOPs, incident response, monitoring plan
+
+
+⸻
+
+🔹 Step 3: Design Document Cards with Metadata & Access Control
+
+Each document tile or row should include:
+	•	✅ Title
+	•	✅ Short Description
+	•	✅ Tags (e.g., FDA, ISO 14971, IEC 62304, External Shareable)
+	•	✅ Link (to Google Drive, S3, Notion, or in-app PDF preview)
+	•	✅ Download/View button
+	•	🔒 Access Control Tag:
+	•	Internal Only
+	•	External Partner
+	•	Public
+
+Example:
+
+Title: Software Requirements Specification (SRS)
+Description: Detailed description of Aegis platform functionality for ACNU use.
+Tags: [FDA, IEC 62304, External Partner]
+Link: https://docs.mahalo.health/srs-aegis-v3.pdf
+Access: External
+
+
+⸻
+
+🔒 Step 4: Add Role-Based Access
+
+Leverage your existing authentication system. Assign roles:
+
+Role	Can View
+Admin	All documents
+Internal User	All except Partner Confidential
+External Partner	Only marked External documents
+
+Use a simple accessLevel: "external" | "internal" | "admin" tag in your JSON/DB.
+
+⸻
+
+🔎 Step 5: Add Search, Filter & Tagging
+
+Let users filter documents by:
+	•	Regulatory standard (FDA, ISO 13485, IEC 62366)
+	•	Document type (SRS, Test Report, HFE Study)
+	•	Use case (ACNU, SaMD, Cybersecurity)
+
+Bonus: Let them export the filtered list as CSV or PDF.
+
+⸻
+
+📁 Example Vault Data Format (JSON)
+
+[
+  {
+    "title": "Risk Management File",
+    "description": "ISO 14971-compliant risk log for ACNU configuration.",
+    "tags": ["ISO 14971", "FDA", "External Partner"],
+    "link": "https://docs.mahalo.health/risk-log-acnu.pdf",
+    "access": "external"
+  },
+  {
+    "title": "Human Factors Validation Report",
+    "description": "Final usability testing results for OTC switch app.",
+    "tags": ["IEC 62366", "FDA", "Partner Confidential"],
+    "link": "https://docs.mahalo.health/hfe-acnu-final.pdf",
+    "access": "admin"
+  }
+]
+
+
+⸻
+
+🧠 Final Touch: Create a “Submission Packet Builder”
+
+Let admins bundle select documents into a “Download FDA Submission Folder” for pharma partners — auto-generate ZIP of:
+	•	SRS
+	•	Traceability Matrix
+	•	V&V Reports
+	•	HF Validation
+	•	Risk File
+
+⸻
+
+🏁 Final Call-to-Action
+
+Want me to:
+	•	Generate the JSON metadata file for all 25 regulatory documents?
+	•	Create the UI layout as a Figma design or Tailwind component spec?
+	•	Write the Replit code to auto-render these vault cards with role gating?
+
+Just say the word — and I’ll generate it immediately.

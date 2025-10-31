@@ -1,0 +1,244 @@
+Great catch — I gave the vault layout and architecture, but not the full list of regulatory documents from your previous table embedded into a usable format for Replit.
+
+Let me now give you the full JSON-based document metadata structure for all 25 documents, formatted to plug directly into your Replit backend (or static JSON) to power the “Regulatory Vault” in your Aegis Documentation Portal.
+
+⸻
+
+✅ regulatory_documents.json — Ready-to-Use Vault Metadata
+
+[
+  {
+    "id": "doc001",
+    "title": "Software Requirements Specification (SRS)",
+    "category": "SaMD Core Documentation",
+    "description": "Detailed description of Aegis platform capabilities, features, and logic.",
+    "tags": ["IEC 62304", "FDA", "Partner-shareable"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/srs-aegis-v3.pdf"
+  },
+  {
+    "id": "doc002",
+    "title": "Design History File (DHF)",
+    "category": "SaMD Core Documentation",
+    "description": "End-to-end documentation of design inputs, outputs, reviews, and versioning.",
+    "tags": ["ISO 13485", "21 CFR 820", "Internal"],
+    "access": "internal",
+    "link": "https://docs.mahalo.health/dhf-master.pdf"
+  },
+  {
+    "id": "doc003",
+    "title": "Software Architecture & System Design",
+    "category": "SaMD Core Documentation",
+    "description": "Structural overview of Aegis services, APIs, modules, and microservices.",
+    "tags": ["IEC 62304", "FDA", "Partner-shareable"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/system-design-diagram.pdf"
+  },
+  {
+    "id": "doc004",
+    "title": "Risk Management File",
+    "category": "Risk & Cybersecurity",
+    "description": "Risk analysis, mitigation plan, and residual risk logs for ACNU use.",
+    "tags": ["ISO 14971", "FDA", "External"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/risk-log-acnu.pdf"
+  },
+  {
+    "id": "doc005",
+    "title": "Human Factors Validation Report",
+    "category": "Verification & Validation (V&V)",
+    "description": "Validation study results proving patients can use Aegis safely and effectively.",
+    "tags": ["IEC 62366", "FDA", "ACNU"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/hfe-validation-report.pdf"
+  },
+  {
+    "id": "doc006",
+    "title": "Verification & Validation Reports",
+    "category": "Verification & Validation (V&V)",
+    "description": "Test plans, cases, and reports for unit, integration, and system-level validation.",
+    "tags": ["IEC 62304", "FDA", "Internal"],
+    "access": "internal",
+    "link": "https://docs.mahalo.health/vnv-complete-report.pdf"
+  },
+  {
+    "id": "doc007",
+    "title": "Traceability Matrix",
+    "category": "SaMD Core Documentation",
+    "description": "Maps requirements to risks, test cases, and verification outcomes.",
+    "tags": ["ISO 13485", "FDA", "Internal"],
+    "access": "internal",
+    "link": "https://docs.mahalo.health/traceability-matrix.pdf"
+  },
+  {
+    "id": "doc008",
+    "title": "Usability Engineering File",
+    "category": "Verification & Validation (V&V)",
+    "description": "Human-centered design documentation aligned to IEC 62366.",
+    "tags": ["IEC 62366", "Partner-shareable"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/usability-file.pdf"
+  },
+  {
+    "id": "doc009",
+    "title": "Cybersecurity Threat Model",
+    "category": "Risk & Cybersecurity",
+    "description": "Attack surface analysis, threat vectors, and mitigation strategies.",
+    "tags": ["FDA Cybersecurity", "NTIA", "Internal"],
+    "access": "internal",
+    "link": "https://docs.mahalo.health/cyber-threat-model.pdf"
+  },
+  {
+    "id": "doc010",
+    "title": "Software Bill of Materials (SBOM)",
+    "category": "Risk & Cybersecurity",
+    "description": "Inventory of all open-source and third-party components used.",
+    "tags": ["SBOM", "FDA", "External"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/sbom-aegis.json"
+  },
+  {
+    "id": "doc011",
+    "title": "Intended Use Statement",
+    "category": "Regulatory Submissions",
+    "description": "Defined scope of the Aegis platform for ACNU OTC switch.",
+    "tags": ["FDA", "IMDRF", "Partner-shareable"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/intended-use-acnu.pdf"
+  },
+  {
+    "id": "doc012",
+    "title": "Clinical Evaluation Report (CER)",
+    "category": "Regulatory Submissions",
+    "description": "Clinical logic justification for self-selection and comprehension.",
+    "tags": ["FDA", "EU MDR", "ACNU"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/cer-digital-companion.pdf"
+  },
+  {
+    "id": "doc013",
+    "title": "SaMD Classification & Justification",
+    "category": "Regulatory Submissions",
+    "description": "Risk classification and rationale based on IMDRF and FDA framework.",
+    "tags": ["SaMD", "IMDRF", "FDA"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/samd-classification.pdf"
+  },
+  {
+    "id": "doc014",
+    "title": "FDA Submission-Ready Validation Package",
+    "category": "Regulatory Submissions",
+    "description": "Comprehensive folder for ACNU NDA supplement or 510(k).",
+    "tags": ["FDA", "Partner Confidential"],
+    "access": "admin",
+    "link": "https://docs.mahalo.health/fda-submission-folder.zip"
+  },
+  {
+    "id": "doc015",
+    "title": "Part 11 Compliance Statement",
+    "category": "Compliance & QMS",
+    "description": "Assurance that the platform meets FDA's electronic record/signature standards.",
+    "tags": ["21 CFR Part 11", "FDA", "External"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/part11-statement.pdf"
+  },
+  {
+    "id": "doc016",
+    "title": "QMS Certification (ISO 13485)",
+    "category": "Compliance & QMS",
+    "description": "Proof of certified quality system for software development and validation.",
+    "tags": ["ISO 13485", "QMS", "External"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/qms-certificate.pdf"
+  },
+  {
+    "id": "doc017",
+    "title": "Change Management Log",
+    "category": "Compliance & QMS",
+    "description": "Versioning and audit log for platform changes under ISO 13485.",
+    "tags": ["ISO 13485", "Change Control"],
+    "access": "internal",
+    "link": "https://docs.mahalo.health/change-log-vault.csv"
+  },
+  {
+    "id": "doc018",
+    "title": "Audit Trail Samples",
+    "category": "Compliance & QMS",
+    "description": "Sample logs from key workflows, exported as audit trail evidence.",
+    "tags": ["Audit", "Part 11", "Internal"],
+    "access": "internal",
+    "link": "https://docs.mahalo.health/audit-logs.zip"
+  },
+  {
+    "id": "doc019",
+    "title": "Post-Market Surveillance Plan",
+    "category": "Post-Market Surveillance",
+    "description": "How Aegis collects RWD, AE reports, and supports pharmacovigilance.",
+    "tags": ["FDA PMS", "ISO 13485"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/pms-plan.pdf"
+  },
+  {
+    "id": "doc020",
+    "title": "Platform Validation Summary (IQ/OQ/PQ)",
+    "category": "Post-Market Surveillance",
+    "description": "Installation, operational, and performance qualification docs.",
+    "tags": ["CSV", "GxP", "Partner-shareable"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/iq-oq-pq-summary.pdf"
+  },
+  {
+    "id": "doc021",
+    "title": "Self-Selection Logic Specification",
+    "category": "ACNU-Specific Files",
+    "description": "Logic tree and flow used to identify contraindicated users.",
+    "tags": ["ACNU", "Logic Engine", "External"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/self-selection-logic.pdf"
+  },
+  {
+    "id": "doc022",
+    "title": "Comprehension Test Design",
+    "category": "ACNU-Specific Files",
+    "description": "Video + quiz format to validate understanding of safe use.",
+    "tags": ["ACNU", "HFE", "FDA"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/comprehension-test.pdf"
+  },
+  {
+    "id": "doc023",
+    "title": "Label-to-Digital Mapping",
+    "category": "ACNU-Specific Files",
+    "description": "How the Rx label is translated into user-facing UX and guidance.",
+    "tags": ["Labeling", "ACNU", "Partner-shareable"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/label-digital-mapping.pdf"
+  },
+  {
+    "id": "doc024",
+    "title": "ACNU Companion Summary Sheet",
+    "category": "ACNU-Specific Files",
+    "description": "One-page summary for inclusion in sponsor FDA submission.",
+    "tags": ["ACNU", "FDA", "External"],
+    "access": "external",
+    "link": "https://docs.mahalo.health/acnu-summary-sheet.pdf"
+  },
+  {
+    "id": "doc025",
+    "title": "Incident Response Plan (SaMD)",
+    "category": "Post-Market Surveillance",
+    "description": "Response procedures for bugs, security events, or user issues.",
+    "tags": ["Post-Market", "Cybersecurity"],
+    "access": "internal",
+    "link": "https://docs.mahalo.health/irp.pdf"
+  }
+]
+
+
+⸻
+
+Would you like:
+	•	A Replit backend/API handler that renders this JSON into a live vault?
+	•	A Figma or Tailwind UI component layout for the vault cards and filters?
+
+Let me know, and I’ll generate the next step instantly.
