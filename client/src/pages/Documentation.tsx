@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Code2, FileText, Users, Layers, Database } from 'lucide-react';
+import { BookOpen, Code2, FileText, Users, Layers, Database, FolderLock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Documentation() {
@@ -52,7 +52,7 @@ export default function Documentation() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid gap-6 md:grid-cols-2"
+        className="grid gap-6 md:grid-cols-3"
       >
         {/* User Guide Card */}
         <motion.div variants={itemVariants}>
@@ -148,6 +148,58 @@ export default function Documentation() {
                   <a href="/docs/technical">
                     <Code2 className="w-4 h-4 mr-2" />
                     View Docs
+                  </a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Regulatory Vault Card */}
+        <motion.div variants={itemVariants}>
+          <Card className="h-full hover-elevate transition-all duration-200">
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-purple-500/10">
+                    <FolderLock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div>
+                    <CardTitle>Regulatory Vault</CardTitle>
+                    <CardDescription>FDA compliance documentation</CardDescription>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Centralized repository of regulatory documentation for FDA submissions, 
+                SaMD compliance, ACNU studies, and post-market surveillance. 
+                Includes 29 documents organized across 7 categories.
+              </p>
+              
+              <div className="space-y-2 text-sm">
+                <p className="font-semibold">Includes:</p>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-4">
+                  <li>SaMD Core Documentation</li>
+                  <li>Verification & Validation</li>
+                  <li>Risk & Cybersecurity</li>
+                  <li>ACNU-Specific Files</li>
+                  <li>Regulatory Submissions</li>
+                  <li>Compliance & QMS</li>
+                  <li>Post-Market Surveillance</li>
+                </ul>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  asChild
+                  className="flex-1"
+                  data-testid="button-view-regulatory-vault"
+                >
+                  <a href="/docs/regulatory-vault">
+                    <FolderLock className="w-4 h-4 mr-2" />
+                    View Vault
                   </a>
                 </Button>
               </div>

@@ -51,6 +51,7 @@ import { PharmaAdminLayout } from "@/components/admin/PharmaAdminLayout";
 import Documentation from "@/pages/Documentation";
 import UserGuide from "@/pages/docs/UserGuide";
 import TechnicalDocs from "@/pages/docs/TechnicalDocs";
+import RegulatoryVault from "@/pages/docs/RegulatoryVault";
 
 // Clinician Pages
 import ReviewQueue from "@/pages/clinician/ReviewQueue";
@@ -289,6 +290,9 @@ function Router() {
       </Route>
       <Route path="/docs/technical">
         <AuthenticatedRoute component={TechnicalDocs} />
+      </Route>
+      <Route path="/docs/regulatory-vault">
+        <AuthenticatedRoute component={RegulatoryVault} />
       </Route>
 
       {/* Clinician Routes */}
