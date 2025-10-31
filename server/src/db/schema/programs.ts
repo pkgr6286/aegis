@@ -29,6 +29,18 @@ const appTable = pgTableCreator((name) => `${name}`);
 
 export const programStatusEnum = pgEnum('program_status', ['draft', 'active', 'archived']);
 
+export const regulatoryDocCategoryEnum = pgEnum('regulatory_doc_category', [
+  'samd_core',
+  'verification_validation',
+  'risk_cybersecurity',
+  'acnu_specific',
+  'regulatory_submissions',
+  'compliance_qms',
+  'post_market_surveillance'
+]);
+
+export const accessLevelEnum = pgEnum('access_level', ['admin', 'internal', 'external']);
+
 // ------------------------------------------------------------------
 // TABLES (Program-Scoped)
 // ------------------------------------------------------------------
@@ -120,6 +132,49 @@ export const screenerVersions = appTable('screener_versions', {
   programVersionIdx: index('sv_program_version_idx').on(table.tenantId, table.drugProgramId, table.version),
 }));
 
+/**
+ * Stores regulatory documentation for compliance and FDA submissions.
+ * Includes SaMD, ACNU, V&V, risk management, and post-market surveillance docs.
+ * RLS IS MANDATORY ON THIS TABLE.
+ */
+export const regulatoryDocuments = appTable('regulatory_documents', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  
+  title: varchar('title', { length: 500 }).notNull(),
+  category: regulatoryDocCategoryEnum('category').notNull(),
+  description: varchar('description', { length: 2000 }),
+  
+  /**
+   * Tags for filtering (e.g., ["FDA", "ISO 13485", "Partner-shareable"])
+   * Stored as JSON array
+   */
+  tags: jsonb('tags').notNull().default('[]'),
+  
+  /**
+   * Access level determines who can view this document:
+   * - admin: Only admins can view
+   * - internal: Internal users and admins
+   * - external: External partners, internal users, and admins
+   */
+  accessLevel: accessLevelEnum('access_level').notNull().default('internal'),
+  
+  /**
+   * URL to the document file (can be S3, Google Drive, etc.)
+   */
+  fileUrl: varchar('file_url', { length: 1000 }).notNull(),
+  
+  /**
+   * Optional metadata for extensibility
+   */
+  metadata: jsonb('metadata'),
+  
+  ...auditSchema,
+}, (table) => ({
+  tenantCategoryIdx: index('rd_tenant_category_idx').on(table.tenantId, table.category),
+  tenantAccessIdx: index('rd_tenant_access_idx').on(table.tenantId, table.accessLevel),
+}));
+
 // ------------------------------------------------------------------
 // RELATIONS (Program-Scoped)
 // ------------------------------------------------------------------
@@ -174,5 +229,22 @@ export const screenerVersionsRelations = relations(screenerVersions, ({ one, man
     fields: [screenerVersions.updatedBy],
     references: [users.id],
     relationName: 'updater',
+  }),
+}));
+
+export const regulatoryDocumentsRelations = relations(regulatoryDocuments, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [regulatoryDocuments.tenantId],
+    references: [tenants.id],
+  }),
+  creator: one(users, {
+    fields: [regulatoryDocuments.createdBy],
+    references: [users.id],
+    relationName: 'doc_creator',
+  }),
+  updater: one(users, {
+    fields: [regulatoryDocuments.updatedBy],
+    references: [users.id],
+    relationName: 'doc_updater',
   }),
 }));
