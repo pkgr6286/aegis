@@ -22,13 +22,14 @@ const router = Router();
 router.get(
   '/documents',
   authenticateToken,
-  requireTenantRole(['admin', 'editor', 'viewer', 'auditor']),
+  requireTenantRole('admin', 'editor', 'viewer', 'auditor'),
   validateRequest(listRegulatoryDocumentsSchema, 'query'),
   async (req, res, next) => {
     try {
       const documents = await regulatoryVaultService.listDocuments(
         req.tenantId!,
-        req.userId!,
+        req.user!.id,
+        req.user!.tenantRole!,
         req.query as any
       );
 
@@ -49,13 +50,13 @@ router.get(
 router.get(
   '/documents/:id',
   authenticateToken,
-  requireTenantRole(['admin', 'editor', 'viewer', 'auditor']),
+  requireTenantRole('admin', 'editor', 'viewer', 'auditor'),
   async (req, res, next) => {
     try {
       const document = await regulatoryVaultService.getDocument(
         req.tenantId!,
         req.params.id,
-        req.userId!
+        req.user!.id
       );
 
       res.json({
@@ -75,13 +76,13 @@ router.get(
 router.post(
   '/documents',
   authenticateToken,
-  requireTenantRole(['admin', 'editor']),
+  requireTenantRole('admin', 'editor'),
   validateRequest(createRegulatoryDocumentSchema),
   async (req, res, next) => {
     try {
       const document = await regulatoryVaultService.createDocument(
         req.tenantId!,
-        req.userId!,
+        req.user!.id,
         req.body
       );
 
@@ -102,14 +103,14 @@ router.post(
 router.put(
   '/documents/:id',
   authenticateToken,
-  requireTenantRole(['admin', 'editor']),
+  requireTenantRole('admin', 'editor'),
   validateRequest(updateRegulatoryDocumentSchema),
   async (req, res, next) => {
     try {
       const document = await regulatoryVaultService.updateDocument(
         req.tenantId!,
         req.params.id,
-        req.userId!,
+        req.user!.id,
         req.body
       );
 
@@ -130,13 +131,13 @@ router.put(
 router.delete(
   '/documents/:id',
   authenticateToken,
-  requireTenantRole(['admin']),
+  requireTenantRole('admin'),
   async (req, res, next) => {
     try {
       const result = await regulatoryVaultService.deleteDocument(
         req.tenantId!,
         req.params.id,
-        req.userId!
+        req.user!.id
       );
 
       res.json(result);
@@ -153,13 +154,13 @@ router.delete(
 router.post(
   '/submission-packet',
   authenticateToken,
-  requireTenantRole(['admin', 'editor']),
+  requireTenantRole('admin', 'editor'),
   validateRequest(submissionPacketSchema),
   async (req, res, next) => {
     try {
       const documents = await regulatoryVaultService.getSubmissionPacket(
         req.tenantId!,
-        req.userId!,
+        req.user!.id,
         req.body
       );
 
@@ -167,6 +168,33 @@ router.post(
         success: true,
         data: documents,
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /api/v1/admin/regulatory-vault/export/csv
+ * Export documents to CSV
+ */
+router.get(
+  '/export/csv',
+  authenticateToken,
+  requireTenantRole('admin', 'editor', 'viewer', 'auditor'),
+  validateRequest(listRegulatoryDocumentsSchema, 'query'),
+  async (req, res, next) => {
+    try {
+      const csvContent = await regulatoryVaultService.exportToCSV(
+        req.tenantId!,
+        req.user!.id,
+        req.user!.tenantRole!,
+        req.query as any
+      );
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="regulatory-documents-${new Date().toISOString().split('T')[0]}.csv"`);
+      res.send(csvContent);
     } catch (error) {
       next(error);
     }

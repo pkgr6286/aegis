@@ -16,14 +16,28 @@ import type {
 export const regulatoryVaultService = {
   /**
    * List all regulatory documents with optional filtering
+   * Implements role-based access control:
+   * - admin/editor: See all documents
+   * - viewer/auditor: See all documents (read-only enforced at route level)
+   * - Future: external partners would only see 'external' documents
    */
-  async listDocuments(tenantId: string, userId: string, query: ListRegulatoryDocumentsQuery) {
+  async listDocuments(
+    tenantId: string, 
+    userId: string, 
+    userRole: string,
+    query: ListRegulatoryDocumentsQuery
+  ) {
     const filters = {
       category: query.category,
       accessLevel: query.accessLevel,
       tags: query.tags ? query.tags.split(',').map(t => t.trim()) : undefined,
       searchTerm: query.searchTerm,
     };
+
+    // Role-based filtering
+    // For now, all tenant users can see all docs within their tenant
+    // In future, we can add 'external' user type that only sees external docs
+    // Example: if (userRole === 'external') filters.accessLevel = 'external';
 
     return await regulatoryDocumentRepository.findByTenant(tenantId, filters);
   },
@@ -165,5 +179,47 @@ export const regulatoryVaultService = {
     });
 
     return documents;
+  },
+
+  /**
+   * Export documents to CSV format
+   */
+  async exportToCSV(tenantId: string, userId: string, userRole: string, query: ListRegulatoryDocumentsQuery) {
+    const documents = await this.listDocuments(tenantId, userId, userRole, query);
+    
+    // CSV headers
+    const headers = ['Title', 'Category', 'Access Level', 'Tags', 'Description', 'File URL', 'Created At'];
+    
+    // CSV rows
+    const rows = documents.map(doc => [
+      doc.title,
+      doc.category,
+      doc.accessLevel,
+      Array.isArray(doc.tags) ? doc.tags.join('; ') : '',
+      doc.description || '',
+      doc.fileUrl,
+      new Date(doc.createdAt).toISOString(),
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    // Audit log
+    await auditLogService.createAuditLog({
+      tenantId,
+      userId,
+      action: 'regulatory_document.export_csv',
+      entityType: 'RegulatoryDocument',
+      entityId: undefined,
+      changes: {
+        exportedCount: documents.length,
+        filters: query,
+      },
+    });
+
+    return csvContent;
   },
 };
